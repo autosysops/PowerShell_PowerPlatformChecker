@@ -1,5 +1,9 @@
-﻿# Get the config file
-$config = Get-Content -Path "$PSScriptRoot\..\..\PowerPlatformAPI.conf" | ConvertFrom-Json
+﻿param (
+    [string] $WorkingDirectory
+)
+
+# Get the config file
+$config = Get-Content -Path "$WorkingDirectory\PowerPlatformAPI.conf" | ConvertFrom-Json
 
 $tokenResp = Invoke-RestMethod -Method Post `
     -Uri "https://login.microsoftonline.com/$($config.TenantID)/oauth2/v2.0/token" `
@@ -26,4 +30,4 @@ name, `
 @{ Name= 'releaseTag'; Expression = { $_.properties.releaseTag}}, `
 @{ Name= 'tier'; Expression = { $_.properties.tier}}, `
 @{ Name= 'publisher'; Expression = { $_.properties.publisher}} `
-| ConvertTo-Json -Depth 10 -Compress | Out-File -FilePath "$PSScriptRoot\..\..\PowerPlatformConnectors.json" -Encoding UTF8
+| ConvertTo-Json -Depth 10 -Compress | Out-File -FilePath "$WorkingDirectory\PowerPlatformConnectors.json" -Encoding UTF8

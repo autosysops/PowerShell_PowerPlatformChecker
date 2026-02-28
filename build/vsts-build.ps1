@@ -55,7 +55,7 @@ Get-ChildItem -Path "$($publishDir.FullName)\PowerPlatformChecker\internal\scrip
 }
 
 # Add Local Cache of Power Platform Connector info
-.\build\helper\Get-PowerPlatformConnectors.ps1
+.\build\helper\Get-PowerPlatformConnectors.ps1 -WorkingDirectory $WorkingDirectory
 $text += "# Local Cache of Power Platform Connector info"
 Write-Host "$($publishDir.FullName)\PowerPlatformConnectors.json"
 $text += "`$script:connectorData = @`'
