@@ -2,8 +2,19 @@
     [string] $WorkingDirectory
 )
 
-# Get the config file
-$config = Get-Content -Path "$WorkingDirectory\PowerPlatformAPI.conf" | ConvertFrom-Json
+# Check for config file
+if (Test-Path -Path "$WorkingDirectory\PowerPlatformAPI.conf") {
+    # Get the config file
+    $config = Get-Content -Path "$WorkingDirectory\PowerPlatformAPI.conf" | ConvertFrom-Json
+}
+else {
+    $config = @{
+        TenantID = $env:TENANTID
+        ApplicationID = $env:APPLICATIONID
+        ClientSecret = $env:CLIENTSECRET
+        EnvironmentID = $env:ENVIRONMENTID
+    }
+}
 
 $tokenResp = Invoke-RestMethod -Method Post `
     -Uri "https://login.microsoftonline.com/$($config.TenantID)/oauth2/v2.0/token" `
