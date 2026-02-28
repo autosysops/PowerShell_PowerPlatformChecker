@@ -37,10 +37,12 @@ Do {
     }
     $operations += ($resp.value | Select-Object -Property `
     name, `
+    @{ Name= 'operationType'; Expression = { $_.properties.operationType}}, `
     @{ Name= 'summary'; Expression = { $_.properties.summary}}, `
     @{ Name= 'description'; Expression = { $_.properties.description}}, `
     @{ Name= 'usage'; Expression = { $_.properties.usage}}, `
-    @{ Name= 'group'; Expression = { $_.properties.operationGroup.name}})
+    @{ Name= 'group'; Expression = { $_.properties.operationGroup.name}}, `
+    @{ Name= 'buildin'; Expression = { $_.properties.operationGroup.isBuiltIn}})
     $uri = $resp.nextlink
 } Until ($null -eq $resp.nextlink)
 

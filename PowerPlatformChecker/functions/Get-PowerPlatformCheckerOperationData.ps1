@@ -37,10 +37,13 @@
         [String] $Name = "*",
 
         [Parameter(Mandatory = $false, Position = 2)]
+        [String] $OperationType = "*",
+
+        [Parameter(Mandatory = $false, Position = 3)]
         [ValidateSet("Trigger","Action","TriggerInAction")]
         [String] $Usage = "*",
 
-        [Parameter(Mandatory = $false, Position = 3)]
+        [Parameter(Mandatory = $false, Position = 4)]
         [String] $Group = "*"
     )
 
@@ -50,6 +53,7 @@
     # Return the data from the script variable
     return $script:operationData | Where-Object {
         $_.name -like $Name -and
+        $_.operationType -like $OperationType -and
         $_.usage -like $Usage -and
         $_.group -like $Group
     }
