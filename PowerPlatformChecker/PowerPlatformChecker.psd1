@@ -89,7 +89,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('PowerPlatform', 'Power Automate', 'Power Apps', 'Linter', 'Checker', 'Best Practices')
+        Tags = @('PowerPlatform', 'PowerAutomate', 'PowerApps', 'Linter', 'Checker', 'BestPractices')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/autosysops/PowerShell_PowerPlatformChecker/blob/main/LICENSE'

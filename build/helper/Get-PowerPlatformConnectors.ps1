@@ -1,4 +1,4 @@
-# Get the config file
+﻿# Get the config file
 $config = Get-Content -Path "$PSScriptRoot\..\..\PowerPlatformAPI.conf" | ConvertFrom-Json
 
 $tokenResp = Invoke-RestMethod -Method Post `

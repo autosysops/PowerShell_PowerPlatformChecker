@@ -6,10 +6,37 @@
     .DESCRIPTION
         Get data for all Power Platform Connectors
 
+    .PARAMETER Name
+        The name of the connector
+
+    .PARAMETER Tier
+        The tier of the connector (Standard, Premium)
+
+    .PARAMETER ReleaseTag
+        The release tag of the connector (Production, Preview)
+
+    .PARAMETER Publisher
+        The publisher of the connector
+
     .EXAMPLE
         Get the Data
 
         PS> Get-PowerPlatformCheckerConnectorData
+
+    .EXAMPLE
+        Get the Data for Standard Connectors
+
+        PS> Get-PowerPlatformCheckerConnectorData -Tier Standard
+
+    .EXAMPLE
+        Get the Data for Connectors in Preview
+
+        PS> Get-PowerPlatformCheckerConnectorData -ReleaseTag Preview
+
+    .EXAMPLE
+        Get the Data for Connectors from Microsoft
+
+        PS> Get-PowerPlatformCheckerConnectorData -Publisher Microsoft
     #>
 
     [CmdLetBinding()]
