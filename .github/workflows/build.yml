@@ -22,3 +22,7 @@ jobs:
       shell: powershell
       env:
         APIKEY: ${{ secrets.ApiKey }}
+        TENANTID: ${{ secrets.TenantId }}
+        APPLICATIONID: ${{ secrets.ApplicationId }}
+        CLIENTSECRET: ${{ secrets.ClientSecret }}
+        ENVIRONMENTID: ${{ secrets.EnvironmentId }}
