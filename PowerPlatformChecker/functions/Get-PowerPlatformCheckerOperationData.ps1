@@ -9,6 +9,9 @@
     .PARAMETER Name
         The name of the operation
 
+    .PARAMETER OperationType
+        The type of the operation this is what is used in Power Automate flow json files
+
     .PARAMETER Usage
         The usage type of the operation (Trigger, Action, TriggerInAction)
 
@@ -21,6 +24,11 @@
         PS> Get-PowerPlatformCheckerOperationData
 
     .EXAMPLE
+        Get the Data for OperationType with "List" in the name
+
+        PS> Get-PowerPlatformCheckerOperationData -OperationType "Wait"
+
+    .EXAMPLE
         Get the Data for Trigger Operations
 
         PS> Get-PowerPlatformCheckerOperationData -Usage Trigger
@@ -29,6 +37,7 @@
         Get the Data for Operations in the "Control" group
 
         PS> Get-PowerPlatformCheckerOperationData -Group "Control"
+
     #>
 
     [CmdLetBinding()]
