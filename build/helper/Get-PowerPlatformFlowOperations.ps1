@@ -42,7 +42,7 @@ Do {
     @{ Name= 'description'; Expression = { $_.properties.description}}, `
     @{ Name= 'usage'; Expression = { $_.properties.usage}}, `
     @{ Name= 'group'; Expression = { $_.properties.operationGroup.name}}, `
-    @{ Name= 'buildin'; Expression = { $_.properties.operationGroup.isBuiltIn}})
+    @{ Name= 'builtin'; Expression = { $_.properties.operationGroup.isBuiltIn}})
     $uri = $resp.nextlink
 } Until ($null -eq $resp.nextlink)
 

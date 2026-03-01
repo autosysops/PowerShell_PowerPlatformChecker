@@ -31,6 +31,13 @@ You will receive a message about telemetry being enabled. After that you can use
 
 Check out the Get-Help for more information on how to use the function.
 
+## Features
+
+For now the feature set is limited. You can:
+
+* Test a Power Automate flow for unchanged actions, this can help you test if your flows are documented correctly
+* Get all connectors linked to a flow and check their tier to check if a premium license is needed for this flow
+
 ## Credits
 
 The module is using the [Telemetryhelper module](https://github.com/nyanhp/TelemetryHelper) to gather telemetry.

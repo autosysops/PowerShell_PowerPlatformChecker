@@ -4,7 +4,7 @@
 RootModule = 'PowerPlatformChecker.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.3'
+ModuleVersion = '0.0.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -22,7 +22,7 @@ CompanyName = 'AutoSysOps'
 Copyright = '(c) AutoSysOps (Leo Visser). All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'PowerShell module to check Power Platform solutions.'
+Description = 'PowerShell module to check Power Platform solutions. This module will use the exported json files so it can be used inside a deployment pipeline. No connection to the Power Platform is required. For now the module is limited to checking Power Automate flows to check which connectors require a premium license. And it can check the flow for actions with the default name.'
 
 # Minimum version of the PowerShell engine required by this module
 # PowerShellVersion = ''
@@ -63,7 +63,11 @@ RequiredModules   = @('TelemetryHelper')
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
     "Get-PowerPlatformCheckerConnectorData",
-    "Get-PowerPlatformCheckerOperationData"
+    "Get-PowerPlatformCheckerFlowActionDefaultName",
+    "Get-PowerPlatformCheckerFlowConnectorTier",
+    "Get-PowerPlatformCheckerOperationData",
+    "Test-PowerPlatformCheckerFlowOperationName"
+
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -90,7 +94,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('PowerPlatform', 'PowerAutomate', 'PowerApps', 'Linter', 'Checker', 'BestPractices')
+        Tags = @('Power', 'Platform', 'PowerPlatform', 'PowerAutomate', 'PowerApps', 'Automate', 'Apps', 'Solution', 'Linter', 'Checker', 'JSON', 'Export', 'BestPractices')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/autosysops/PowerShell_PowerPlatformChecker/blob/main/LICENSE'
