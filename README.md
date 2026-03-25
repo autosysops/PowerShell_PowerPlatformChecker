@@ -3,7 +3,8 @@
 ![example workflow](https://github.com/autosysops/PowerShell_PowerPlatformChecker/actions/workflows/build.yml/badge.svg)
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/PowerPlatformChecker.svg)](https://www.powershellgallery.com/packages/PowerPlatformChecker/)
 
-PowerShell module to determine the network latency between two Azure regions.
+PowerShell module to check Power Platform solutions. This module will use the exported json files so it can be used inside a deployment pipeline. No connection to the Power Platform is required.
+This module will assume solutions are unpacked using the Power Platform CLI tools (pac solution unpack).
 
 ## Installation
 
@@ -37,6 +38,8 @@ For now the feature set is limited. You can:
 
 * Test a Power Automate flow for unchanged actions, this can help you test if your flows are documented correctly
 * Get all connectors linked to a flow and check their tier to check if a premium license is needed for this flow
+* Get all action in a flow and the refernces they have
+* Get the flows, environmental variables and connection references in a solution
 
 ## Credits
 

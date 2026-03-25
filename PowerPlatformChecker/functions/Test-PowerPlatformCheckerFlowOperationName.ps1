@@ -24,11 +24,8 @@
     # Send telemetry data
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Test-PowerPlatformCheckerFlowOperationName"
 
-    # Import the flow data
-    $flowdata = Import-PowerPlatformCheckerFlow -Path $Path
-
     # Get the list of actions in the flow
-    $actionlist = Get-PowerPlatformCheckerFlowActionList -Actions $flowdata.properties.definition.actions -Recurse
+    $actionlist = Get-PowerPlatformCheckerFlowActionList -Path $Path -Recurse
 
     # Loop through the actions and get the default name of the action
     $testedactionlist = foreach ($action in $actionlist) {
