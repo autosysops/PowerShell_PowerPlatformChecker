@@ -59,6 +59,11 @@
     $actionsList = $actions | Get-Member -MemberType NoteProperty | ForEach-Object {
         if ($actions.$($_.Name).actions -and $Recurse) {
             Get-PowerPlatformCheckerFlowActionList -Actions $actions.$($_.Name).actions -Recurse -References:$References
+
+            # Check if there is an else statement and loop through those actions as well
+            if ($actions.$($_.Name).else -and $Recurse) {
+                Get-PowerPlatformCheckerFlowActionList -Actions $actions.$($_.Name).else.actions -Recurse -References:$References
+            }
         }
         else {
             $type = $actions.$($_.Name).type
