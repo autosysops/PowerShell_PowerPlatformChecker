@@ -62,7 +62,7 @@
     # Get the connection references
     $solutionConnectionReferences = @()
 
-    $customizationXml = Select-Xml -Path (Join-Path $SolutionPath "Other/customizations.xml") -XPath "*"
+    $customizationXml = Select-Xml -Path (Join-Path $SolutionPath "Other/Customizations.xml") -XPath "*"
     $customizationXml.node.connectionreferences.connectionreference | ForEach-Object {
         $solutionConnectionReferences += [PSCustomObject]@{
             ConnectorId = $_.connectorid
