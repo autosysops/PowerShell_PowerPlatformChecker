@@ -43,7 +43,7 @@
 
     # For each connector retrieve the tier
     $cdata = foreach($c in $connectors) {
-        $connectorData = Get-PowerPlatformCheckerConnectorData -Name $c
+        $connectorData = Get-PowerPlatformCheckerConnectorData -Name $flowdata.properties.connectionReferences.$c.api.name
         [PSCustomObject]@{
             Name = $c
             DisplayName = $connectorData.displayname

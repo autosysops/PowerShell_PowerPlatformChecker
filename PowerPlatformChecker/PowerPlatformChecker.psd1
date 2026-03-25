@@ -4,7 +4,7 @@
 RootModule = 'PowerPlatformChecker.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.1'
+ModuleVersion = '0.1.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -22,7 +22,7 @@ CompanyName = 'AutoSysOps'
 Copyright = '(c) AutoSysOps (Leo Visser). All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'PowerShell module to check Power Platform solutions. This module will use the exported json files so it can be used inside a deployment pipeline. No connection to the Power Platform is required. For now the module is limited to checking Power Automate flows to check which connectors require a premium license. And it can check the flow for actions with the default name.'
+Description = 'PowerShell module to check Power Platform solutions. This module will use the exported json files so it can be used inside a deployment pipeline. No connection to the Power Platform is required. For now the module is limited to checking Power Automate flows to check which connectors require a premium license. And it can check the flow for actions with the default name. It can also give you information about the solution (environment variables, connection references and flows).'
 
 # Minimum version of the PowerShell engine required by this module
 # PowerShellVersion = ''
