@@ -63,7 +63,7 @@
         else {
             $type = $actions.$($_.Name).type
             $group = "*"
-            if ($type -eq "OpenApiConnection") {
+            if ($type -eq "OpenApiConnection" -or $type -eq "OpenApiConnectionWebhook") {
                 $type = $actions.$($_.Name).inputs.host.operationId
                 $group = $actions.$($_.Name).inputs.host.apiId.split("/")[-1]
             }
