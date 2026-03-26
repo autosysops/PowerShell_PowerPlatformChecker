@@ -27,7 +27,7 @@
     #>
 
     [CmdLetBinding()]
-    [OutputType([Object[]])]
+    [OutputType([String])]
     Param (
         [Parameter(Mandatory = $true, ParameterSetName = "ByName", Position = 1)]
         [Parameter(Mandatory = $true, ParameterSetName = "ById", Position = 1)]
