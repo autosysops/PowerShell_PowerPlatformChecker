@@ -4,7 +4,7 @@
         Gets a Power Platform solution object
 
     .DESCRIPTION
-        This function retrieves a Power Platform solution object, including its workflows, environment variables, and connection references
+        This function retrieves a Power Platform solution object, including its workflows, environment variables, connection references, and entities
 
     .PARAMETER SolutionPath
         The file path to the Power Platform solution
@@ -72,6 +72,13 @@
 
     if($solutionConnectionReferences.Count -gt 0) {
         $solutionObject | Add-Member -MemberType NoteProperty -Name "ConnectionReferences" -Value $solutionConnectionReferences
+    }
+
+    # Get the entities
+    $solutionEntities = Get-PowerPlatformCheckerEntity -SolutionPath $SolutionPath
+
+    if($solutionEntities.Count -gt 0) {
+        $solutionObject | Add-Member -MemberType NoteProperty -Name "Entities" -Value $solutionEntities
     }
 
     # return the solution object
