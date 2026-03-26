@@ -15,8 +15,11 @@
     .PARAMETER Recurse
         A switch to indicate if nested actions should be included in the list
 
-    .PARAMETER References
-        A switch to indicate if action references should be included in the list
+    .PARAMETER IncludeTrigger
+        A switch to indicate if the trigger should be included in the list
+
+    .PARAMETER Properties
+        A list of additional properties to include in the output, options are References, Entities, RunAfter, and ParentAction
 
     .EXAMPLE
         Get a list of actions in a Power Platform flow
@@ -27,9 +30,29 @@
         Get a list of actions in a Power Platform flow including nested actions
 
         PS> Get-PowerPlatformCheckerFlowActionList -Actions $flowdata.definition.actions -Recurse
+
+    .EXAMPLE
+        Get a list of actions in a Power Platform flow including the references of the actions
+
+        PS> Get-PowerPlatformCheckerFlowActionList -Actions $flowdata.definition.actions -Properties References
+
+    .EXAMPLE
+        Get a list of actions in a Power Platform flow including the actions that run after each action
+
+        PS> Get-PowerPlatformCheckerFlowActionList -Actions $flowdata.definition.actions -Properties RunAfter
+
+    .EXAMPLE
+        Get a list of actions in a Power Platform flow including the parent action of each action
+
+        PS> Get-PowerPlatformCheckerFlowActionList -Actions $flowdata.definition.actions -Properties ParentAction
+
+    .EXAMPLE
+        Get a list including the triggers in a Power Platform flow
+
+        PS> Get-PowerPlatformCheckerFlowActionList -Path C:\Path\To\Flow -IncludeTrigger
     #>
 
-    [CmdLetBinding()]
+    [CmdLetBinding(defaultParameterSetName = "Path")]
     Param (
         [Parameter(Mandatory = $true, ParameterSetName = 'Path', Position = 1)]
         [String] $Path,
@@ -37,62 +60,28 @@
         [Parameter(Mandatory = $true, ParameterSetName = 'Actions', Position = 1)]
         [Object] $Actions,
 
-        [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 2)]
-        [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 2)]
-        [Switch] $Recurse,
-
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 3)]
         [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 3)]
-        [Switch] $References
+        [Switch] $Recurse,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 4)]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 4)]
+        [Switch] $IncludeTrigger,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 5)]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 5)]
+        [ValidateSet("References", "Entities", "RunAfter", "ParentAction")]
+        [String[]] $Properties
     )
 
     # Send telemetry data
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowActionList"
 
-    # Import the flow data
-    if ($Path) {
-        $flowdata = Import-PowerPlatformCheckerFlow -Path $Path
-        $actions = $flowdata.properties.definition.actions
+    # Call the internal function to get the list of actions
+    if($Path) {
+        return Get-PowerPlatformCheckerFlowActionListInternal -Path $Path -Recurse:$Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties
     }
-
-    # Loop through the actions and get the information of the actions, if there are nested actions then loop through those as well
-    $actionsList = $actions | Get-Member -MemberType NoteProperty | ForEach-Object {
-        if ($actions.$($_.Name).actions -and $Recurse) {
-            Get-PowerPlatformCheckerFlowActionList -Actions $actions.$($_.Name).actions -Recurse -References:$References
-
-            # Check if there is an else statement and loop through those actions as well
-            if ($actions.$($_.Name).else -and $Recurse) {
-                Get-PowerPlatformCheckerFlowActionList -Actions $actions.$($_.Name).else.actions -Recurse -References:$References
-            }
-        }
-        else {
-            $type = $actions.$($_.Name).type
-            $group = "*"
-            if ($type -eq "OpenApiConnection" -or $type -eq "OpenApiConnectionWebhook") {
-                $type = $actions.$($_.Name).inputs.host.operationId
-                $group = $actions.$($_.Name).inputs.host.apiId.split("/")[-1]
-            }
-
-            $actionObject = [pscustomobject]@{
-                Name  = $_.Name
-                Type  = $type
-                Group = $group
-            }
-
-            if ($References) {
-                $reference = ""
-
-                if ($type -eq "Workflow") {
-                    $reference = $actions.$($_.Name).inputs.host.workflowReferenceName
-                }
-
-                $actionObject | Add-Member -MemberType NoteProperty -Name "Reference" -Value $reference
-            }
-
-            $actionObject
-        }
+    if ($Actions) {
+        return Get-PowerPlatformCheckerFlowActionListInternal -Actions $Actions -Recurse:$Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties
     }
-
-    # Return the list of actions
-    return $actionsList
 }

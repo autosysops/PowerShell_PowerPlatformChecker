@@ -12,8 +12,11 @@
     .PARAMETER FlowName
         The name of the flow to retrieve. If not specified, all flow files will be returned
 
+    .PARAMETER FlowId
+        The id of the flow to retrieve. If not specified, all flow files will be returned
+
     .PARAMETER Type
-        The type of flow file to retrieve, either json or xml. Default is json
+        The type of flow file to retrieve, either json, xml, or all. Default is json
 
     .EXAMPLE
         Get a Power Platform solution flow file or files
@@ -29,18 +32,33 @@
         Get a specific Power Platform solution flow file in xml format
 
         PS> Get-PowerPlatformCheckerFlowFile -SolutionPath "C:\Solutions\MySolution" -FlowName "MyFlow" -Type "xml"
+
+    .EXAMPLE
+        Get a specific Power Platform solution flow file by id
+
+        PS> Get-PowerPlatformCheckerFlowFile -SolutionPath "C:\Solutions\MySolution" -FlowId "00000000-0000-0000-0000-000000000000"
+
+    .EXAMPLE
+        Get a specific Power Platform solution flow file in any format
+
+        PS> Get-PowerPlatformCheckerFlowFile -SolutionPath "C:\Solutions\MySolution" -FlowId "00000000-0000-0000-0000-000000000000" -Type "all"
     #>
 
-    [CmdLetBinding()]
+    [CmdLetBinding(defaultParameterSetName = "ByName")]
     Param (
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, ParameterSetName = "ByName", Position = 1)]
+        [Parameter(Mandatory = $true, ParameterSetName = "ById", Position = 1)]
         [String] $SolutionPath,
 
-        [Parameter(Mandatory = $false, Position = 2)]
+        [Parameter(Mandatory = $false, ParameterSetName = "ByName", Position = 2)]
         [String] $FlowName,
 
-        [Parameter(Mandatory = $false, Position = 3)]
-        [ValidateSet("json","xml")]
+        [Parameter(Mandatory = $false, ParameterSetName = "ById", Position = 2)]
+        [String] $FlowId,
+
+        [Parameter(Mandatory = $false, ParameterSetName = "ByName", Position = 3)]
+        [Parameter(Mandatory = $false, ParameterSetName = "ById", Position = 3)]
+        [ValidateSet("json", "xml", "all")]
         [String] $Type = "json"
     )
 
@@ -48,19 +66,28 @@
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowFile"
 
     # Get the childitems
-    $filter = "*.json"
-    if($Type -eq "xml") {
-        $filter = "*.json.data.xml"
-    }
-    $files = Get-ChildItem -Path (Join-Path $SolutionPath "Workflows") -Filter $filter
+    $files = Get-ChildItem -Path (Join-Path $SolutionPath "Workflows")
 
     # If the name is given filter it
-    if($FlowName) {
-        if($Type -eq "xml") {
-            $FlowName += ".json.data"
+    if ($FlowName -or $FlowId) {
+        $files = foreach ($file in ($files | Where-Object {$_.Extension -eq ".xml"}) ){
+            $flowXml = Select-Xml -Path $file.FullName -XPath "*"
+            if ($FlowName -eq $flowXml.Node.Name -or $FlowId -eq $flowXml.Node.WorkflowId.replace("{", "").replace("}", "")) {
+                $files | Where-Object { $_.BaseName -eq $file.BaseName -or $_.BaseName -eq ($file.BaseName.replace(".json.data", "")) }
+            }
         }
-        $files = $files | Where-Object { $_.BaseName -eq $FlowName }
     }
+
+    # Filter for the right extension
+    $filter = "*.json"
+    if ($Type -eq "xml") {
+        $filter = "*.json.data.xml"
+    } elseif ($Type -eq "all") {
+        $filter = "*.*"
+    }
+
+    # Filter the files for the right type
+    $files = $files | Where-Object { $_.Name -like $filter }
 
     # Return the file or files
     $files | Select-Object -ExpandProperty FullName

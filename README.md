@@ -38,9 +38,10 @@ For now the feature set is limited. You can:
 
 * Test a Power Automate flow for unchanged actions, this can help you test if your flows are documented correctly
 * Get all connectors linked to a flow and check their tier to check if a premium license is needed for this flow
-* Get all action in a flow and the refernces they have
+* Get all action in a flow including several properties and a hiearchy of the action in the flow
 * Get all parameters in a flow
 * Get the flows, environmental variables and connection references in a solution
+* Get a list of entities in the solution with their attributes
 
 ## Credits
 
