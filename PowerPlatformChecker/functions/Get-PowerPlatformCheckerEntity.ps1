@@ -57,6 +57,7 @@
 
         $returnObject += [PSCustomObject]@{
             Name = $xmlfile.Node.Name."#text"
+            EntitySetName = $xmlfile.Node.EntityInfo.entity.EntitySetName
             Attributes = $attributes
         }
     }
