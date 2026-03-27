@@ -77,6 +77,11 @@
     # Send telemetry data
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowActionList"
 
+    # Create an empty array if Properties is not set to pass that along
+    if(-not $Properties) {
+        $Properties = @()
+    }
+
     # Call the internal function to get the list of actions
     if($Path) {
         return Get-PowerPlatformCheckerFlowActionListInternal -Path $Path -Recurse:$Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties

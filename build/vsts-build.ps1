@@ -55,13 +55,13 @@ Get-ChildItem -Path "$($publishDir.FullName)\PowerPlatformChecker\internal\scrip
 }
 
 # Add Local Cache of Power Platform Connector info
-.\build\helper\Get-PowerPlatformConnectors.ps1 -WorkingDirectory $WorkingDirectory
+#.\build\helper\Get-PowerPlatformConnectors.ps1 -WorkingDirectory $WorkingDirectory
 $text += "# Local Cache of Power Platform Connector info"
 $text += "`$script:connectorData = @`'
 " + (Get-Content -Path "$WorkingDirectory\PowerPlatformConnectors.json" -Raw) + "`'@ | ConvertFrom-Json"
 
 # Add Local Cache of Power Platform Operations info
-.\build\helper\Get-PowerPlatformFlowOperations.ps1 -WorkingDirectory $WorkingDirectory
+#.\build\helper\Get-PowerPlatformFlowOperations.ps1 -WorkingDirectory $WorkingDirectory
 $text += "# Local Cache of Power Platform Operations info"
 $text += "`$script:operationData = @`'
 " + (Get-Content -Path "$WorkingDirectory\PowerPlatformOperations.json" -Raw) + "`'@ | ConvertFrom-Json"
