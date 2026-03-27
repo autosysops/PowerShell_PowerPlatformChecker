@@ -128,7 +128,7 @@
     $actionsList = @()
 
     # If the trigger is included call this recursivly to add the trigger as well
-    if ($IncludeTrigger -and $ParentAction -eq $null) {
+    if ($IncludeTrigger -and $null -eq $ParentAction) {
         $actionsList += Get-PowerPlatformCheckerFlowActionListInternal -Actions $flowdata.properties.definition.triggers -ParentAction "Trigger" -Recurse:$Recurse -Properties $Properties -IncludeTrigger -IsTrigger -Depth $Depth
     }
 
