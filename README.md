@@ -42,6 +42,8 @@ For now the feature set is limited. You can:
 * Get all parameters in a flow
 * Get the flows, environmental variables and connection references in a solution
 * Get a list of entities in the solution with their attributes
+* Get a list of all relationships (entities) in the solution
+* Get a list of all canvas apps in the solution
 
 ## Credits
 

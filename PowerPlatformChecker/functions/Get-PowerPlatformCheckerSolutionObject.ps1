@@ -75,10 +75,17 @@
     }
 
     # Get the entities
-    $solutionEntities = Get-PowerPlatformCheckerEntity -SolutionPath $SolutionPath
+    $solutionEntities = Get-PowerPlatformCheckerEntity -SolutionPath $SolutionPath -Relations
 
     if($solutionEntities.Count -gt 0) {
         $solutionObject | Add-Member -MemberType NoteProperty -Name "Entities" -Value $solutionEntities
+    }
+
+    # Get the Canvas Apps
+    $canvasApps = Get-PowerPlatformCheckerCanvasApp -SolutionPath $SolutionPath
+
+    if($canvasApps.Count -gt 0) {
+        $solutionObject | Add-Member -MemberType NoteProperty -Name "CanvasApps" -Value $canvasApps
     }
 
     # return the solution object

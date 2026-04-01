@@ -12,6 +12,9 @@
     .PARAMETER EntityName
         The name of the entity to retrieve. If not specified, information for all entities will be returned.
 
+    .PARAMETER Relations
+        If specified, the relations of the entities will also be retrieved and added to the return object.
+
     .EXAMPLE
         Get the entity information for all entities in a Power Platform solution.
 
@@ -30,7 +33,10 @@
         [String] $SolutionPath,
 
         [Parameter(Mandatory = $false, Position = 2)]
-        [String] $EntityName
+        [String] $EntityName,
+
+        [Parameter(Mandatory = $false, Position = 4)]
+        [Switch] $Relations
     )
 
     # Send telemetry data
@@ -41,6 +47,11 @@
 
     # Create a empty return object
     $returnObject = @()
+
+    # If the relation switch is on, get the relations and add them to the return object
+    if($Relations) {
+        $relationlist = Get-PowerPlatformCheckerSolutionRelation -SolutionPath $SolutionPath
+    }
 
     # Loop through all files and read the xml files. Take the name and attributes and return them in a object where the attributes are an array
     foreach ($file in $entityfiles) {
@@ -59,6 +70,12 @@
             Name = $xmlfile.Node.Name."#text"
             EntitySetName = $xmlfile.Node.EntityInfo.entity.EntitySetName
             Attributes = $attributes
+        }
+
+        # If the relation switch is on, add the relations to the return object by filtering for the name in the Source and Target of the relations
+        if($Relations) {
+            $entityRelations = $relationlist | Where-Object { $_.Source -eq $xmlfile.Node.Name."#text" -or $_.Target -eq $xmlfile.Node.Name."#text" }
+            $returnObject[-1] | Add-Member -MemberType NoteProperty -Name "Relations" -Value $entityRelations
         }
     }
 
