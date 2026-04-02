@@ -69,6 +69,7 @@
             $connectionReferences = $connectionReferencesJson.($connectionReferencesJson | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Select-Object id, xrmConnectionReferenceLogicalName, displayName
 
             $returnObject += [PSCustomObject]@{
+                Name = $xmlfile.Node.Name
                 DisplayName = $xmlfile.Node.DisplayName
                 Description = $xmlfile.Node.Description
                 Publisher = $xmlfile.Node.Publisher
