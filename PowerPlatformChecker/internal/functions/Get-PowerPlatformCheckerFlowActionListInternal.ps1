@@ -170,11 +170,19 @@
             # Triggers never have a runafter so make sure it's set to empty
             if($IsTrigger) {
                 $runAfterActions = ""
+                $runAfterStatus = $null
             }
             else {
-                $runAfterActions = $actions.$($_.Name).runAfter | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+                $runAfterStatus = $actions.$($_.Name).runAfter
+                if ($null -ne $runAfterStatus) {
+                    $runAfterActions = $runAfterStatus | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+                }
+                else {
+                    $runAfterActions = @()
+                }
             }
             $actionObject | Add-Member -MemberType NoteProperty -Name "RunAfter" -Value $runAfterActions
+            $actionObject | Add-Member -MemberType NoteProperty -Name "RunAfterStatus" -Value $runAfterStatus
         }
 
         if ($Properties -contains "ParentAction") {

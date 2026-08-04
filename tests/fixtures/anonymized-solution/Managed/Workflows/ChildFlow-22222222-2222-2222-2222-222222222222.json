@@ -1,0 +1,37 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "api": { "name": "shared_office365" },
+        "connection": { "connectionReferenceLogicalName": "ppc_sharedoffice365" },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "parameters": {
+        "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+        "$connections": { "defaultValue": {}, "type": "Object" }
+      },
+      "triggers": {
+        "Manual": {
+          "type": "Request",
+          "inputs": { "schema": {} }
+        }
+      },
+      "actions": {
+        "Notify": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {},
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "SendEmailV2",
+              "connectionName": "shared_office365"
+            }
+          },
+          "runAfter": {}
+        }
+      }
+    }
+  }
+}

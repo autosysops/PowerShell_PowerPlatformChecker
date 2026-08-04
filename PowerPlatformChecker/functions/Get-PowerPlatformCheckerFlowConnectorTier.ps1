@@ -32,8 +32,11 @@
         [String] $Connector = "*"
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowConnectorTier"
+    # Send telemetry data (tracks option usage only).
+    $telemetryProperties = @{
+        ConnectorFiltered = ($Connector -ne "*")
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowConnectorTier" -PropertiesHash $telemetryProperties
 
     # Import the flow data
     $flowdata = Import-PowerPlatformCheckerFlow -Path $Path

@@ -28,8 +28,11 @@
     )
 
     Process {
-        # Send telemetry data
-        Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowActionDefaultName"
+        # Send telemetry data (tracks grouping strategy only).
+        $telemetryProperties = @{
+            UsesWildcardGroup = ($Group -eq "*")
+        }
+        Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowActionDefaultName" -PropertiesHash $telemetryProperties
 
         # Get the operation data
         if ($Group -ne "*") {

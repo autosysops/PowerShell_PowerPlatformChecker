@@ -1,0 +1,14 @@
+<AppModuleSiteMap>
+  <SiteMapUniqueName>ppc_ModelApp</SiteMapUniqueName>
+  <SiteMap>
+    <Area Id="area_1">
+      <Group Id="group_1">
+        <SubArea Id="sub_1" Entity="ppc_order" />
+        <SubArea Id="sub_2" Entity="ppc_orderline" />
+      </Group>
+    </Area>
+  </SiteMap>
+  <LocalizedNames>
+    <LocalizedName description="Sales Model App" languagecode="1033" />
+  </LocalizedNames>
+</AppModuleSiteMap>

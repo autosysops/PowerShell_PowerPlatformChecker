@@ -24,6 +24,7 @@
     #>
 
     [CmdLetBinding()]
+    [OutputType([Object[]])]
     Param (
         [Parameter(Mandatory = $true, Position = 1)]
         [String] $SolutionPath,
@@ -37,9 +38,9 @@
 
     # Get the childitems
     if(Test-Path -Path (Join-Path $SolutionPath "CanvasApps")) {
-        $files = Get-ChildItem -Path (Join-Path $SolutionPath "CanvasApps\$CanvasAppInternalName.meta.xml")
+        $files = Get-ChildItem -Path (Join-Path $SolutionPath "CanvasApps\$CanvasAppInternalName.meta.xml") -File -ErrorAction SilentlyContinue
     }
 
     # Return the files
-    return $files | Select-Object -ExpandProperty FullName
+    return @($files | Where-Object { $_ -is [System.IO.FileSystemInfo] } | ForEach-Object { $_.FullName })
 }

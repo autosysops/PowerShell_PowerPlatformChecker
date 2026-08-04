@@ -1,0 +1,5 @@
+<Workflow WorkflowId="{22222222-2222-2222-2222-222222222222}" Name="Child Flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/ChildFlow-22222222-2222-2222-2222-222222222222.json</JsonFileName>
+  <Category>5</Category>
+  <Description>Child flow used for workflow reference testing.</Description>
+</Workflow>

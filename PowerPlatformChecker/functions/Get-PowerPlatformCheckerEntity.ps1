@@ -40,7 +40,11 @@
     )
 
     # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerEntity"
+    $telemetryProperties = @{
+        EntityFilterUsed = (-not [string]::IsNullOrWhiteSpace($EntityName))
+        IncludeRelations = $Relations.IsPresent
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerEntity" -PropertiesHash $telemetryProperties
 
     # Get the right file
     $entityfiles = Get-PowerPlatformCheckerEntityFile -SolutionPath $SolutionPath -EntityName $EntityName

@@ -74,8 +74,14 @@
         [String[]] $Properties
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowActionList"
+    # Send telemetry data (captures non-sensitive option usage).
+    $telemetryProperties = @{
+        ParameterSet = $PSCmdlet.ParameterSetName
+        Recurse = $Recurse.IsPresent
+        IncludeTrigger = $IncludeTrigger.IsPresent
+        PropertyCount = @($Properties).Count
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowActionList" -PropertiesHash $telemetryProperties
 
     # Create an empty array if Properties is not set to pass that along
     if(-not $Properties) {

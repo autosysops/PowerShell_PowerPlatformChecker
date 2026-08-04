@@ -40,8 +40,11 @@
         [String] $FlowId
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowDescription"
+    # Send telemetry data (parameter set only, no names/ids).
+    $telemetryProperties = @{
+        ParameterSet = $PSCmdlet.ParameterSetName
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowDescription" -PropertiesHash $telemetryProperties
 
     # Get the right file
     if($FlowName) {

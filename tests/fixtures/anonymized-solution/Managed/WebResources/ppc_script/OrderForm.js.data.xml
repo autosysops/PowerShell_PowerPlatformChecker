@@ -1,0 +1,8 @@
+<WebResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <WebResourceId>{aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee}</WebResourceId>
+  <Name>ppc_script/OrderForm.js</Name>
+  <DisplayName>Order Form Script</DisplayName>
+  <WebResourceType>3</WebResourceType>
+  <DependencyXml>&lt;Dependencies&gt;&lt;Dependency componentType="WebResource"&gt;&lt;Library libraryUniqueId="{ffffffff-1111-2222-3333-444444444444}" name="ppc_script/Shared.js" displayName="Shared" /&gt;&lt;/Dependency&gt;&lt;/Dependencies&gt;</DependencyXml>
+  <FileName>/WebResources/ppc_scriptOrderFormjsAAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE</FileName>
+</WebResource>

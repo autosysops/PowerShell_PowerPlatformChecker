@@ -56,8 +56,14 @@
         [String] $Group = "*"
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerOperationData"
+    # Send telemetry data (no sensitive values).
+    $telemetryProperties = @{
+        NameFiltered = ($Name -ne "*")
+        OperationTypeFiltered = ($OperationType -ne "*")
+        UsageFiltered = ($Usage -ne "*")
+        GroupFiltered = ($Group -ne "*")
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerOperationData" -PropertiesHash $telemetryProperties
 
     # Return the data from the script variable
     return $script:operationData | Where-Object {

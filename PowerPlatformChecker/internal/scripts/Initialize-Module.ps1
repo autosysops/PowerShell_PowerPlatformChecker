@@ -2,6 +2,27 @@
 # ================== TELEMETRY ======================================
 # ===================================================================
 
+# ===================================================================
+# ================== DIAGRAM STYLE DEFAULTS =========================
+# ===================================================================
+
+# Keep default Mermaid class styles in a single startup location so all
+# diagram functions and style override helpers share the same baseline.
+if (-not $script:PowerPlatformCheckerDiagramColors) {
+	$script:PowerPlatformCheckerDiagramColors = @{
+		Default = "red"
+		EnvVar = "#DF9A57"
+		Connection = "#FCD757"
+		Entity = "#B56784"
+		DefaultEntity = "#71374D"
+		Flow = "#DBE4EE"
+		CanvasApp = "#8BC34A"
+		ModelDrivenApp = "#7BAFD4"
+		WebResource = "#D7C8F3"
+		Stroke = "#5E5B52"
+	}
+}
+
 # Create env variables
 $Env:PowerPlatformChecker_TELEMETRY_OPTIN = (-not $Evn:POWERSHELL_TELEMETRY_OPTOUT) # use the invert of default powershell telemetry setting
 

@@ -3,49 +3,195 @@
 ![example workflow](https://github.com/autosysops/PowerShell_PowerPlatformChecker/actions/workflows/build.yml/badge.svg)
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/PowerPlatformChecker.svg)](https://www.powershellgallery.com/packages/PowerPlatformChecker/)
 
-PowerShell module to check Power Platform solutions. This module will use the exported json files so it can be used inside a deployment pipeline. No connection to the Power Platform is required.
-This module will assume solutions are unpacked using the Power Platform CLI tools (pac solution unpack).
+PowerPlatformChecker is a PowerShell module for analyzing unpacked Microsoft Power Platform solutions in CI/CD and local development.
+
+The module works on exported/unpacked files and does not require a live connection to Dataverse or Power Automate.
+
+## What This Module Solves
+
+Use this module when you want to:
+
+- Inspect flows, connectors, actions, and parameters from exported JSON/XML
+- Check if flow action names still match default operation names
+- Build architecture diagrams (Mermaid classDiagram) from solution assets
+- Build flowcharts (Mermaid flowchart) with runAfter and branch labels
+- Read canvas app metadata, model-driven app metadata, and JavaScript web resources
+- Summarize entities, relations, environment variables, and connection references
+
+## Prerequisites
+
+- PowerShell 7+ recommended
+- Solution unpacked with Power Platform CLI (`pac solution unpack`) or equivalent structure
+- Required dependency module: `TelemetryHelper`
 
 ## Installation
 
-You can install the module from the [PSGallery](https://www.powershellgallery.com/packages/PowerPlatformChecker) by using the following command.
+Install from PowerShell Gallery:
 
-```PowerShell
+```powershell
 Install-Module -Name PowerPlatformChecker
 ```
 
-Or if you are using PowerShell 7.4 or higher you can use
+Or with PSResourceGet:
 
-```PowerShell
+```powershell
 Install-PSResource -Name PowerPlatformChecker
 ```
 
-## Usage
+Import the module:
 
-To use the module first import it.
-
-```PowerShell
-Import-Module -Name PowerPlatformChecker
+```powershell
+Import-Module PowerPlatformChecker -Force
 ```
 
-You will receive a message about telemetry being enabled. After that you can use the command `Get-PowerPlatformChecker` to use the module.
+## Expected Solution Structure
 
-Check out the Get-Help for more information on how to use the function.
+The module expects a folder structure similar to unpacked solutions:
 
-## Features
+- `Workflows/*.json` and `Workflows/*.json.data.xml`
+- `Other/Customizations.xml`
+- `Entities/*/Entity.xml`
+- `Other/Relationships/*.xml`
+- `environmentvariabledefinitions/*/environmentvariabledefinition.xml`
+- Optional:
+  - `CanvasApps/*.meta.xml`
+  - `AppModules/*/AppModule*.xml`
+  - `AppModuleSiteMaps/*/AppModuleSiteMap*.xml`
+  - `WebResources/**/*.data.xml`
 
-For now the feature set is limited. You can:
+## Command Overview
 
-* Test a Power Automate flow for unchanged actions, this can help you test if your flows are documented correctly
-* Get all connectors linked to a flow and check their tier to check if a premium license is needed for this flow
-* Get all action in a flow including several properties and a hiearchy of the action in the flow
-* Get all parameters in a flow
-* Get the flows, environmental variables and connection references in a solution
-* Get a list of entities in the solution with their attributes
-* Get a list of all relationships (entities) in the solution
-* Get a list of all canvas apps in the solution
+### Flow Analysis
+
+- `Get-PowerPlatformCheckerFlowActionList`
+- `Get-PowerPlatformCheckerFlowActionDefaultName`
+- `Test-PowerPlatformCheckerFlowOperationName`
+- `Get-PowerPlatformCheckerFlowParameter`
+- `Get-PowerPlatformCheckerFlowDescription`
+- `Get-PowerPlatformCheckerFlowConnectorTier`
+
+### Solution Metadata
+
+- `Get-PowerPlatformCheckerSolutionObject`
+- `Get-PowerPlatformCheckerSolutionRelation`
+- `Get-PowerPlatformCheckerEntity`
+- `Get-PowerPlatformCheckerCanvasApp`
+- `Get-PowerPlatformCheckerModelDrivenApp`
+- `Get-PowerPlatformCheckerWebResource`
+
+### Diagram Generation
+
+- `Get-PowerPlatformCheckerArchitectureDiagram`
+- `Get-PowerPlatformCheckerFlowChart`
+
+### Connector and Operation Catalogs
+
+- `Get-PowerPlatformCheckerConnectorData`
+- `Get-PowerPlatformCheckerOperationData`
+
+## Usage Examples
+
+### 1) Build a solution object snapshot
+
+```powershell
+$solutionPath = "C:\Solutions\MySolution\Managed"
+$solution = Get-PowerPlatformCheckerSolutionObject -SolutionPath $solutionPath
+
+$solution.Workflows.Count
+$solution.Entities.Count
+$solution.CanvasApps.Count
+$solution.ModelDrivenApps.Count
+```
+
+### 2) Check connector tiers used in a flow
+
+```powershell
+$flowPath = "C:\Solutions\MySolution\Managed\Workflows\MyFlow.json"
+Get-PowerPlatformCheckerFlowConnectorTier -Path $flowPath
+```
+
+### 3) Validate flow action names against defaults
+
+```powershell
+Test-PowerPlatformCheckerFlowOperationName -Path "C:\Solutions\MySolution\Managed\Workflows\MyFlow.json"
+```
+
+### 4) Generate a flowchart (markdown + mermaid)
+
+```powershell
+$actions = Get-PowerPlatformCheckerFlowActionList `
+  -Path "C:\Solutions\MySolution\Managed\Workflows\MyFlow.json" `
+  -Recurse -IncludeTrigger -Properties RunAfter, ParentAction, References, Entities
+
+Get-PowerPlatformCheckerFlowChart -Actions $actions
+```
+
+### 5) Generate architecture diagram for entire solution
+
+```powershell
+Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath "C:\Solutions\MySolution\Managed"
+```
+
+### 6) Generate filtered architecture diagrams
+
+```powershell
+# Single flow
+Get-PowerPlatformCheckerArchitectureDiagram `
+  -SolutionPath "C:\Solutions\MySolution\Managed" `
+  -FlowId "00000000-0000-0000-0000-000000000000"
+
+# Single canvas app
+Get-PowerPlatformCheckerArchitectureDiagram `
+  -SolutionPath "C:\Solutions\MySolution\Managed" `
+  -CanvasAppName "contoso_canvasapp_1234"
+
+# Single model-driven app
+Get-PowerPlatformCheckerArchitectureDiagram `
+  -SolutionPath "C:\Solutions\MySolution\Managed" `
+  -ModelDrivenAppName "contoso_ModelApp"
+```
+
+## Telemetry
+
+This module uses `TelemetryHelper` for lightweight usage telemetry.
+
+Telemetry captures non-sensitive usage metadata only, for example:
+
+- Which parameter set was used
+- Whether optional filters were supplied
+- Feature usage buckets (such as action count size categories)
+
+Telemetry does **not** send flow names, entity names, file contents, or credentials.
+
+You can control telemetry using the module's telemetry opt-in environment variable shown during import.
+
+## Development, Build, and Test
+
+From repository root:
+
+```powershell
+# Run validation (includes Pester and analyzer)
+.\build\vsts-validate.ps1
+
+# Build publish folder locally without publishing
+.\build\vsts-build.ps1 -SkipPublish
+```
+
+Test outputs are written to `TestResults/`.
+
+Function tests are organized per command in `tests/functions/`.
+
+Code coverage is generated during test runs and enforced by threshold in `tests/pester.ps1`.
+
+## CI Test Reporting
+
+GitHub workflows in `.github/workflows/`:
+
+- Run validation on PR and push
+- Publish pester XML test reports (`TestResults/TEST-*.xml`)
+- Upload full `TestResults/*` artifacts
 
 ## Credits
 
-The module is using the [Telemetryhelper module](https://github.com/nyanhp/TelemetryHelper) to gather telemetry.
-The module is made using the [PSModuleDevelopment module](https://github.com/PowershellFrameworkCollective/PSModuleDevelopment) to get a template for a module.
+- Telemetry: [TelemetryHelper](https://github.com/nyanhp/TelemetryHelper)
+- Module scaffolding baseline: [PSModuleDevelopment](https://github.com/PowershellFrameworkCollective/PSModuleDevelopment)

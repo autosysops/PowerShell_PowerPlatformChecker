@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml>
+  <connectionreferences>
+    <connectionreference connectionreferencelogicalname="ppc_sharedcommondataserviceforapps">
+      <connectionreferencedisplayname>Dataverse - Test</connectionreferencedisplayname>
+      <connectorid>/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps</connectorid>
+    </connectionreference>
+    <connectionreference connectionreferencelogicalname="ppc_sharedoffice365">
+      <connectionreferencedisplayname>Office 365 Outlook - Test</connectionreferencedisplayname>
+      <connectorid>/providers/Microsoft.PowerApps/apis/shared_office365</connectorid>
+    </connectionreference>
+    <connectionreference connectionreferencelogicalname="ppc_unusedconnector">
+      <connectionreferencedisplayname>Unused Connector</connectionreferencedisplayname>
+      <connectorid>/providers/Microsoft.PowerApps/apis/shared_todo</connectorid>
+    </connectionreference>
+  </connectionreferences>
+</ImportExportXml>

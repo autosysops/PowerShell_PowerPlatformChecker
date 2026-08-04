@@ -1,0 +1,12 @@
+<EntityRelationships>
+  <EntityRelationship Name="ppc_Order_ppc_OrderLine">
+    <EntityRelationshipType>OneToMany</EntityRelationshipType>
+    <ReferencingEntityName>ppc_OrderLine</ReferencingEntityName>
+    <ReferencedEntityName>ppc_Order</ReferencedEntityName>
+  </EntityRelationship>
+  <EntityRelationship Name="ppc_Order_SystemUser">
+    <EntityRelationshipType>ManyToOne</EntityRelationshipType>
+    <ReferencingEntityName>ppc_Order</ReferencingEntityName>
+    <ReferencedEntityName>systemuser</ReferencedEntityName>
+  </EntityRelationship>
+</EntityRelationships>

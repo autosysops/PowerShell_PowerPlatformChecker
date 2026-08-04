@@ -56,8 +56,14 @@
         [String] $Publisher = "*"
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerConnectorData"
+    # Send telemetry data (no user content, only option usage).
+    $telemetryProperties = @{
+        NameFiltered = ($Name -ne "*")
+        TierFiltered = ($Tier -ne "*")
+        ReleaseTagFiltered = ($ReleaseTag -ne "*")
+        PublisherFiltered = ($Publisher -ne "*")
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerConnectorData" -PropertiesHash $telemetryProperties
 
     # Return the data from the script variable
     return $script:connectorData | Where-Object {

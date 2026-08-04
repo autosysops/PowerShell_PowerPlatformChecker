@@ -1,0 +1,12 @@
+<Entity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name LocalizedName="Order Line" OriginalName="Order Line">ppc_OrderLine</Name>
+  <EntityInfo>
+    <entity Name="ppc_OrderLine">
+      <EntitySetName>ppc_orderlines</EntitySetName>
+      <attributes>
+        <attribute><Name>ppc_quantity</Name><Type>int</Type><displaynames><displayname description="Quantity" /></displaynames><descriptions><description description="Quantity" /></descriptions></attribute>
+        <attribute><Name>statuscode</Name><Type>status</Type><displaynames><displayname description="Status" /></displaynames><descriptions><description description="Status" /></descriptions></attribute>
+      </attributes>
+    </entity>
+  </EntityInfo>
+</Entity>

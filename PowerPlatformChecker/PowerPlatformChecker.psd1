@@ -4,7 +4,7 @@
 RootModule = 'PowerPlatformChecker.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.3.1'
+ModuleVersion = '0.4.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -22,7 +22,7 @@ CompanyName = 'AutoSysOps'
 Copyright = '(c) AutoSysOps (Leo Visser). All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'PowerShell module to check Power Platform solutions. This module will use the exported json files so it can be used inside a deployment pipeline. No connection to the Power Platform is required. For now the module is limited to checking Power Automate flows to check which connectors require a premium license. And it can check the flow for actions with the default name. It can also give you information about the solution (environment variables, connection references, entities, relations, and flows). More features will be added in the future.'
+Description = 'PowerShell module to check and document Power Platform solutions. This module uses exported solution files so it can run in deployment pipelines without a live tenant connection. It can analyze flows, connectors, actions, entities, relations, canvas apps, model-driven apps, JavaScript web resources, and generate Mermaid architecture and flowchart diagrams.'
 
 # Minimum version of the PowerShell engine required by this module
 # PowerShellVersion = ''
@@ -68,11 +68,16 @@ FunctionsToExport = @(
     "Get-PowerPlatformCheckerFlowActionDefaultName",
     "Get-PowerPlatformCheckerFlowParameter",
     "Get-PowerPlatformCheckerFlowActionList",
+    "Get-PowerPlatformCheckerFlowChart",
     "Get-PowerPlatformCheckerFlowConnectorTier",
     "Get-PowerPlatformCheckerFlowDescription",
+    "Get-PowerPlatformCheckerArchitectureDiagram",
+    "Get-PowerPlatformCheckerModelDrivenApp",
     "Get-PowerPlatformCheckerOperationData",
     "Get-PowerPlatformCheckerSolutionObject",
     "Get-PowerPlatformCheckerSolutionRelation",
+    "Get-PowerPlatformCheckerWebResource",
+    "Set-PowerPlatformCheckerDiagramStyle",
     "Test-PowerPlatformCheckerFlowOperationName"
 
 )
@@ -101,7 +106,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('Power', 'Platform', 'PowerPlatform', 'PowerAutomate', 'PowerApps', 'Automate', 'Apps', 'CanvasApp', 'Entity', 'Relations', 'CloudFlow', 'ModernFlow', 'Flow', 'Solution', 'Linter', 'Checker', 'JSON', 'Export', 'BestPractices')
+        Tags = @('Power', 'Platform', 'PowerPlatform', 'PowerAutomate', 'PowerApps', 'Automate', 'Apps', 'CanvasApp', 'ModelDrivenApp', 'WebResource', 'Entity', 'Relations', 'CloudFlow', 'ModernFlow', 'Flow', 'Solution', 'Documentation', 'Mermaid', 'Linter', 'Checker', 'JSON', 'Export', 'BestPractices')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/autosysops/PowerShell_PowerPlatformChecker/blob/main/LICENSE'

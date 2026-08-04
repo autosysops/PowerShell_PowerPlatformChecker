@@ -1,0 +1,12 @@
+<Entity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name LocalizedName="Order" OriginalName="Order">ppc_Order</Name>
+  <EntityInfo>
+    <entity Name="ppc_Order">
+      <EntitySetName>ppc_orders</EntitySetName>
+      <attributes>
+        <attribute><Name>ppc_name</Name><Type>string</Type><displaynames><displayname description="Order Name" /></displaynames><descriptions><description description="Order name" /></descriptions></attribute>
+        <attribute><Name>createdon</Name><Type>datetime</Type><displaynames><displayname description="Created On" /></displaynames><descriptions><description description="Created" /></descriptions></attribute>
+      </attributes>
+    </entity>
+  </EntityInfo>
+</Entity>

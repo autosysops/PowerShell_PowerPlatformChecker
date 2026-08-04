@@ -1,0 +1,125 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": { "name": "shared_commondataserviceforapps" },
+        "connection": { "connectionReferenceLogicalName": "ppc_sharedcommondataserviceforapps" },
+        "runtimeSource": "embedded"
+      },
+      "shared_office365": {
+        "api": { "name": "shared_office365" },
+        "connection": { "connectionReferenceLogicalName": "ppc_sharedoffice365" },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "parameters": {
+        "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+        "$connections": { "defaultValue": {}, "type": "Object" },
+        "Api_Base_Url (ppc_ApiBaseUrl)": {
+          "defaultValue": "https://api.example.test",
+          "type": "String",
+          "metadata": { "schemaName": "ppc_ApiBaseUrl" }
+        }
+      },
+      "triggers": {
+        "When_a_row_is_added": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "parameters": {
+              "subscriptionRequest/entityname": "ppc_order",
+              "subscriptionRequest/message": 3
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          }
+        }
+      },
+      "actions": {
+        "Create_orderline": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "ppc_orderlines"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "CreateRecord",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {}
+        },
+        "Condition_Check_Order": {
+          "type": "If",
+          "expression": "@equals(1,1)",
+          "actions": {
+            "Send_an_email": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {},
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "SendEmailV2",
+                  "connectionName": "shared_office365"
+                }
+              },
+              "runAfter": {}
+            }
+          },
+          "else": {
+            "actions": {
+              "Update_row": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "entityName": "ppc_orders"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "UpdateOnlyRecord",
+                    "connectionName": "shared_commondataserviceforapps"
+                  }
+                },
+                "runAfter": {}
+              }
+            }
+          },
+          "runAfter": {
+            "Create_orderline": ["Succeeded", "Failed"]
+          }
+        },
+        "Call_Child_Workflow": {
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "22222222-2222-2222-2222-222222222222"
+            }
+          },
+          "runAfter": {
+            "Condition_Check_Order": ["Succeeded", "Failed", "TimedOut", "Skipped"]
+          }
+        },
+        "Parallel_A": {
+          "type": "Compose",
+          "inputs": "A",
+          "runAfter": {
+            "Create_orderline": ["Succeeded"]
+          }
+        },
+        "Parallel_B": {
+          "type": "Compose",
+          "inputs": "B",
+          "runAfter": {
+            "Create_orderline": ["Succeeded"]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

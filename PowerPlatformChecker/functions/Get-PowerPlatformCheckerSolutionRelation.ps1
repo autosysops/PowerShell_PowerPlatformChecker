@@ -23,7 +23,10 @@
     )
 
     # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerSolutionRelation"
+    $telemetryProperties = @{
+        PathProvided = [bool]$SolutionPath
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerSolutionRelation" -PropertiesHash $telemetryProperties
 
     # Create an array to return
     $returnObject = @()

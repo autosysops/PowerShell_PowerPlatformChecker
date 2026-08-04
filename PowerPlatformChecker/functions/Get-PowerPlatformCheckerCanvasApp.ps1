@@ -33,8 +33,11 @@
         [String] $CanvasAppDisplayName
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerCanvasApp"
+    # Send telemetry data (captures whether filtering was used, not actual names).
+    $telemetryProperties = @{
+        CanvasAppFilterUsed = (-not [string]::IsNullOrWhiteSpace($CanvasAppDisplayName))
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerCanvasApp" -PropertiesHash $telemetryProperties
 
     # Get the right file
     $canvasFiles = Get-PowerPlatformCheckerCanvasAppFile -SolutionPath $SolutionPath
@@ -47,6 +50,10 @@
         $xmlfile = Select-Xml -Path $file -XPath "*"
 
         if($xmlfile.Node.DisplayName -like $CanvasAppDisplayName -or $CanvasAppDisplayName -eq "") {
+
+            $fallbackName = [System.IO.Path]::GetFileNameWithoutExtension($file)
+            $appName = if ([string]::IsNullOrWhiteSpace([string]$xmlfile.Node.Name)) { $fallbackName } else { [string]$xmlfile.Node.Name }
+            $appDisplayName = if ([string]::IsNullOrWhiteSpace([string]$xmlfile.Node.DisplayName)) { $appName } else { [string]$xmlfile.Node.DisplayName }
 
             # Get all the data sources
             $dataSources = @()
@@ -66,11 +73,14 @@
 
             # Get all the connection references
             $connectionReferencesJson = $xmlfile.Node.ConnectionReferences | ConvertFrom-Json
-            $connectionReferences = $connectionReferencesJson.($connectionReferencesJson | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Select-Object id, xrmConnectionReferenceLogicalName, displayName
+            $connectionReferenceNames = $connectionReferencesJson | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+            $connectionReferences = foreach ($connectionReferenceName in $connectionReferenceNames) {
+                $connectionReferencesJson.$connectionReferenceName | Select-Object id, xrmConnectionReferenceLogicalName, displayName
+            }
 
             $returnObject += [PSCustomObject]@{
-                Name = $xmlfile.Node.Name
-                DisplayName = $xmlfile.Node.DisplayName
+                Name = $appName
+                DisplayName = $appDisplayName
                 Description = $xmlfile.Node.Description
                 Publisher = $xmlfile.Node.Publisher
                 ConnectionReferences = $connectionReferences

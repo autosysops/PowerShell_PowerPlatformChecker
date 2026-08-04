@@ -23,7 +23,10 @@
     )
 
     # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowParameter"
+    $telemetryProperties = @{
+        PathProvided = [bool]$Path
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowParameter" -PropertiesHash $telemetryProperties
 
     # Create an array to return
     $parametersList = @()

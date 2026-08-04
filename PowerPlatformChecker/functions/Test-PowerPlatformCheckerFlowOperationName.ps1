@@ -22,7 +22,10 @@
     )
 
     # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Test-PowerPlatformCheckerFlowOperationName"
+    $telemetryProperties = @{
+        PathProvided = [bool]$Path
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Test-PowerPlatformCheckerFlowOperationName" -PropertiesHash $telemetryProperties
 
     # Get the list of actions in the flow
     $actionlist = Get-PowerPlatformCheckerFlowActionList -Path $Path -Recurse

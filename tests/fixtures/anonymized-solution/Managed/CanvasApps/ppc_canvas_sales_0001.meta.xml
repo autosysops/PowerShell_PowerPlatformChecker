@@ -1,0 +1,8 @@
+<CanvasApp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ppc_canvas_sales_0001</Name>
+  <DisplayName>Sales Canvas App</DisplayName>
+  <Description>Anonymized canvas app fixture.</Description>
+  <Publisher>Fabrikam Test Publisher</Publisher>
+  <ConnectionReferences>{"refDataverse":{"id":"/providers/microsoft.powerapps/apis/shared_commondataserviceforapps","xrmConnectionReferenceLogicalName":"ppc_sharedcommondataserviceforapps","displayName":"Dataverse Test"},"refOffice365":{"id":"/providers/microsoft.powerapps/apis/shared_office365","xrmConnectionReferenceLogicalName":"ppc_sharedoffice365","displayName":"Office 365 Test"}}</ConnectionReferences>
+  <DatabaseReferences>{"default.cds":{"dataSources":{"Orders":{"entitySetName":"ppc_orders","logicalName":"ppc_order"},"OrderLines":{"entitySetName":"ppc_orderlines","logicalName":"ppc_orderline"},"SystemUsers":{"entitySetName":"systemusers","logicalName":"systemuser"}}}}</DatabaseReferences>
+</CanvasApp>

@@ -22,7 +22,10 @@
     )
 
     # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerSolutionObject"
+    $telemetryProperties = @{
+        PathProvided = [bool]$SolutionPath
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerSolutionObject" -PropertiesHash $telemetryProperties
 
     # Create the object to return
     $solutionObject = [PSCustomObject] @{}
@@ -86,6 +89,20 @@
 
     if($canvasApps.Count -gt 0) {
         $solutionObject | Add-Member -MemberType NoteProperty -Name "CanvasApps" -Value $canvasApps
+    }
+
+    # Get the model-driven apps
+    $modelDrivenApps = Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $SolutionPath
+
+    if($modelDrivenApps.Count -gt 0) {
+        $solutionObject | Add-Member -MemberType NoteProperty -Name "ModelDrivenApps" -Value $modelDrivenApps
+    }
+
+    # Get JavaScript web resources
+    $webResources = Get-PowerPlatformCheckerWebResource -SolutionPath $SolutionPath -JavaScriptOnly
+
+    if($webResources.Count -gt 0) {
+        $solutionObject | Add-Member -MemberType NoteProperty -Name "WebResources" -Value $webResources
     }
 
     # return the solution object
