@@ -21,9 +21,6 @@
         [String] $Path
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Import-PowerPlatformCheckerFlow"
-
     # Import the json file as a PowerShell object
     $flowData = Get-Content -Path $Path -Raw | ConvertFrom-Json
 

@@ -23,6 +23,11 @@
         [int] $Type
     )
 
+    $telemetryProperties = @{
+        ComponentType = $Type
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerModelDrivenAppComponentType" -PropertiesHash $telemetryProperties
+
     switch ($Type) {
         1 { return "Entities" }
         26 { return "Views" }

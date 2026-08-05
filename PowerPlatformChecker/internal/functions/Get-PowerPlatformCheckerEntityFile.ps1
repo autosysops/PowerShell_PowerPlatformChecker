@@ -33,9 +33,6 @@
         [String] $EntityName = "*"
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerEntityFile"
-
     # Get the childitems
     if(Test-Path -Path (Join-Path $SolutionPath "Entities")) {
         $files = Get-ChildItem -Path (Join-Path $SolutionPath "Entities\*\Entity.xml") | Where-Object { $_.Directory -like "$($SolutionPath)*$($EntityName)"}

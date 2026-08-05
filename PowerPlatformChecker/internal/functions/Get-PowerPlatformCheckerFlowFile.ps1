@@ -62,9 +62,6 @@
         [String] $Type = "json"
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowFile"
-
     # Get the childitems
     $files = Get-ChildItem -Path (Join-Path $SolutionPath "Workflows")
 

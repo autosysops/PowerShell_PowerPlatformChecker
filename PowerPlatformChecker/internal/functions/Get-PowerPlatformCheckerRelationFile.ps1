@@ -34,9 +34,6 @@
         [String] $RelationTarget
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerRelationFile"
-
     # Always initialize local state to avoid leaking similarly named variables from parent scopes.
     $files = @()
 

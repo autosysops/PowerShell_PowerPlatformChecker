@@ -35,6 +35,12 @@
         [hashtable] $ColorMap
     )
 
+    $telemetryProperties = @{
+        ColorKeyCount = @($ColorMap.Keys).Count
+        ColorKeys = (@($ColorMap.Keys | ForEach-Object { [string]$_ } | Sort-Object -Unique) -join ",")
+    }
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Set-PowerPlatformCheckerDiagramStyle" -PropertiesHash $telemetryProperties
+
     $validKeys = @(
         'Default',
         'EnvVar',

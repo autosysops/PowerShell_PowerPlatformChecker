@@ -22,9 +22,6 @@
         [Int] $CategoryId
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowCategory"
-
     # Return the name as defined in the workflow EntityType
     switch ($CategoryId) {
         0 { return "Workflow" }

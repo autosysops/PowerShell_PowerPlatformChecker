@@ -32,9 +32,6 @@
         [String] $EnvironmentalVariableName
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerEnvVarFile"
-
     # Get the childitems
     $filter = "*.xml"
     $files = Get-ChildItem -Path (Join-Path $SolutionPath "environmentvariabledefinitions") -Recurse -Filter $filter

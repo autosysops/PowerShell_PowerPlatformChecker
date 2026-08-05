@@ -115,9 +115,6 @@
         [int] $Depth = 0
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowActionListInternal"
-
     # Import the flow data
     if ($Path) {
         $flowdata = Import-PowerPlatformCheckerFlow -Path $Path

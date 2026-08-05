@@ -33,9 +33,6 @@
         [String] $CanvasAppInternalName = "*"
     )
 
-    # Send telemetry data
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerCanvasAppFile"
-
     # Initialize locally so missing CanvasApps folders cannot leak prior-scope values.
     $files = @()
 
