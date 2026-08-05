@@ -34,6 +34,48 @@ if (-not $WorkingDirectory)
 	else { $WorkingDirectory = $env:SYSTEM_DEFAULTWORKINGDIRECTORY }
 }
 if (-not $WorkingDirectory) { $WorkingDirectory = Split-Path $PSScriptRoot }
+
+function Test-ManifestFunctionExports {
+	param(
+		[Parameter(Mandatory = $true)]
+		[string]$ModuleRoot
+	)
+
+	$manifestPath = Join-Path $ModuleRoot 'PowerPlatformChecker.psd1'
+	$publicFunctionsPath = Join-Path $ModuleRoot 'functions'
+
+	if (-not (Test-Path $manifestPath)) {
+		throw "Module manifest not found: $manifestPath"
+	}
+
+	if (-not (Test-Path $publicFunctionsPath)) {
+		throw "Public functions folder not found: $publicFunctionsPath"
+	}
+
+	$manifest = Import-PowerShellDataFile -Path $manifestPath
+	$manifestFunctions = @($manifest.FunctionsToExport | ForEach-Object { [string]$_ })
+	$publicFunctions = @(Get-ChildItem -Path $publicFunctionsPath -File -Filter '*.ps1' | ForEach-Object { $_.BaseName })
+
+	$missingFromManifest = @($publicFunctions | Where-Object { $_ -notin $manifestFunctions })
+	$staleInManifest = @($manifestFunctions | Where-Object { $_ -notin $publicFunctions })
+
+	if ($missingFromManifest.Count -gt 0 -or $staleInManifest.Count -gt 0) {
+		$messages = @()
+		if ($missingFromManifest.Count -gt 0) {
+			$messages += "Missing in FunctionsToExport: $($missingFromManifest -join ', ')"
+		}
+		if ($staleInManifest.Count -gt 0) {
+			$messages += "Listed in FunctionsToExport but no matching file in functions/: $($staleInManifest -join ', ')"
+		}
+
+		throw "Manifest export validation failed. $($messages -join '; ')"
+	}
+
+	Write-Host "Manifest export validation passed. Public functions are exported correctly."
+}
+
+$moduleRoot = Join-Path $WorkingDirectory 'PowerPlatformChecker'
+Test-ManifestFunctionExports -ModuleRoot $moduleRoot
 #endregion Handle Working Directory Defaults
 
 # Prepare publish folder

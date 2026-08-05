@@ -9,4 +9,14 @@
     <ReferencingEntityName>ppc_Order</ReferencingEntityName>
     <ReferencedEntityName>systemuser</ReferencedEntityName>
   </EntityRelationship>
+  <EntityRelationship Name="ppc_Order_ppc_Supplier">
+    <EntityRelationshipType>OneToMany</EntityRelationshipType>
+    <ReferencingEntityName>ppc_Order</ReferencingEntityName>
+    <ReferencedEntityName>ppc_Supplier</ReferencedEntityName>
+  </EntityRelationship>
+  <EntityRelationship Name="ppc_Order_ppc_TechSpec">
+    <EntityRelationshipType>OneToMany</EntityRelationshipType>
+    <ReferencingEntityName>ppc_Order</ReferencingEntityName>
+    <ReferencedEntityName>ppc_TechSpec</ReferencedEntityName>
+  </EntityRelationship>
 </EntityRelationships>

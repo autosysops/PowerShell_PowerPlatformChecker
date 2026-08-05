@@ -23,6 +23,49 @@ if (-not $script:PowerPlatformCheckerDiagramColors) {
 	}
 }
 
+# Load static connector/operation catalogs used by documentation and tier analysis.
+if (-not $script:connectorData) {
+	$moduleRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+	$connectorCatalogCandidates = @(
+		(Join-Path $moduleRoot "PowerPlatformConnectors.json"),
+		(Join-Path (Split-Path $moduleRoot -Parent) "PowerPlatformConnectors.json")
+	)
+
+	$connectorCatalogPath = $connectorCatalogCandidates | Where-Object { Test-Path -Path $_ } | Select-Object -First 1
+	if ($connectorCatalogPath) {
+		try {
+			$script:connectorData = Get-Content -Path $connectorCatalogPath -Raw | ConvertFrom-Json
+		}
+		catch {
+			$script:connectorData = @()
+		}
+	}
+	else {
+		$script:connectorData = @()
+	}
+}
+
+if (-not $script:operationData) {
+	$moduleRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+	$operationCatalogCandidates = @(
+		(Join-Path $moduleRoot "PowerPlatformOperations.json"),
+		(Join-Path (Split-Path $moduleRoot -Parent) "PowerPlatformOperations.json")
+	)
+
+	$operationCatalogPath = $operationCatalogCandidates | Where-Object { Test-Path -Path $_ } | Select-Object -First 1
+	if ($operationCatalogPath) {
+		try {
+			$script:operationData = Get-Content -Path $operationCatalogPath -Raw | ConvertFrom-Json
+		}
+		catch {
+			$script:operationData = @()
+		}
+	}
+	else {
+		$script:operationData = @()
+	}
+}
+
 # Create env variables
 $Env:PowerPlatformChecker_TELEMETRY_OPTIN = (-not $Evn:POWERSHELL_TELEMETRY_OPTOUT) # use the invert of default powershell telemetry setting
 

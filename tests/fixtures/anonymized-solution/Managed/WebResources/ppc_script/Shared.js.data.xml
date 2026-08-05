@@ -1,0 +1,8 @@
+<WebResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <WebResourceId>{ffffffff-1111-2222-3333-444444444444}</WebResourceId>
+  <Name>ppc_script/Shared.js</Name>
+  <DisplayName>Shared Script</DisplayName>
+  <WebResourceType>3</WebResourceType>
+  <DependencyXml></DependencyXml>
+  <FileName>/WebResources/ppc_scriptSharedjsFFFFFFFF-1111-2222-3333-444444444444</FileName>
+</WebResource>

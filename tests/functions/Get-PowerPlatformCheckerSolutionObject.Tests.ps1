@@ -13,10 +13,10 @@ Describe "Get-PowerPlatformCheckerSolutionObject" {
         $solution.Workflows.Count | Should -Be 2
         $solution.EnvironmentVariables.Count | Should -Be 2
         $solution.ConnectionReferences.Count | Should -Be 3
-        $solution.Entities.Count | Should -Be 2
+        $solution.Entities.Count | Should -Be 5
         $solution.CanvasApps.Count | Should -Be 1
         $solution.ModelDrivenApps.Count | Should -Be 1
-        $solution.WebResources.Count | Should -Be 1
+        $solution.WebResources.Count | Should -Be 2
     }
 }
 

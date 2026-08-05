@@ -1,0 +1,12 @@
+<Entity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name LocalizedName="Tech Spec" OriginalName="Tech Spec">ppc_TechSpec</Name>
+  <EntityInfo>
+    <entity Name="ppc_TechSpec">
+      <EntitySetName>ppc_techspecs</EntitySetName>
+      <attributes>
+        <attribute><Name>ppc_code</Name><Type>nvarchar</Type><displaynames><displayname description="Code" /></displaynames><descriptions><description description="Code" /></descriptions></attribute>
+        <attribute><Name>ppc_description</Name><Type>nvarchar</Type><displaynames><displayname description="Description" /></displaynames><descriptions><description description="Description" /></descriptions></attribute>
+      </attributes>
+    </entity>
+  </EntityInfo>
+</Entity>

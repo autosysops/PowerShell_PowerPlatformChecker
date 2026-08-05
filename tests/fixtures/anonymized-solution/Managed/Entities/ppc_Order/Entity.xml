@@ -5,6 +5,8 @@
       <EntitySetName>ppc_orders</EntitySetName>
       <attributes>
         <attribute><Name>ppc_name</Name><Type>string</Type><displaynames><displayname description="Order Name" /></displaynames><descriptions><description description="Order name" /></descriptions></attribute>
+        <attribute><Name>ppc_supplier</Name><Type>lookup</Type><displaynames><displayname description="Supplier" /></displaynames><descriptions><description description="Supplier" /></descriptions></attribute>
+        <attribute><Name>ppc_techspec</Name><Type>lookup</Type><displaynames><displayname description="Tech Spec" /></displaynames><descriptions><description description="Tech Spec" /></descriptions></attribute>
         <attribute><Name>createdon</Name><Type>datetime</Type><displaynames><displayname description="Created On" /></displaynames><descriptions><description description="Created" /></descriptions></attribute>
       </attributes>
     </entity>

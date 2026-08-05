@@ -16,6 +16,7 @@ Use this module when you want to:
 - Build architecture diagrams (Mermaid classDiagram) from solution assets
 - Build flowcharts (Mermaid flowchart) with runAfter and branch labels
 - Read canvas app metadata, model-driven app metadata, and JavaScript web resources
+- Resolve model-driven app form libraries and their dependent JavaScript web resources
 - Summarize entities, relations, environment variables, and connection references
 
 ## Prerequisites
@@ -58,6 +59,7 @@ The module expects a folder structure similar to unpacked solutions:
   - `AppModules/*/AppModule*.xml`
   - `AppModuleSiteMaps/*/AppModuleSiteMap*.xml`
   - `WebResources/**/*.data.xml`
+  - `Entities/*/FormXml/**/*.xml`
 
 ## Command Overview
 
@@ -75,14 +77,31 @@ The module expects a folder structure similar to unpacked solutions:
 - `Get-PowerPlatformCheckerSolutionObject`
 - `Get-PowerPlatformCheckerSolutionRelation`
 - `Get-PowerPlatformCheckerEntity`
+- `Get-PowerPlatformCheckerEntityFormXmlWebResource`
 - `Get-PowerPlatformCheckerCanvasApp`
 - `Get-PowerPlatformCheckerModelDrivenApp`
+- `Get-PowerPlatformCheckerModelDrivenAppComponentType`
 - `Get-PowerPlatformCheckerWebResource`
+
+`Get-PowerPlatformCheckerModelDrivenApp` behavior:
+- `WebResources` contains direct app component links.
+- `EntityWebResources` contains entity FormXML script ownership used for `App -> Entity -> Script` chains.
+
+`Get-PowerPlatformCheckerModelDrivenAppComponentType` common values:
+- `1` = Entities
+- `29` = Business Process Flows
+- `62` = Sitemap
 
 ### Diagram Generation
 
 - `Get-PowerPlatformCheckerArchitectureDiagram`
 - `Get-PowerPlatformCheckerFlowChart`
+
+`Get-PowerPlatformCheckerArchitectureDiagram` supports:
+- Filtered views with `-FlowId`, `-CanvasAppName`, or `-ModelDrivenAppName`
+- Include-group filtering with `-IncludeElements`
+- Style overrides with `-StyleOverrides`
+- Output format selection with `-OutputFormat Mermaid|Graph`
 
 ### Connector and Operation Catalogs
 
@@ -151,6 +170,21 @@ Get-PowerPlatformCheckerArchitectureDiagram `
   -ModelDrivenAppName "contoso_ModelApp"
 ```
 
+Filtered flow, canvas app, and model-driven app diagrams are scoped to directly connected components for the selected item.
+
+### 7) Generate graph output for downstream tooling
+
+```powershell
+$graph = Get-PowerPlatformCheckerArchitectureDiagram `
+  -SolutionPath "C:\Solutions\MySolution\Managed" `
+  -OutputFormat Graph
+
+$graph.Nodes.Count
+$graph.Edges.Count
+```
+
+The Graph output includes `Metadata`, `Nodes`, `Edges`, `Styles`, and the original `Mermaid` text.
+
 ## Telemetry
 
 This module uses `TelemetryHelper` for lightweight usage telemetry.
@@ -175,7 +209,12 @@ From repository root:
 
 # Build publish folder locally without publishing
 .\build\vsts-build.ps1 -SkipPublish
+
+# Optional: skip connector/operation cache refresh for faster local iteration
+.\build\vsts-build.ps1 -SkipPublish -DontUpdateCache
 ```
+
+`vsts-build.ps1` now validates `FunctionsToExport` in the module manifest against files in `PowerPlatformChecker/functions` and fails fast on mismatches.
 
 Test outputs are written to `TestResults/`.
 

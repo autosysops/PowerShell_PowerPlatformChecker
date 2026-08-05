@@ -4,7 +4,7 @@ direction TB
 class flow11111111-1111-1111-1111-111111111111["Sample Flow"]:::Flow {
     [String]ppc_ApiBaseUrl
     When_a_row_is_added(shared_commondataserviceforapps)
-    When_a_row_is_added(ppc_order)
+    When_a_row_is_added(ppc_orders)
     Send_an_email(shared_office365)
     Update_row(shared_commondataserviceforapps)
     Update_row(ppc_orders)
@@ -24,27 +24,41 @@ class shared_office365:::Connection {
 }
 class ppc_orders["ppc_Order"]:::Entity {
     [string]ppc_name
+    [lookup]ppc_supplier
+    [lookup]ppc_techspec
 }
 class ppc_orderlines["ppc_OrderLine"]:::Entity {
     [int]ppc_quantity
 }
+class ppc_suppliers["ppc_Supplier"]:::Entity {
+    [nvarchar]ppc_suppliername
+    [nvarchar]ppc_suppliernumber
+}
+class ppc_techspecs["ppc_TechSpec"]:::Entity {
+    [nvarchar]ppc_code
+    [nvarchar]ppc_description
+}
 class systemuser:::DefaultEntity
-class ppc_ModelApp["Sales Model App"]:::ModelDrivenApp
-class ppc_script_OrderForm_js["Order Form Script"]:::WebResource
-class ppc_script_Shared_js["ppc_script/Shared.js"]:::WebResource
+class ppc_script_OrderForm_js["Order Form Script"]:::WebResource {
+  [Script]JavaScript
+  [Script]onLoad
+}
+class ppc_script_Shared_js["Shared Script"]:::WebResource {
+  [Script]JavaScript
+  [Script]setTabVisibility
+}
 ppc_ApiBaseUrl ..> flow11111111-1111-1111-1111-111111111111:ppc_ApiBaseUrl
 shared_commondataserviceforapps --> flow11111111-1111-1111-1111-111111111111:shared_commondataserviceforapps
-flow11111111-1111-1111-1111-111111111111 --> ppc_order:ppc_order
+flow11111111-1111-1111-1111-111111111111 --> ppc_orders:ppc_order
 shared_office365 --> flow11111111-1111-1111-1111-111111111111:shared_office365
 flow11111111-1111-1111-1111-111111111111 --> ppc_orders:ppc_orders
 flow11111111-1111-1111-1111-111111111111 --> ppc_orderlines:ppc_orderlines
-ppc_orderlines --> ppc_orders:ppc_OrderLine-OneToMany
 ppc_orders --> systemuser:ManyToOne
-ppc_ModelApp --> flow11111111-1111-1111-1111-111111111111:Flow
-ppc_ModelApp --> ppc_orders:Entity
-ppc_ModelApp --> ppc_orderlines:Entity
-ppc_ModelApp --> ppc_script_OrderForm_js:Script
-ppc_script_Shared_js --> ppc_script_OrderForm_js:Dependency
+ppc_orders --> ppc_suppliers:ppc_Order-OneToMany
+ppc_orders --> ppc_techspecs:ppc_Order-OneToMany
+ppc_orders --> ppc_script_OrderForm_js:Script
+ppc_orderlines --> ppc_orders:ppc_OrderLine-OneToMany
+ppc_script_OrderForm_js --> ppc_script_Shared_js:Dependency
 classDef default fill:red,stroke:#5E5B52
 classDef EnvVar fill:#DF9A57,stroke:#5E5B52
 classDef Connection fill:#FCD757,stroke:#5E5B52

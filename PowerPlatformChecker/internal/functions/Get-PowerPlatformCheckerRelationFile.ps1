@@ -25,6 +25,7 @@
     #>
 
     [CmdLetBinding()]
+    [OutputType([string[]])]
     Param (
         [Parameter(Mandatory = $true, Position = 1)]
         [String] $SolutionPath,
@@ -36,17 +37,31 @@
     # Send telemetry data
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerRelationFile"
 
+    # Always initialize local state to avoid leaking similarly named variables from parent scopes.
+    $files = @()
+
     # Get the childitems
     $filter = "*.xml"
-    if(Test-Path -Path (Join-Path $SolutionPath "Other\Relationships")) {
+    if (Test-Path -Path (Join-Path $SolutionPath "Other\Relationships")) {
         $files = Get-ChildItem -Path (Join-Path $SolutionPath "Other\Relationships") -Recurse -Filter $filter
     }
 
     # If the name is given filter it
-    if($RelationTarget) {
+    if ($RelationTarget) {
         $files = $files | Where-Object { $_.BaseName -eq $RelationTarget }
     }
 
     # Return the file or files
-    $files | Select-Object -ExpandProperty FullName
+    [string[]]$result = @(
+        foreach ($item in @($files)) {
+            if ($item -is [System.IO.FileSystemInfo]) {
+                $item.FullName
+            }
+            elseif ($item -is [string]) {
+                $item
+            }
+        }
+    )
+
+    return [string[]]$result
 }

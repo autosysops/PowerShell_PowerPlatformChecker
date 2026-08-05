@@ -57,6 +57,14 @@
         $relationlist = Get-PowerPlatformCheckerSolutionRelation -SolutionPath $SolutionPath
     }
 
+    # Parse form XML script usage once so entity output can expose direct form library links.
+    $entityFormWebResources = @{}
+    foreach ($entry in @(Get-PowerPlatformCheckerEntityFormXmlWebResource -SolutionPath $SolutionPath -EntityName ($(if ($EntityName) { $EntityName } else { "*" })))) {
+        if ($entry -and $entry.EntitySchemaName) {
+            $entityFormWebResources[[string]$entry.EntitySchemaName.ToLower()] = @($entry.WebResources)
+        }
+    }
+
     # Loop through all files and read the xml files. Take the name and attributes and return them in a object where the attributes are an array
     foreach ($file in $entityfiles) {
         $xmlfile = Select-Xml -Path $file -XPath "*"
@@ -70,10 +78,24 @@
             }
         }
 
+        $entityLogicalName = [string]$xmlfile.Node.Name."#text"
+        $entityLookupKey = $entityLogicalName.ToLower()
+        $formWebResources = if ($entityFormWebResources.ContainsKey($entityLookupKey)) { @($entityFormWebResources[$entityLookupKey]) } else { @() }
+        $iconResources = @()
+        if (-not [string]::IsNullOrWhiteSpace([string]$xmlfile.Node.EntityInfo.entity.IconVectorName)) {
+            $iconResources += [PSCustomObject]@{
+                FieldName = 'IconVectorName'
+                WebResourceName = [string]$xmlfile.Node.EntityInfo.entity.IconVectorName
+            }
+        }
+
         $returnObject += [PSCustomObject]@{
             Name = $xmlfile.Node.Name."#text"
             EntitySetName = $xmlfile.Node.EntityInfo.entity.EntitySetName
+            IconVectorName = $xmlfile.Node.EntityInfo.entity.IconVectorName
+            IconResources = $iconResources
             Attributes = $attributes
+            FormWebResources = $formWebResources
         }
 
         # If the relation switch is on, add the relations to the return object by filtering for the name in the Source and Target of the relations

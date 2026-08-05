@@ -1,0 +1,12 @@
+<Entity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name LocalizedName="Supplier" OriginalName="Supplier">ppc_Supplier</Name>
+  <EntityInfo>
+    <entity Name="ppc_Supplier">
+      <EntitySetName>ppc_suppliers</EntitySetName>
+      <attributes>
+        <attribute><Name>ppc_suppliername</Name><Type>nvarchar</Type><displaynames><displayname description="Supplier Name" /></displaynames><descriptions><description description="Supplier Name" /></descriptions></attribute>
+        <attribute><Name>ppc_suppliernumber</Name><Type>nvarchar</Type><displaynames><displayname description="Supplier Number" /></displaynames><descriptions><description description="Supplier Number" /></descriptions></attribute>
+      </attributes>
+    </entity>
+  </EntityInfo>
+</Entity>

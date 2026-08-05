@@ -51,5 +51,23 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
         (Normalize-PowerPlatformCheckerSnapshotText -Text $markdown) |
             Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $script:expectedEmptyRl)
     }
+
+    It "does not emit dangling edge endpoints" {
+        $markdown = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions
+        $lines = @($markdown -split [Environment]::NewLine)
+
+        $nodeIds = @($lines |
+            Where-Object { $_ -match '^(action\d+)(\(|\[|\{)' } |
+            ForEach-Object { $matches[1] } |
+            Select-Object -Unique)
+
+        $edgeLines = @($lines | Where-Object { $_ -match '-->' })
+        foreach ($edgeLine in $edgeLines) {
+            $edgeNodeIds = @([regex]::Matches($edgeLine, 'action\d+') | ForEach-Object { $_.Value } | Select-Object -Unique)
+            foreach ($edgeNodeId in $edgeNodeIds) {
+                $edgeNodeId | Should -BeIn $nodeIds
+            }
+        }
+    }
 }
 

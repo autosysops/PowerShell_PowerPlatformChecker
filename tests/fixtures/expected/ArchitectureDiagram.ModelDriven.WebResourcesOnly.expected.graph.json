@@ -1,0 +1,52 @@
+﻿{
+  "Metadata": {
+    "Direction": "LR",
+    "IncludeElements": [
+      "ModelDrivenApps",
+      "WebResources"
+    ],
+    "IsScopedDiagram": true,
+    "SourceFilterType": "ModelDrivenApp",
+    "SourceFilterValue": "ppc_ModelApp",
+    "OutputFormat": "Graph"
+  },
+  "Nodes": [
+    {
+      "Id": "ppc_ModelApp",
+      "Type": "ModelDrivenApp",
+      "DisplayName": "Sales Model App",
+      "ClassKind": "ModelDrivenApp"
+    },
+    {
+      "Id": "ppc_script_OrderForm_js",
+      "Type": "WebResource",
+      "DisplayName": "Order Form Script",
+      "ClassKind": "WebResource"
+    },
+    {
+      "Id": "ppc_script_Shared_js",
+      "Type": "WebResource",
+      "DisplayName": "Shared Script",
+      "ClassKind": "WebResource"
+    }
+  ],
+  "Edges": [
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "ppc_script_OrderForm_js",
+      "Label": "Script",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_script_OrderForm_js",
+      "TargetId": "ppc_script_Shared_js",
+      "Label": "Dependency",
+      "EdgeType": "Link"
+    }
+  ],
+  "Styles": {
+    "default": "fill:red,stroke:#5E5B52",
+    "ModelDrivenApp": "fill:#7BAFD4,stroke:#5E5B52",
+    "WebResource": "fill:#D7C8F3,stroke:#5E5B52"
+  }
+}

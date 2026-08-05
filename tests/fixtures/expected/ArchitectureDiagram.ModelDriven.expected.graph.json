@@ -1,0 +1,220 @@
+﻿{
+  "Metadata": {
+    "Direction": "LR",
+    "IncludeElements": [
+      "CanvasApps",
+      "Connections",
+      "DefaultEntities",
+      "Entities",
+      "EnvironmentVariables",
+      "Flows",
+      "ModelDrivenApps",
+      "WebResources"
+    ],
+    "IsScopedDiagram": true,
+    "SourceFilterType": "ModelDrivenApp",
+    "SourceFilterValue": "ppc_ModelApp",
+    "OutputFormat": "Graph"
+  },
+  "Nodes": [
+    {
+      "Id": "flow11111111-1111-1111-1111-111111111111",
+      "Type": "Flow",
+      "DisplayName": "Sample Flow",
+      "ClassKind": "Flow"
+    },
+    {
+      "Id": "ppc_ApiBaseUrl",
+      "Type": "EnvVar",
+      "DisplayName": "ppc_ApiBaseUrl",
+      "ClassKind": "EnvVar"
+    },
+    {
+      "Id": "ppc_ModelApp",
+      "Type": "ModelDrivenApp",
+      "DisplayName": "Sales Model App",
+      "ClassKind": "ModelDrivenApp"
+    },
+    {
+      "Id": "ppc_orderlines",
+      "Type": "Entity",
+      "DisplayName": "ppc_OrderLine",
+      "ClassKind": "Entity"
+    },
+    {
+      "Id": "ppc_orders",
+      "Type": "Entity",
+      "DisplayName": "ppc_Order",
+      "ClassKind": "Entity"
+    },
+    {
+      "Id": "ppc_productpricespecifications",
+      "Type": "Entity",
+      "DisplayName": "ppc_ProductPriceSpecification",
+      "ClassKind": "Entity"
+    },
+    {
+      "Id": "ppc_script_OrderForm_js",
+      "Type": "WebResource",
+      "DisplayName": "Order Form Script",
+      "ClassKind": "WebResource"
+    },
+    {
+      "Id": "ppc_script_Shared_js",
+      "Type": "WebResource",
+      "DisplayName": "Shared Script",
+      "ClassKind": "WebResource"
+    },
+    {
+      "Id": "ppc_suppliers",
+      "Type": "Entity",
+      "DisplayName": "ppc_Supplier",
+      "ClassKind": "Entity"
+    },
+    {
+      "Id": "ppc_techspecs",
+      "Type": "Entity",
+      "DisplayName": "ppc_TechSpec",
+      "ClassKind": "Entity"
+    },
+    {
+      "Id": "shared_commondataserviceforapps",
+      "Type": "Connection",
+      "DisplayName": "shared_commondataserviceforapps",
+      "ClassKind": "Connection"
+    },
+    {
+      "Id": "shared_office365",
+      "Type": "Connection",
+      "DisplayName": "shared_office365",
+      "ClassKind": "Connection"
+    },
+    {
+      "Id": "systemuser",
+      "Type": "DefaultEntity",
+      "DisplayName": "systemuser",
+      "ClassKind": "DefaultEntity"
+    }
+  ],
+  "Edges": [
+    {
+      "SourceId": "flow11111111-1111-1111-1111-111111111111",
+      "TargetId": "flow22222222-2222-2222-2222-222222222222",
+      "Label": "Call_Child_Workflow",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "flow11111111-1111-1111-1111-111111111111",
+      "TargetId": "ppc_orderlines",
+      "Label": "ppc_orderlines",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "flow11111111-1111-1111-1111-111111111111",
+      "TargetId": "ppc_orders",
+      "Label": "ppc_order",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "flow11111111-1111-1111-1111-111111111111",
+      "TargetId": "ppc_orders",
+      "Label": "ppc_orders",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_ApiBaseUrl",
+      "TargetId": "flow11111111-1111-1111-1111-111111111111",
+      "Label": "ppc_ApiBaseUrl",
+      "EdgeType": "Reference"
+    },
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "flow11111111-1111-1111-1111-111111111111",
+      "Label": "Flow",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "ppc_orderlines",
+      "Label": "Entity",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "ppc_orders",
+      "Label": "Entity",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "ppc_productpricespecifications",
+      "Label": "Entity",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "ppc_suppliers",
+      "Label": "Entity",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_orderlines",
+      "TargetId": "ppc_orders",
+      "Label": "ppc_OrderLine-OneToMany",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_orders",
+      "TargetId": "ppc_script_OrderForm_js",
+      "Label": "Script",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_orders",
+      "TargetId": "ppc_suppliers",
+      "Label": "ppc_Order-OneToMany",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_orders",
+      "TargetId": "ppc_techspecs",
+      "Label": "ppc_Order-OneToMany",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_orders",
+      "TargetId": "systemuser",
+      "Label": "ManyToOne",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_script_OrderForm_js",
+      "TargetId": "ppc_script_Shared_js",
+      "Label": "Dependency",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "shared_commondataserviceforapps",
+      "TargetId": "flow11111111-1111-1111-1111-111111111111",
+      "Label": "shared_commondataserviceforapps",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "shared_office365",
+      "TargetId": "flow11111111-1111-1111-1111-111111111111",
+      "Label": "shared_office365",
+      "EdgeType": "Link"
+    }
+  ],
+  "Styles": {
+    "CanvasApp": "fill:#8BC34A,stroke:#5E5B52",
+    "Connection": "fill:#FCD757,stroke:#5E5B52",
+    "default": "fill:red,stroke:#5E5B52",
+    "DefaultEntity": "fill:#71374D,stroke:#5E5B52",
+    "Entity": "fill:#B56784,stroke:#5E5B52",
+    "EnvVar": "fill:#DF9A57,stroke:#5E5B52",
+    "Flow": "fill:#DBE4EE,stroke:#5E5B52",
+    "ModelDrivenApp": "fill:#7BAFD4,stroke:#5E5B52",
+    "WebResource": "fill:#D7C8F3,stroke:#5E5B52"
+  }
+}

@@ -1,0 +1,116 @@
+﻿{
+  "Metadata": {
+    "Direction": "LR",
+    "IncludeElements": [
+      "CanvasApps",
+      "Connections",
+      "Flows",
+      "WebResources"
+    ],
+    "IsScopedDiagram": false,
+    "SourceFilterType": "None",
+    "SourceFilterValue": "",
+    "OutputFormat": "Graph"
+  },
+  "Nodes": [
+    {
+      "Id": "flow11111111-1111-1111-1111-111111111111",
+      "Type": "Flow",
+      "DisplayName": "Sample Flow",
+      "ClassKind": "Flow"
+    },
+    {
+      "Id": "flow22222222-2222-2222-2222-222222222222",
+      "Type": "Flow",
+      "DisplayName": "Child Flow",
+      "ClassKind": "Flow"
+    },
+    {
+      "Id": "ppc_canvas_sales_0001",
+      "Type": "CanvasApp",
+      "DisplayName": "Sales Canvas App",
+      "ClassKind": "CanvasApp"
+    },
+    {
+      "Id": "ppc_script_OrderForm_js",
+      "Type": "WebResource",
+      "DisplayName": "Order Form Script",
+      "ClassKind": "WebResource"
+    },
+    {
+      "Id": "ppc_script_Shared_js",
+      "Type": "WebResource",
+      "DisplayName": "Shared Script",
+      "ClassKind": "WebResource"
+    },
+    {
+      "Id": "shared_commondataserviceforapps",
+      "Type": "Connection",
+      "DisplayName": "shared_commondataserviceforapps",
+      "ClassKind": "Connection"
+    },
+    {
+      "Id": "shared_office365",
+      "Type": "Connection",
+      "DisplayName": "shared_office365",
+      "ClassKind": "Connection"
+    },
+    {
+      "Id": "shared_todo",
+      "Type": "Connection",
+      "DisplayName": "shared_todo",
+      "ClassKind": "Connection"
+    }
+  ],
+  "Edges": [
+    {
+      "SourceId": "flow11111111-1111-1111-1111-111111111111",
+      "TargetId": "flow22222222-2222-2222-2222-222222222222",
+      "Label": "Call_Child_Workflow",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_script_OrderForm_js",
+      "TargetId": "ppc_script_Shared_js",
+      "Label": "Dependency",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "shared_commondataserviceforapps",
+      "TargetId": "flow11111111-1111-1111-1111-111111111111",
+      "Label": "shared_commondataserviceforapps",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "shared_commondataserviceforapps",
+      "TargetId": "ppc_canvas_sales_0001",
+      "Label": "shared_commondataserviceforapps",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "shared_office365",
+      "TargetId": "flow11111111-1111-1111-1111-111111111111",
+      "Label": "shared_office365",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "shared_office365",
+      "TargetId": "flow22222222-2222-2222-2222-222222222222",
+      "Label": "shared_office365",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "shared_office365",
+      "TargetId": "ppc_canvas_sales_0001",
+      "Label": "shared_office365",
+      "EdgeType": "Link"
+    }
+  ],
+  "Styles": {
+    "CanvasApp": "fill:#8BC34A,stroke:#5E5B52",
+    "Connection": "fill:#FCD757,stroke:#5E5B52",
+    "default": "fill:red,stroke:#5E5B52",
+    "Flow": "fill:#DBE4EE,stroke:#5E5B52",
+    "WebResource": "fill:#D7C8F3,stroke:#5E5B52"
+  }
+}

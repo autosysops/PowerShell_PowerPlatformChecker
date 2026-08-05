@@ -46,11 +46,24 @@
 
     # For each connector retrieve the tier
     $cdata = foreach($c in $connectors) {
-        $connectorData = Get-PowerPlatformCheckerConnectorData -Name $flowdata.properties.connectionReferences.$c.api.name
+        $connectorApiName = [string]$flowdata.properties.connectionReferences.$c.api.name
+        $connectorData = Get-PowerPlatformCheckerConnectorData -Name $connectorApiName
+
+        # Some exports may expose aliases; fall back to stripped shared_ prefix and then connector key name.
+        if (-not $connectorData -and $connectorApiName -like "shared_*") {
+            $connectorData = Get-PowerPlatformCheckerConnectorData -Name ($connectorApiName -replace '^shared_', '')
+        }
+        if (-not $connectorData) {
+            $connectorData = Get-PowerPlatformCheckerConnectorData -Name $c
+        }
+
+        $connectorDisplayName = if ($connectorData) { $connectorData.displayname } else { $null }
+        $connectorTier = if ($connectorData) { $connectorData.tier } else { $null }
+
         [PSCustomObject]@{
             Name = $c
-            DisplayName = $connectorData.displayname
-            Tier = $connectorData.tier
+            DisplayName = $connectorDisplayName
+            Tier = $connectorTier
         }
     }
 

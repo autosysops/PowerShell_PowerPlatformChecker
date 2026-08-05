@@ -1,0 +1,12 @@
+<Entity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name LocalizedName="Product Price Specification" OriginalName="Product Price Specification">ppc_ProductPriceSpecification</Name>
+  <EntityInfo>
+    <entity Name="ppc_ProductPriceSpecification">
+      <EntitySetName>ppc_productpricespecifications</EntitySetName>
+      <attributes>
+        <attribute><Name>ppc_name</Name><Type>nvarchar</Type><displaynames><displayname description="Name" /></displaynames><descriptions><description description="Name" /></descriptions></attribute>
+        <attribute><Name>ppc_price</Name><Type>decimal</Type><displaynames><displayname description="Price" /></displaynames><descriptions><description description="Price" /></descriptions></attribute>
+      </attributes>
+    </entity>
+  </EntityInfo>
+</Entity>

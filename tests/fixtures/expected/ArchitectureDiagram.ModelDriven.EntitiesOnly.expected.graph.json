@@ -1,0 +1,100 @@
+﻿{
+  "Metadata": {
+    "Direction": "LR",
+    "IncludeElements": [
+      "Entities",
+      "ModelDrivenApps"
+    ],
+    "IsScopedDiagram": true,
+    "SourceFilterType": "ModelDrivenApp",
+    "SourceFilterValue": "ppc_ModelApp",
+    "OutputFormat": "Graph"
+  },
+  "Nodes": [
+    {
+      "Id": "ppc_ModelApp",
+      "Type": "ModelDrivenApp",
+      "DisplayName": "Sales Model App",
+      "ClassKind": "ModelDrivenApp"
+    },
+    {
+      "Id": "ppc_orderlines",
+      "Type": "Entity",
+      "DisplayName": "ppc_OrderLine",
+      "ClassKind": "Entity"
+    },
+    {
+      "Id": "ppc_orders",
+      "Type": "Entity",
+      "DisplayName": "ppc_Order",
+      "ClassKind": "Entity"
+    },
+    {
+      "Id": "ppc_productpricespecifications",
+      "Type": "Entity",
+      "DisplayName": "ppc_ProductPriceSpecification",
+      "ClassKind": "Entity"
+    },
+    {
+      "Id": "ppc_suppliers",
+      "Type": "Entity",
+      "DisplayName": "ppc_Supplier",
+      "ClassKind": "Entity"
+    },
+    {
+      "Id": "ppc_techspecs",
+      "Type": "Entity",
+      "DisplayName": "ppc_TechSpec",
+      "ClassKind": "Entity"
+    }
+  ],
+  "Edges": [
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "ppc_orderlines",
+      "Label": "Entity",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "ppc_orders",
+      "Label": "Entity",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "ppc_productpricespecifications",
+      "Label": "Entity",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_ModelApp",
+      "TargetId": "ppc_suppliers",
+      "Label": "Entity",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_orderlines",
+      "TargetId": "ppc_orders",
+      "Label": "ppc_OrderLine-OneToMany",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_orders",
+      "TargetId": "ppc_suppliers",
+      "Label": "ppc_Order-OneToMany",
+      "EdgeType": "Link"
+    },
+    {
+      "SourceId": "ppc_orders",
+      "TargetId": "ppc_techspecs",
+      "Label": "ppc_Order-OneToMany",
+      "EdgeType": "Link"
+    }
+  ],
+  "Styles": {
+    "default": "fill:red,stroke:#5E5B52",
+    "Entity": "fill:#B56784,stroke:#5E5B52",
+    "ModelDrivenApp": "fill:#7BAFD4,stroke:#5E5B52"
+  }
+}

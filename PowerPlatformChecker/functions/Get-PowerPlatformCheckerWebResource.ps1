@@ -51,18 +51,20 @@
         return @()
     }
 
-    # Metadata files contain web resource descriptors including dependency xml.
+    # Metadata files contain web resource descriptors including encoded DependencyXml.
     $metadataFiles = Get-ChildItem -Path $webResourcePath -Recurse -File -Filter "*.data.xml"
 
     $results = foreach ($metadataFile in $metadataFiles) {
         $xml = Select-Xml -Path $metadataFile.FullName -XPath "*"
         if (-not $xml.Node.Name) { continue }
 
-        # WebResourceType=3 identifies JavaScript resources used in form/ribbon logic.
-        $resourceType = "Other"
-        if ($xml.Node.WebResourceType -eq "3") {
-            $resourceType = "JavaScript"
-        }
+        # Normalize the documented Dataverse web resource type codes in one helper so the
+        # getter and diagram code both work from the same type vocabulary.
+        $typeCode = 0
+        [void][int]::TryParse([string]$xml.Node.WebResourceType, [ref]$typeCode)
+        $resourceTypeInfo = Get-PowerPlatformCheckerWebResourceType -Type $typeCode
+        $resourceType = [string]$resourceTypeInfo.Name
+        $resourceKind = [string]$resourceTypeInfo.Kind
 
         if ($JavaScriptOnly -and $resourceType -ne "JavaScript") {
             continue
@@ -72,12 +74,21 @@
             continue
         }
 
+        $sourcePath = Join-Path $metadataFile.DirectoryName ($metadataFile.BaseName -replace '\.data$','')
+        if ($resourceType -eq "JavaScript") {
+            $methodNames = @(Get-PowerPlatformCheckerWebResourceJavaScriptMethod -SourcePath $sourcePath)
+        }
+        else {
+            $methodNames = @()
+        }
+
         # DependencyXml is HTML-encoded inside metadata; decode then parse inner XML structure.
         $dependencies = @()
         if ($xml.Node.DependencyXml) {
             try {
                 $dependencyXmlText = [System.Net.WebUtility]::HtmlDecode([string] $xml.Node.DependencyXml)
                 [xml] $dependencyXml = $dependencyXmlText
+                # Library nodes contain the canonical script names used for dependency links.
                 $dependencies = @($dependencyXml.Dependencies.Dependency.Library | ForEach-Object { $_.name } | Where-Object { $_ })
             }
             catch {
@@ -90,8 +101,12 @@
             Name = [string] $xml.Node.Name
             DisplayName = [string] $xml.Node.DisplayName
             Type = $resourceType
+            Kind = $resourceKind
+            TypeCode = $typeCode
             FileName = [string] $xml.Node.FileName
             Dependencies = $dependencies
+            Methods = $methodNames
+            SourcePath = $sourcePath
             MermaidId = Convert-PowerPlatformCheckerMermaidId -InputString ([string] $xml.Node.Name)
         }
     }

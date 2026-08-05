@@ -6,6 +6,8 @@
     .DESCRIPTION
         Produces markdown containing a Mermaid classDiagram based on flows, environment variables,
         connection references, entities, canvas apps, model-driven apps, and JavaScript web resources.
+        When a flow, canvas app, or model-driven app filter is used, the diagram is scoped to the
+        directly connected components for that selected item.
 
     .PARAMETER SolutionPath
         The root path of the unpacked solution.
@@ -24,6 +26,9 @@
 
     .PARAMETER IncludeElements
         Which diagram element groups to include. Defaults to all groups.
+
+    .PARAMETER OutputFormat
+        Output format to return: Mermaid markdown text (default) or parsed Graph object.
 
     .PARAMETER StyleOverrides
         Optional hashtable to override default color values for class definitions.
@@ -82,6 +87,10 @@
         [string[]] $IncludeElements = @("Flows", "CanvasApps", "ModelDrivenApps", "EnvironmentVariables", "Connections", "Entities", "DefaultEntities", "WebResources"),
 
         [Parameter(Mandatory = $false)]
+        [ValidateSet("Mermaid", "Graph")]
+        [string] $OutputFormat = "Mermaid",
+
+        [Parameter(Mandatory = $false)]
         [hashtable] $StyleOverrides
     )
 
@@ -91,6 +100,7 @@
         HasCanvasFilter = $PSBoundParameters.ContainsKey("CanvasAppName")
         HasModelDrivenFilter = $PSBoundParameters.ContainsKey("ModelDrivenAppName")
         Direction = $Direction
+        OutputFormat = $OutputFormat
         IncludeElements = (($IncludeElements | Sort-Object -Unique) -join ",")
         HasStyleOverrides = $PSBoundParameters.ContainsKey("StyleOverrides")
     }
@@ -102,15 +112,20 @@
     $diagram += "classDiagram$newline"
     $diagram += "direction $Direction$newline"
 
+    $includePolicy = Get-PowerPlatformCheckerDiagramIncludePolicy `
+        -IncludeElements $IncludeElements `
+        -HasFlowFilter:$($PSBoundParameters.ContainsKey("FlowId")) `
+        -HasCanvasFilter:$($PSBoundParameters.ContainsKey("CanvasAppName")) `
+        -HasModelDrivenFilter:$($PSBoundParameters.ContainsKey("ModelDrivenAppName"))
+
     # Resolve include flags once so downstream blocks can stay readable.
-    $includeFlows = "Flows" -in $IncludeElements
-    $includeCanvasApps = "CanvasApps" -in $IncludeElements
-    $includeModelDrivenApps = "ModelDrivenApps" -in $IncludeElements
-    $includeEnvVars = "EnvironmentVariables" -in $IncludeElements
-    $includeConnections = "Connections" -in $IncludeElements
-    $includeEntities = "Entities" -in $IncludeElements
-    $includeDefaultEntities = "DefaultEntities" -in $IncludeElements
-    $includeWebResources = "WebResources" -in $IncludeElements
+    $includeFlows = $includePolicy.IncludeFlows
+    $includeModelDrivenApps = $includePolicy.IncludeModelDrivenApps
+    $includeEnvVars = $includePolicy.IncludeEnvironmentVariables
+    $includeConnections = $includePolicy.IncludeConnections
+    $includeEntities = $includePolicy.IncludeEntities
+    $includeDefaultEntities = $includePolicy.IncludeDefaultEntities
+    $includeWebResources = $includePolicy.IncludeWebResources
 
     # Start from module defaults and apply per-call style overrides if provided.
     $style = @{}
@@ -126,117 +141,135 @@
     }
 
     $solutionObject = Get-PowerPlatformCheckerSolutionObject -SolutionPath $SolutionPath
-    $modelApps = if ($includeModelDrivenApps) { Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $SolutionPath } else { @() }
-    if ($PSBoundParameters.ContainsKey("ModelDrivenAppName")) {
-        $modelApps = @($modelApps | Where-Object { $_.UniqueName -eq $ModelDrivenAppName })
+    $isScopedDiagram = $includePolicy.IsScopedDiagram
+
+    # Resolve logical/entity names to the canonical entity set id so links remain stable across
+    # casing/singular/plural variants. Downstream diagram code should only need to work with one id.
+    $entitySetByReference = @{}
+    $entityByLogicalName = @{}
+    $entityBySetName = @{}
+    $renderedEntityNodeIds = @()
+    foreach ($entity in @($solutionObject.Entities)) {
+        if (-not $entity -or [string]::IsNullOrWhiteSpace([string]$entity.EntitySetName)) {
+            continue
+        }
+
+        $entitySetName = [string]$entity.EntitySetName.Trim().ToLower()
+        $entitySetByReference[$entitySetName] = $entitySetName
+        $entityBySetName[$entitySetName] = $entity
+
+        if (-not [string]::IsNullOrWhiteSpace([string]$entity.Name)) {
+            $entityLogicalName = [string]$entity.Name.ToLower()
+            $entitySetByReference[$entityLogicalName] = $entitySetName
+            $entityByLogicalName[$entityLogicalName] = $entity
+        }
     }
+    $modelApps = Get-PowerPlatformCheckerDiagramModelDrivenApps `
+        -SolutionPath $SolutionPath `
+        -IncludePolicy $includePolicy `
+        -HasFlowFilter:$($PSBoundParameters.ContainsKey("FlowId")) `
+        -HasCanvasFilter:$($PSBoundParameters.ContainsKey("CanvasAppName")) `
+        -ModelDrivenAppName $ModelDrivenAppName
 
     # If model-driven app filtering is used, only include flows referenced by selected apps.
+    # The app metadata already identifies those flow ids, so this becomes the authoritative filter.
     $modelDrivenFlowFilter = @($modelApps | ForEach-Object { $_.FlowIds } | Sort-Object -Unique)
-    $webResources = if ($includeWebResources) { Get-PowerPlatformCheckerWebResource -SolutionPath $SolutionPath -JavaScriptOnly } else { @() }
+    $preConnectedEntities = @()
+    if ($PSBoundParameters.ContainsKey("ModelDrivenAppName") -and $includeEntities) {
+        foreach ($modelApp in @($modelApps)) {
+            foreach ($entityName in @($modelApp.Entities)) {
+                $resolvedEntitySet = Get-PowerPlatformCheckerArchitectureDiagramEntitySetName -EntityReference ([string]$entityName) -EntitySetByReference $entitySetByReference
+                if ($resolvedEntitySet) {
+                    $preConnectedEntities += $resolvedEntitySet
+                }
+            }
+        }
+    }
+    $webResourceData = Get-PowerPlatformCheckerDiagramWebResources `
+        -SolutionPath $SolutionPath `
+        -SolutionObject $solutionObject `
+        -IncludePolicy $includePolicy `
+        -HasModelDrivenFilter:$($PSBoundParameters.ContainsKey("ModelDrivenAppName")) `
+        -ModelApps $modelApps
+
+    $webResources = @($webResourceData.WebResources)
+    $iconResources = @($webResourceData.IconResources)
 
     $links = @()
     $connectedEnvVars = @()
     $connectedConnections = @()
-    $connectedEntities = @()
+    $connectedEntities = @($preConnectedEntities)
     $connectedDefaultEntities = @()
+    $connectedIconResources = @()
 
     # Keep system fields in one helper so filtering rules are reusable and easy to maintain.
     $defaultFields = Get-PowerPlatformCheckerDefaultEntityFieldName
     $entitySetNames = @($solutionObject.Entities | Where-Object { $_ -and $_.EntitySetName } | ForEach-Object { $_.EntitySetName.ToLower() })
 
+    $flowsToRender = Get-PowerPlatformCheckerDiagramFlows `
+        -SolutionObject $solutionObject `
+        -IncludePolicy $includePolicy `
+        -HasCanvasFilter:$($PSBoundParameters.ContainsKey("CanvasAppName")) `
+        -HasFlowFilter:$($PSBoundParameters.ContainsKey("FlowId")) `
+        -HasModelDrivenFilter:$($PSBoundParameters.ContainsKey("ModelDrivenAppName")) `
+        -FlowId $FlowId `
+        -ModelDrivenFlowFilter $modelDrivenFlowFilter
+
     # Flow nodes are only rendered when flow inclusion is enabled and canvas-only filtering is not active.
-    if ($includeFlows -and -not $PSBoundParameters.ContainsKey("CanvasAppName")) {
-        foreach ($flow in @($solutionObject.Workflows)) {
-            if ($PSBoundParameters.ContainsKey("FlowId") -and $flow.Id -ne $FlowId) { continue }
-            if ($PSBoundParameters.ContainsKey("ModelDrivenAppName") -and $flow.Id -notin $modelDrivenFlowFilter) { continue }
+    # Collect the visible members for each flow first so we can avoid emitting an empty Mermaid class body.
+    # Mermaid accepts `class Node["Label"]:::Type`, but rejects `class Node["Label"]:::Type {}`.
+    $flowDiagramContent = Get-PowerPlatformCheckerFlowDiagramContent `
+        -FlowsToRender $flowsToRender `
+        -SolutionPath $SolutionPath `
+        -SolutionObject $solutionObject `
+        -EntitySetByReference $entitySetByReference `
+        -IncludeFlows:$includeFlows `
+        -IncludeEnvironmentVariables:$includeEnvVars `
+        -IncludeConnections:$includeConnections `
+        -IncludeEntities:$includeEntities `
+        -HasFlowFilter:$($PSBoundParameters.ContainsKey("FlowId")) `
+        -FlowId $FlowId `
+        -NewLine $newline
 
-            $flowNode = "flow$($flow.Id)"
-            $diagram += "class $flowNode[`"$($flow.Name)`"]:::Flow {$newline"
-
-            try {
-                $parameters = Get-PowerPlatformCheckerFlowParameter -Path (Join-Path (Join-Path $SolutionPath "Workflows") ("*" + $flow.Id + "*.json"))
-                foreach ($parameter in @($parameters)) {
-                    if (-not $includeEnvVars) { continue }
-                    $diagram += "    [$($parameter.Type)]$($parameter.SchemaName)$newline"
-                    $links += "$($parameter.SchemaName) ..> ${flowNode}:$($parameter.SchemaName)$newline"
-                    $connectedEnvVars += $parameter.SchemaName
-                }
-            }
-            catch {
-                Write-Warning "Error in reading the parameters of flow $($flow.Name)"
-            }
-
-            try {
-                $actions = Get-PowerPlatformCheckerFlowActionList -Path (Join-Path (Join-Path $SolutionPath "Workflows") ("*" + $flow.Id + "*.json")) -Recurse -IncludeTrigger -Properties References,Entities
-                foreach ($action in @($actions)) {
-                    if ($null -ne $action.Reference -and $action.Reference -ne "") {
-                        $referenceFlow = $solutionObject.Workflows | Where-Object { $_.Id -eq $action.Reference } | Select-Object -First 1
-                        if ($includeFlows -and $referenceFlow -and ((-not $PSBoundParameters.ContainsKey("FlowId")) -or $referenceFlow.Id -eq $FlowId)) {
-                            $links += "${flowNode} --> flow$($referenceFlow.Id):$($action.Name.replace(' ', '_'))$newline"
-                        }
-                    }
-
-                    if ($includeConnections -and $action.Group -ne "*" -and $null -ne $action.Group) {
-                        $diagram += "    $($action.Name.replace(' ', '_'))($($action.Group))$newline"
-                        $links += "$($action.Group) --> ${flowNode}:$($action.Group)$newline"
-                        $connectedConnections += $action.Group
-                    }
-
-                    if ($includeEntities -and $action.Entities.Count -gt 0) {
-                        foreach ($entity in @($action.Entities)) {
-                            $diagram += "    $($action.Name.replace(' ', '_'))($($entity))$newline"
-                            $links += "${flowNode} --> $($entity):$($entity)$newline"
-                            $connectedEntities += $entity
-                        }
-                    }
-                }
-            }
-            catch {
-                Write-Warning "Error in reading the actions of flow $($flow.Name)"
-            }
-
-            $diagram += "}$newline"
-        }
-    }
+    $diagram += [string]$flowDiagramContent.DiagramText
+    $links += @($flowDiagramContent.Links)
+    $connectedEnvVars += @($flowDiagramContent.ConnectedEnvVars)
+    $connectedConnections += @($flowDiagramContent.ConnectedConnections)
+    $connectedEntities += @($flowDiagramContent.ConnectedEntities)
 
     $defaultEntitiesInCanvasApps = @()
 
+    $canvasAppsToRender = Get-PowerPlatformCheckerDiagramCanvasApps `
+        -SolutionObject $solutionObject `
+        -IncludePolicy $includePolicy `
+        -HasFlowFilter:$($PSBoundParameters.ContainsKey("FlowId")) `
+        -HasModelDrivenFilter:$($PSBoundParameters.ContainsKey("ModelDrivenAppName")) `
+        -CanvasAppName $CanvasAppName
+
     # Canvas apps are excluded for flow-only and model-driven-only projections.
-    if ($includeCanvasApps -and -not $PSBoundParameters.ContainsKey("FlowId") -and -not $PSBoundParameters.ContainsKey("ModelDrivenAppName")) {
-        foreach ($canvasApp in @($solutionObject.CanvasApps)) {
-            if ($PSBoundParameters.ContainsKey("CanvasAppName") -and $canvasApp.Name -ne $CanvasAppName) { continue }
+    # Their links are derived from connection references plus data-source metadata in the app package.
+    $canvasDiagramContent = Get-PowerPlatformCheckerCanvasDiagramContent `
+        -CanvasAppsToRender $canvasAppsToRender `
+        -EntitySetByReference $entitySetByReference `
+        -KnownEntitySetNames $entitySetNames `
+        -IncludeConnections:$includeConnections `
+        -IncludeEntities:$includeEntities `
+        -IncludeDefaultEntities:$includeDefaultEntities `
+        -NewLine $newline
 
-            $canvasKey = if ($canvasApp.Name) { [string]$canvasApp.Name } elseif ($canvasApp.DisplayName) { [string]$canvasApp.DisplayName } else { $null }
-            if (-not $canvasKey) {
-                continue
-            }
+    $diagram += [string]$canvasDiagramContent.DiagramText
+    $links += @($canvasDiagramContent.Links)
+    $connectedConnections += @($canvasDiagramContent.ConnectedConnections)
+    $connectedEntities += @($canvasDiagramContent.ConnectedEntities)
+    $defaultEntitiesInCanvasApps += @($canvasDiagramContent.DefaultEntitiesInCanvasApps)
+    $connectedDefaultEntities += @($canvasDiagramContent.ConnectedDefaultEntities)
 
-            $canvasId = Convert-PowerPlatformCheckerMermaidId -InputString $canvasKey
-            $canvasDisplayName = if ($canvasApp.DisplayName) { [string]$canvasApp.DisplayName } else { $canvasKey }
-            $diagram += ('class {0}["{1}"]:::CanvasApp{2}' -f $canvasId, $canvasDisplayName, $newline)
-
-            foreach ($connection in @($canvasApp.ConnectionReferences)) {
-                if (-not $includeConnections) { continue }
-                if (-not $connection.id) { continue }
-                $connectorName = $connection.id.Split("/")[-1]
-                $links += "${connectorName} --> ${canvasId}:$connectorName$newline"
-                $connectedConnections += $connectorName
-            }
-
-            foreach ($dataSource in @($canvasApp.DataSources.DataSources)) {
-                if (-not $includeEntities -and -not $includeDefaultEntities) { continue }
-                if ($dataSource.entitySetName -and $dataSource.entitySetName.ToLower() -in $entitySetNames) {
-                    if (-not $includeEntities) { continue }
-                    $links += "${canvasId} --> $($dataSource.entitySetName.ToLower()):$($dataSource.Name)$newline"
-                    $connectedEntities += $dataSource.entitySetName.ToLower()
-                }
-                elseif ($dataSource.logicalName) {
-                    if (-not $includeDefaultEntities) { continue }
-                    $links += "${canvasId} --> $($dataSource.logicalName.ToLower()):$($dataSource.Name)$newline"
-                    $defaultEntitiesInCanvasApps += $dataSource.logicalName.ToLower()
-                    $connectedDefaultEntities += $dataSource.logicalName.ToLower()
-                }
+    # Keep unresolved connected entity references visible (for example cross-solution dependencies)
+    # by promoting unknown entity ids to default-entity candidates.
+    if ($includeDefaultEntities) {
+        foreach ($connectedEntity in @($connectedEntities)) {
+            if (-not [string]::IsNullOrWhiteSpace([string]$connectedEntity) -and -not $entityBySetName.ContainsKey([string]$connectedEntity)) {
+                $connectedDefaultEntities += [string]$connectedEntity
             }
         }
     }
@@ -245,89 +278,71 @@
     $connectedConnections = @($connectedConnections | Select-Object -Unique)
     $connectedEntities = @($connectedEntities | Select-Object -Unique)
     $connectedDefaultEntities = @($connectedDefaultEntities | Select-Object -Unique)
+    $connectedIconResources = @($connectedIconResources | Select-Object -Unique)
 
-    foreach ($envVar in @($solutionObject.EnvironmentVariables)) {
-        if (-not $includeEnvVars) { continue }
-        if ([string]::IsNullOrWhiteSpace([string]$envVar.Name)) {
-            continue
-        }
-        if ((-not $PSBoundParameters.ContainsKey("FlowId") -and -not $PSBoundParameters.ContainsKey("CanvasAppName")) -or $envVar.Name -in $connectedEnvVars) {
-            $diagram += "class $($envVar.Name):::EnvVar {$newline"
-            $diagram += "  EnvironmentalVariable$newline"
-            $diagram += "}$newline"
-        }
+    # Scoped diagrams start from explicitly connected nodes (flow/app selections), then expand
+    # reachability so linked in-solution and default entities are declared before rendering.
+    if ($isScopedDiagram -and $includeEntities -and $connectedEntities.Count -gt 0) {
+        $expandedReachability = Expand-PowerPlatformCheckerScopedReachability `
+            -ConnectedEntities $connectedEntities `
+            -ConnectedDefaultEntities $connectedDefaultEntities `
+            -EntityBySetName $entityBySetName `
+            -EntityByLogicalName $entityByLogicalName `
+            -IncludeDefaultEntities:$includeDefaultEntities
+
+        $connectedEntities = @($expandedReachability.ConnectedEntities)
+        $connectedDefaultEntities = @($expandedReachability.ConnectedDefaultEntities)
     }
 
-    foreach ($connection in @($solutionObject.ConnectionReferences)) {
-        if (-not $includeConnections) { continue }
-        if ([string]::IsNullOrWhiteSpace([string]$connection.ConnectorId)) {
-            continue
-        }
+    $envVarsToRender = Get-PowerPlatformCheckerDiagramEnvironmentVariables `
+        -SolutionObject $solutionObject `
+        -IncludePolicy $includePolicy `
+        -IsScopedDiagram:$isScopedDiagram `
+        -ConnectedNames $connectedEnvVars
+
+    foreach ($envVar in @($envVarsToRender)) {
+        $diagram += "class $($envVar.Name):::EnvVar {$newline"
+        $diagram += "  EnvironmentalVariable$newline"
+        $diagram += "}$newline"
+    }
+
+    $connectionsToRender = Get-PowerPlatformCheckerDiagramConnections `
+        -SolutionObject $solutionObject `
+        -IncludePolicy $includePolicy `
+        -IsScopedDiagram:$isScopedDiagram `
+        -ConnectedConnectorNames $connectedConnections
+
+    foreach ($connection in @($connectionsToRender)) {
         $connectorName = Convert-PowerPlatformCheckerMermaidId -InputString $connection.ConnectorId.Split("/")[-1]
-        if ((-not $PSBoundParameters.ContainsKey("FlowId") -and -not $PSBoundParameters.ContainsKey("CanvasAppName")) -or $connectorName -in $connectedConnections) {
-            $diagram += "class ${connectorName}:::Connection {$newline"
-            $diagram += "  ConnectionReference$newline"
-            $diagram += "  $($connection.DisplayName)()$newline"
-            $diagram += "}$newline"
-        }
+        $diagram += "class ${connectorName}:::Connection {$newline"
+        $diagram += "  ConnectionReference$newline"
+        $diagram += "  $($connection.DisplayName)()$newline"
+        $diagram += "}$newline"
     }
 
-    foreach ($entity in @($solutionObject.Entities)) {
-        if (-not $includeEntities) { continue }
-        if (-not $entity -or [string]::IsNullOrWhiteSpace([string]$entity.EntitySetName)) {
-            continue
-        }
+    $entitiesToRender = Get-PowerPlatformCheckerDiagramEntities `
+        -SolutionObject $solutionObject `
+        -IncludePolicy $includePolicy `
+        -IsScopedDiagram:$isScopedDiagram `
+        -ConnectedEntitySetNames $connectedEntities
 
-        $entitySetName = $entity.EntitySetName.Trim().ToLower()
-        if ((-not $PSBoundParameters.ContainsKey("FlowId") -and -not $PSBoundParameters.ContainsKey("CanvasAppName")) -or $entitySetName -in $connectedEntities) {
-            $entityDisplayName = if ($entity.Name) { [string]$entity.Name } else { [string]$entitySetName }
-            $diagram += ('class {0}["{1}"]:::Entity {{{2}' -f $entitySetName, $entityDisplayName, $newline)
-            foreach ($attribute in @($entity.Attributes)) {
-                if (-not $attribute.Name) {
-                    continue
-                }
-                if ($attribute.Name -in $defaultFields -and ($PSBoundParameters.ContainsKey("FlowId") -or $PSBoundParameters.ContainsKey("CanvasAppName"))) {
-                    continue
-                }
-                $diagram += "    [$($attribute.Type)]$($attribute.Name)$newline"
-            }
-            $diagram += "}$newline"
+    $entityDiagramContent = Get-PowerPlatformCheckerEntityDiagramContent `
+        -EntitiesToRender $entitiesToRender `
+        -DefaultFields $defaultFields `
+        -IsScopedDiagram:$isScopedDiagram `
+        -IncludeDefaultEntities:$includeDefaultEntities `
+        -IncludeWebResources:$includeWebResources `
+        -EntityByLogicalName $entityByLogicalName `
+        -WebResources $webResources `
+        -IconResources $iconResources `
+        -NewLine $newline
 
-            foreach ($relation in @($entity.Relations)) {
-                if (-not $relation.Source -or -not $relation.Target) {
-                    continue
-                }
-
-                if ($relation.Source -in $solutionObject.Entities.Name -and $relation.Target -in $solutionObject.Entities.Name) {
-                    $sourceEntityObj = $solutionObject.Entities | Where-Object { $_.Name -eq $relation.Source -and $_.EntitySetName } | Select-Object -First 1
-                    $targetEntityObj = $solutionObject.Entities | Where-Object { $_.Name -eq $relation.Target -and $_.EntitySetName } | Select-Object -First 1
-                    if ($sourceEntityObj -and $targetEntityObj) {
-                        $sourceEntity = $sourceEntityObj.EntitySetName.ToLower()
-                        $targetEntity = $targetEntityObj.EntitySetName.ToLower()
-                        $links += "${sourceEntity} --> ${targetEntity}:$($relation.Source)-$($relation.Type)$newline"
-                    }
-                }
-                elseif ($relation.Source -in $solutionObject.Entities.Name) {
-                    if (-not $includeDefaultEntities) { continue }
-                    $sourceEntityObj = $solutionObject.Entities | Where-Object { $_.Name -eq $relation.Source -and $_.EntitySetName } | Select-Object -First 1
-                    if ($sourceEntityObj) {
-                        $sourceEntity = $sourceEntityObj.EntitySetName.ToLower()
-                        $links += "${sourceEntity} --> $($relation.Target.ToLower()):$($relation.Type)$newline"
-                        $connectedDefaultEntities += $relation.Target.ToLower()
-                    }
-                }
-                else {
-                    if (-not $includeDefaultEntities) { continue }
-                    $targetEntityObj = $solutionObject.Entities | Where-Object { $_.Name -eq $relation.Target -and $_.EntitySetName } | Select-Object -First 1
-                    if ($targetEntityObj) {
-                        $targetEntity = $targetEntityObj.EntitySetName.ToLower()
-                        $links += "${targetEntity} --> $($relation.Source.ToLower()):$($relation.Type)$newline"
-                        $connectedDefaultEntities += $relation.Source.ToLower()
-                    }
-                }
-            }
-        }
-    }
+    $diagram += [string]$entityDiagramContent.DiagramText
+    $links += @($entityDiagramContent.Links)
+    $connectedEntities += @($entityDiagramContent.ConnectedEntities)
+    $connectedDefaultEntities += @($entityDiagramContent.ConnectedDefaultEntities)
+    $connectedIconResources += @($entityDiagramContent.ConnectedIconResources)
+    $renderedEntityNodeIds += @($entityDiagramContent.RenderedEntityNodeIds)
 
     if ($includeDefaultEntities -and $solutionObject.Entities.Relations.Count -gt 0) {
         foreach ($relation in @($solutionObject.Entities.Relations)) {
@@ -340,70 +355,98 @@
         }
     }
 
-    foreach ($entity in ($defaultEntitiesInCanvasApps | Where-Object { $_ } | Select-Object -Unique)) {
-        if (-not $includeDefaultEntities) { continue }
-        if ((-not $PSBoundParameters.ContainsKey("FlowId") -and -not $PSBoundParameters.ContainsKey("CanvasAppName")) -or $entity -in $connectedDefaultEntities) {
-            if ($entity -and $entity -notin $solutionObject.Entities.Name) {
-                $diagram += "class ${entity}:::DefaultEntity$newline"
-            }
-        }
+    $defaultEntitiesToRender = Get-PowerPlatformCheckerDiagramDefaultEntities `
+        -IncludePolicy $includePolicy `
+        -IsScopedDiagram:$isScopedDiagram `
+        -DefaultEntitiesInCanvasApps $defaultEntitiesInCanvasApps `
+        -ConnectedDefaultEntities $connectedDefaultEntities `
+        -EntitySetByReference $entitySetByReference `
+        -RenderedEntityNodeIds $renderedEntityNodeIds
+
+    foreach ($entity in @($defaultEntitiesToRender)) {
+        $diagram += "class ${entity}:::DefaultEntity$newline"
     }
 
     foreach ($modelApp in @($modelApps)) {
         if (-not $includeModelDrivenApps) { continue }
         if ($PSBoundParameters.ContainsKey("CanvasAppName")) { continue }
-        $diagram += "class $($modelApp.MermaidId)[`"$($modelApp.DisplayName)`"]:::ModelDrivenApp$newline"
+        $diagram += Get-PowerPlatformCheckerModelDrivenAppClassDefinition -ModelApp $modelApp -NewLine $newline
+        $modelAppLinkData = Get-PowerPlatformCheckerModelDrivenAppLinks `
+            -ModelApp $modelApp `
+            -SolutionObject $solutionObject `
+            -EntitySetByReference $entitySetByReference `
+            -WebResources $webResources `
+            -IncludeFlows:$includeFlows `
+            -IncludeEntities:$includeEntities `
+            -IncludeDefaultEntities:$includeDefaultEntities `
+            -IncludeWebResources:$includeWebResources `
+            -NewLine $newline
 
-        foreach ($flowReferenceId in @($modelApp.FlowIds)) {
-            if (-not $includeFlows) { continue }
-            $links += "$($modelApp.MermaidId) --> flow${flowReferenceId}:Flow$newline"
-        }
-
-        foreach ($entityName in @($modelApp.Entities)) {
-            if (-not $includeEntities) { continue }
-            $entityObj = $solutionObject.Entities | Where-Object { $_.Name -and $_.EntitySetName -and $_.Name.ToLower() -eq $entityName.ToLower() } | Select-Object -First 1
-            if ($entityObj) {
-                $links += "$($modelApp.MermaidId) --> $($entityObj.EntitySetName.ToLower()):Entity$newline"
-            }
-        }
-
-        foreach ($webResourceName in @($modelApp.WebResources)) {
-            if (-not $includeWebResources) { continue }
-            $webResource = $webResources | Where-Object { $_.Name -eq $webResourceName } | Select-Object -First 1
-            if ($webResource) {
-                $links += "$($modelApp.MermaidId) --> $($webResource.MermaidId):Script$newline"
-            }
-        }
+        $links += @($modelAppLinkData.Links)
+        $connectedEntities += @($modelAppLinkData.ConnectedEntities)
+        $connectedDefaultEntities += @($modelAppLinkData.ConnectedDefaultEntities)
     }
 
-    foreach ($webResource in @($webResources)) {
-        if (-not $includeWebResources) { continue }
-        $diagram += "class $($webResource.MermaidId)[`"$($webResource.DisplayName)`"]:::WebResource$newline"
-        foreach ($dependency in @($webResource.Dependencies)) {
-            if (-not $dependency) {
-                continue
-            }
-            $dependencyId = Convert-PowerPlatformCheckerMermaidId -InputString $dependency
-            $diagram += "class $dependencyId[`"$dependency`"]:::WebResource$newline"
-            $links += "$dependencyId --> $($webResource.MermaidId):Dependency$newline"
-        }
-    }
+    # Web resources are rendered after the app/entity graph so links can point at stable node ids.
+    # Scripts get a class body so the diagram can show discovered method names in addition to type.
+    $webResourceDiagramContent = Get-PowerPlatformCheckerWebResourceDiagramContent `
+        -WebResources $webResources `
+        -IncludeWebResources:$includeWebResources `
+        -NewLine $newline
+    $diagram += [string]$webResourceDiagramContent.DiagramText
+    $links += @($webResourceDiagramContent.Links)
 
+    $diagram += Get-PowerPlatformCheckerIconResourceDiagramContent `
+        -IconResources $iconResources `
+        -IncludeWebResources:$includeWebResources `
+        -IsScopedDiagram:$isScopedDiagram `
+        -ConnectedIconResources $connectedIconResources `
+        -NewLine $newline
+
+    # The diagram builder collects links from several passes; skip any empty items before appending.
     foreach ($link in ($links | Select-Object -Unique)) {
+        if ([string]::IsNullOrWhiteSpace([string]$link)) {
+            continue
+        }
         $diagram += $link
     }
 
     # Emit only class definitions for enabled element groups so style blocks stay minimal.
-    $diagram += "classDef default fill:$($style.Default),stroke:$($style.Stroke)$newline"
-    if ($includeEnvVars) { $diagram += "classDef EnvVar fill:$($style.EnvVar),stroke:$($style.Stroke)$newline" }
-    if ($includeConnections) { $diagram += "classDef Connection fill:$($style.Connection),stroke:$($style.Stroke)$newline" }
-    if ($includeEntities) { $diagram += "classDef Entity fill:$($style.Entity),stroke:$($style.Stroke)$newline" }
-    if ($includeDefaultEntities) { $diagram += "classDef DefaultEntity fill:$($style.DefaultEntity),stroke:$($style.Stroke)$newline" }
-    if ($includeFlows) { $diagram += "classDef Flow fill:$($style.Flow),stroke:$($style.Stroke)$newline" }
-    if ($includeCanvasApps) { $diagram += "classDef CanvasApp fill:$($style.CanvasApp),stroke:$($style.Stroke)$newline" }
-    if ($includeModelDrivenApps) { $diagram += "classDef ModelDrivenApp fill:$($style.ModelDrivenApp),stroke:$($style.Stroke)$newline" }
-    if ($includeWebResources) { $diagram += "classDef WebResource fill:$($style.WebResource),stroke:$($style.Stroke)$newline" }
+    $diagram += Get-PowerPlatformCheckerMermaidStyleBlock -Style $style -IncludePolicy $includePolicy -NewLine $newline
     $diagram += ":::"
+
+    # Defensive cleanup: if any upstream metadata produced a targetless edge, remove it so the
+    # markdown stays parseable and the snapshot remains representative of valid output.
+    $diagram = Remove-PowerPlatformCheckerMalformedMermaidEdges -MermaidText $diagram
+
+    if ($OutputFormat -eq "Graph") {
+        $sourceFilterType = if ($PSBoundParameters.ContainsKey("FlowId")) { "Flow" }
+        elseif ($PSBoundParameters.ContainsKey("CanvasAppName")) { "CanvasApp" }
+        elseif ($PSBoundParameters.ContainsKey("ModelDrivenAppName")) { "ModelDrivenApp" }
+        else { "None" }
+
+        $sourceFilterValue = if ($PSBoundParameters.ContainsKey("FlowId")) { [string]$FlowId }
+        elseif ($PSBoundParameters.ContainsKey("CanvasAppName")) { [string]$CanvasAppName }
+        elseif ($PSBoundParameters.ContainsKey("ModelDrivenAppName")) { [string]$ModelDrivenAppName }
+        else { "" }
+
+        $parsedGraph = Convert-PowerPlatformCheckerMermaidToGraph -MermaidText $diagram
+
+        return [pscustomobject]@{
+            Metadata = [pscustomobject]@{
+                Direction = $Direction
+                IncludeElements = @($IncludeElements)
+                IsScopedDiagram = $isScopedDiagram
+                SourceFilterType = $sourceFilterType
+                SourceFilterValue = $sourceFilterValue
+                OutputFormat = "Graph"
+            }
+            Nodes = @($parsedGraph.Nodes)
+            Edges = @($parsedGraph.Edges)
+            Styles = $parsedGraph.Styles
+            Mermaid = $diagram
+        }
+    }
 
     return $diagram
 }

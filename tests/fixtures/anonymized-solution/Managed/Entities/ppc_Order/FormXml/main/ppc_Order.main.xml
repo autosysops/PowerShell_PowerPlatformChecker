@@ -1,0 +1,12 @@
+<form>
+  <formLibraries>
+    <Library name="ppc_script/OrderForm.js" libraryUniqueId="{aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee}" />
+  </formLibraries>
+  <events>
+    <event name="onload" application="false" active="true">
+      <Handlers>
+        <Handler functionName="Ppc.Order.OnLoad" libraryName="ppc_script/OrderForm.js" enabled="true" passExecutionContext="true" />
+      </Handlers>
+    </event>
+  </events>
+</form>

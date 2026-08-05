@@ -4,7 +4,7 @@
 RootModule = 'PowerPlatformChecker.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.4.0'
+ModuleVersion = '0.5.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -65,6 +65,7 @@ FunctionsToExport = @(
     "Get-PowerPlatformCheckerCanvasApp",
     "Get-PowerPlatformCheckerConnectorData",
     "Get-PowerPlatformCheckerEntity",
+    "Get-PowerPlatformCheckerEntityFormXmlWebResource",
     "Get-PowerPlatformCheckerFlowActionDefaultName",
     "Get-PowerPlatformCheckerFlowParameter",
     "Get-PowerPlatformCheckerFlowActionList",
@@ -73,6 +74,7 @@ FunctionsToExport = @(
     "Get-PowerPlatformCheckerFlowDescription",
     "Get-PowerPlatformCheckerArchitectureDiagram",
     "Get-PowerPlatformCheckerModelDrivenApp",
+    "Get-PowerPlatformCheckerModelDrivenAppComponentType",
     "Get-PowerPlatformCheckerOperationData",
     "Get-PowerPlatformCheckerSolutionObject",
     "Get-PowerPlatformCheckerSolutionRelation",

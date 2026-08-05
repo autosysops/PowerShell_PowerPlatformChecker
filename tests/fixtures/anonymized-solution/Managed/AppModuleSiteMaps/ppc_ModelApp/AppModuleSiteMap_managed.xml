@@ -5,6 +5,8 @@
       <Group Id="group_1">
         <SubArea Id="sub_1" Entity="ppc_order" />
         <SubArea Id="sub_2" Entity="ppc_orderline" />
+        <SubArea Id="sub_3" Entity="ppc_supplier" />
+        <SubArea Id="sub_4" Entity="ppc_productpricespecification" />
       </Group>
     </Area>
   </SiteMap>

@@ -6,7 +6,9 @@
   <AppModuleComponents>
     <AppModuleComponent type="1" schemaName="ppc_order" />
     <AppModuleComponent type="1" schemaName="ppc_orderline" />
+    <AppModuleComponent type="1" schemaName="ppc_supplier" />
+    <AppModuleComponent type="1" schemaName="ppc_productpricespecification" />
     <AppModuleComponent type="29" id="{11111111-1111-1111-1111-111111111111}" />
-    <AppModuleComponent type="61" schemaName="ppc_script/OrderForm.js" />
+    <AppModuleComponent type="62" schemaName="ppc_ModelApp" />
   </AppModuleComponents>
 </AppModule>

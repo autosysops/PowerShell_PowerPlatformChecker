@@ -42,7 +42,8 @@
     $newline = [Environment]::NewLine
     $actionArray = @($Actions)
     if ($actionArray.Count -eq 0) {
-        return ":::mermaid$newline flowchart $Direction$newline:::"
+        # Keep the empty-state snapshot parseable and visible in Mermaid renderers.
+        return ":::mermaid$newline flowchart $Direction$newline empty[`"No actions found`"]$newline:::"
     }
 
     # Build stable node ids once so every edge can reference deterministic ids.
