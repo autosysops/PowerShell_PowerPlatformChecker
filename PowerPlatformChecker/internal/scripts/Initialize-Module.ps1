@@ -77,5 +77,34 @@ Add-THAppInsightsConnectionString -ModuleName "PowerPlatformChecker" -Connection
 # Create a message about the telemetry
 Write-Information ("Telemetry for PowerPlatformChecker module is $(if([string] $Env:PowerPlatformChecker_TELEMETRY_OPTIN -in ("no","false","0")){"NOT "})enabled. Change the behavior by setting the value of " + '$Env:PowerPlatformChecker_TELEMETRY_OPTIN') -InformationAction Continue
 
+# Resolve module version without requiring a full import to complete.
+$moduleVersion = $null
+
+try{
+	$moduleManifestCandidates = @(
+		(Join-Path $PSScriptRoot "PowerPlatformChecker.psd1"),
+		(Join-Path (Split-Path $PSScriptRoot -Parent) "PowerPlatformChecker.psd1"),
+		(Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "PowerPlatformChecker.psd1")
+	)
+	$moduleManifestPath = $moduleManifestCandidates | Where-Object { Test-Path -Path $_ } | Select-Object -First 1
+
+	if ($moduleManifestPath) {
+		try {
+			$moduleManifest = Import-PowerShellDataFile -Path $moduleManifestPath
+			$moduleVersion = [string]$moduleManifest.ModuleVersion
+		}
+		catch {
+			$moduleVersion = $null
+		}
+	}
+}
+catch {
+	$moduleVersion = $null
+}
+
 # Send a metric for the installation of the module
-Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Import Module PowerPlatformChecker"
+$telemetryProperties = @{
+	ModuleVersion = $moduleVersion
+}
+
+Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Import Module PowerPlatformChecker" -PropertiesHash $telemetryProperties
