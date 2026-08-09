@@ -1,0 +1,119 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": { "name": "shared_commondataserviceforapps" },
+        "connection": { "connectionReferenceLogicalName": "ppc_sharedcommondataserviceforapps" },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "parameters": {
+        "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+        "$connections": { "defaultValue": {}, "type": "Object" }
+      },
+      "triggers": {
+        "Manual": {
+          "type": "Request",
+          "inputs": { "schema": {} }
+        }
+      },
+      "actions": {
+        "Parse_Input_A": {
+          "type": "Compose",
+          "inputs": "INPUT_A",
+          "runAfter": {}
+        },
+        "Parse_Input_B": {
+          "type": "Compose",
+          "inputs": "INPUT_B",
+          "runAfter": {
+            "Parse_Input_A": ["Succeeded"]
+          }
+        },
+        "Parse_Input_C": {
+          "type": "Compose",
+          "inputs": "INPUT_C",
+          "runAfter": {
+            "Parse_Input_B": ["Succeeded"]
+          }
+        },
+        "Try_Supplier_check": {
+          "type": "Scope",
+          "actions": {
+            "List_Supplier": {
+              "type": "Compose",
+              "inputs": "List supplier",
+              "runAfter": {}
+            },
+            "Check_if_Supplier_exists_in_dataverse": {
+              "type": "If",
+              "expression": "@equals(1,1)",
+              "actions": {},
+              "else": {
+                "actions": {
+                  "Add_a_new_supplier": {
+                    "type": "Compose",
+                    "inputs": "Create supplier",
+                    "runAfter": {}
+                  }
+                }
+              },
+              "runAfter": {
+                "List_Supplier": ["Succeeded"]
+              }
+            }
+          },
+          "runAfter": {
+            "Parse_Input_C": ["Succeeded"]
+          }
+        },
+        "Initialize_materieelnummer": {
+          "type": "Compose",
+          "inputs": "Init material",
+          "runAfter": {
+            "Try_Supplier_check": ["Succeeded"]
+          }
+        },
+        "Compose": {
+          "type": "Compose",
+          "inputs": "Compose",
+          "runAfter": {
+            "Initialize_materieelnummer": ["Succeeded"]
+          }
+        },
+        "Check_is_approval_is_needed": {
+          "type": "If",
+          "expression": "@equals(1,1)",
+          "actions": {
+            "Maintain_status": {
+              "type": "Compose",
+              "inputs": "Maintain status",
+              "runAfter": {}
+            }
+          },
+          "else": {
+            "actions": {
+              "Set_status_to_Ready_for_approval": {
+                "type": "Compose",
+                "inputs": "Set ready for approval",
+                "runAfter": {}
+              }
+            }
+          },
+          "runAfter": {
+            "Compose": ["Succeeded"]
+          }
+        },
+        "Update_a_row": {
+          "type": "Compose",
+          "inputs": "Update row",
+          "runAfter": {
+            "Check_is_approval_is_needed": ["Succeeded"]
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": "1.0.0.0"
+}

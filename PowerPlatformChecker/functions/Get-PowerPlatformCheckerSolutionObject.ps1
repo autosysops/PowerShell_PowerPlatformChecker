@@ -50,11 +50,13 @@
     # Get the environmental variables
     $solutionEnvVars = @()
 
-    Get-PowerPlatformCheckerEnvVarFile -SolutionPath $SolutionPath | `
-    Foreach-Object {
-        $envVarXml = Select-Xml -Path $_ -XPath "*"
-        $solutionEnvVars += [PSCustomObject]@{
-            Name = $envVarXml.Node.schemaname
+    $environmentVariableRoot = Join-Path $SolutionPath "environmentvariabledefinitions"
+    if (Test-Path -Path $environmentVariableRoot) {
+        Get-ChildItem -Path $environmentVariableRoot -Recurse -File -Filter "*.xml" | ForEach-Object {
+            $envVarXml = Select-Xml -Path $_.FullName -XPath "*"
+            $solutionEnvVars += [PSCustomObject]@{
+                Name = $envVarXml.Node.schemaname
+            }
         }
     }
 

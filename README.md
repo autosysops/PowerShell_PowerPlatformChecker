@@ -14,7 +14,7 @@ Use this module when you want to:
 - Inspect flows, connectors, actions, and parameters from exported JSON/XML
 - Check if flow action names still match default operation names
 - Build architecture diagrams (Mermaid classDiagram) from solution assets
-- Build flowcharts (Mermaid flowchart) with runAfter and branch labels
+- Build flowcharts (Mermaid flowchart) with runAfter labels and grouped Scope/If branches
 - Read canvas app metadata, model-driven app metadata, and JavaScript web resources
 - Resolve model-driven app form libraries and their dependent JavaScript web resources
 - Summarize entities, relations, environment variables, and connection references
@@ -84,10 +84,12 @@ The module expects a folder structure similar to unpacked solutions:
 - `Get-PowerPlatformCheckerWebResource`
 
 `Get-PowerPlatformCheckerModelDrivenApp` behavior:
+
 - `WebResources` contains direct app component links.
 - `EntityWebResources` contains entity FormXML script ownership used for `App -> Entity -> Script` chains.
 
 `Get-PowerPlatformCheckerModelDrivenAppComponentType` common values:
+
 - `1` = Entities
 - `29` = Business Process Flows
 - `62` = Sitemap
@@ -98,10 +100,15 @@ The module expects a folder structure similar to unpacked solutions:
 - `Get-PowerPlatformCheckerFlowChart`
 
 `Get-PowerPlatformCheckerArchitectureDiagram` supports:
+
 - Filtered views with `-FlowId`, `-CanvasAppName`, or `-ModelDrivenAppName`
 - Include-group filtering with `-IncludeElements`
-- Style overrides with `-StyleOverrides`
+- Per-call style overrides with `-StyleOverrides`
+- Session-level style defaults with `Set-PowerPlatformCheckerStyle`
 - Output format selection with `-OutputFormat Mermaid|Graph`
+
+`Get-PowerPlatformCheckerFlowChart` supports Mermaid and recursive graph output with
+`-OutputFormat Mermaid|Graph`.
 
 ### Connector and Operation Catalogs
 
@@ -145,6 +152,8 @@ $actions = Get-PowerPlatformCheckerFlowActionList `
 Get-PowerPlatformCheckerFlowChart -Actions $actions
 ```
 
+Flowchart output groups scope blocks and If blocks with explicit post-branch continuation into Mermaid subgraphs, which keeps branch internals separate from downstream "Succeeded" continuation actions.
+
 ### 5) Generate architecture diagram for entire solution
 
 ```powershell
@@ -183,7 +192,133 @@ $graph.Nodes.Count
 $graph.Edges.Count
 ```
 
-The Graph output includes `Metadata`, `Nodes`, `Edges`, `Styles`, and the original `Mermaid` text.
+Graph output is the complete, renderer-independent source used to produce Mermaid. It does not
+contain a second copy of the Mermaid text.
+
+Flowcharts can be returned as graphs in the same way:
+
+```powershell
+$flowGraph = Get-PowerPlatformCheckerFlowChart `
+  -Actions $actions `
+  -Direction TB `
+  -OutputFormat Graph
+
+$flowGraph.Nodes.Count
+$flowGraph.Subgraphs.Count
+```
+
+## Graph Schemas
+
+### Architecture diagram graph
+
+`Get-PowerPlatformCheckerArchitectureDiagram -OutputFormat Graph` returns this top-level schema:
+
+| Property | Contents |
+| --- | --- |
+| `Metadata` | `Direction`, `IncludeElements`, `IsScopedDiagram`, `SourceFilterType`, `SourceFilterValue`, and `OutputFormat` |
+| `Nodes` | Architecture components consumed by the class-diagram renderer |
+| `Edges` | Valid, deduplicated relationships between declared nodes |
+| `Styles` | Mermaid class names mapped to resolved `fill` and `stroke` declarations |
+| `StyleOrder` | Stable class-style rendering order |
+
+Every architecture node has the following properties:
+
+| Property | Meaning |
+| --- | --- |
+| `Id` | Stable Mermaid-safe node identifier |
+| `Type` | Component type such as `Flow`, `Entity`, `CanvasApp`, or `WebResource` |
+| `DisplayName` | Human-readable component name |
+| `ClassKind` | Style class selected from `Styles` |
+| `Properties` | Additional structured component metadata; currently reserved for graph consumers |
+| `Members` | Lines rendered inside the Mermaid class, including entity fields and flow references |
+| `HasExplicitDisplayName` | Whether the renderer emits a separate display label |
+
+Every architecture edge contains `SourceId`, `TargetId`, `Label`, `EdgeType`, and
+`Metadata.Arrow`. `EdgeType` describes the relationship semantics; `Metadata.Arrow` contains the
+resolved Mermaid arrow such as `-->` or `..>`. Edge endpoints always refer to nodes in `Nodes`.
+
+### Flowchart graph
+
+`Get-PowerPlatformCheckerFlowChart -OutputFormat Graph` returns a recursive `FlowchartGraph`:
+
+| Property | Contents |
+| --- | --- |
+| `GraphType` | Always `FlowchartGraph` |
+| `Id` | Subgraph identifier; `$null` for the root graph |
+| `ActionName` | Action that owns the subgraph; `$null` for the root graph |
+| `Title` | Mermaid subgraph title |
+| `Direction` | `TB`, `BT`, `LR`, or `RL` |
+| `IsEmpty` | Indicates an empty root action list |
+| `Nodes` | Nodes directly owned by this graph, each with `Id`, `Label`, and `Shape` |
+| `Edges` | Edges directly owned by this graph, each with `From`, `To`, and `Label` |
+| `Subgraphs` | Nested objects using this same `FlowchartGraph` schema |
+
+Node `Shape` is `Trigger`, `Decision`, or `Action`. Scope and continuation-style condition
+boundaries are represented by recursive `Subgraphs`; an edge is stored at the graph level that
+owns both of its endpoints. This ownership prevents nested edges from leaking into the root graph.
+
+## Architecture Diagram Styles
+
+Styling applies to architecture diagrams, not flowcharts. The resolved palette follows this
+precedence, from lowest to highest:
+
+1. Built-in module defaults.
+2. Session defaults changed with `Set-PowerPlatformCheckerStyle`.
+3. Per-call values passed to `Get-PowerPlatformCheckerArchitectureDiagram -StyleOverrides`.
+
+Supported keys and built-in values are:
+
+| Key | Default | Used for |
+| --- | --- | --- |
+| `Default` | `red` | Missing or unresolved components |
+| `EnvVar` | `#DF9A57` | Environment variables |
+| `Connection` | `#FCD757` | Connection references |
+| `Entity` | `#B56784` | Solution entities |
+| `DefaultEntity` | `#71374D` | Referenced platform entities |
+| `Flow` | `#DBE4EE` | Power Automate flows |
+| `CanvasApp` | `#8BC34A` | Canvas apps |
+| `ModelDrivenApp` | `#7BAFD4` | Model-driven apps |
+| `WebResource` | `#D7C8F3` | JavaScript and icon web resources |
+| `Stroke` | `#5E5B52` | Border color shared by all classes |
+
+Set defaults for all subsequent diagrams in the current imported-module session:
+
+```powershell
+Set-PowerPlatformCheckerStyle `
+  -StyleTarget ArchitectureDiagram `
+  -Flow '#0078D4' `
+  -Entity '#00A36C' `
+  -Connection '#FFB900' `
+  -Stroke '#242424'
+```
+
+The command returns a copy of the resolved session palette, rejects unsupported keys and empty
+values, and supports `-WhatIf` and `-Confirm`. Re-importing the module starts a new session with
+the built-in defaults.
+
+You can update multiple values in one call by passing multiple style key parameters:
+
+```powershell
+Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Flow '#0078D4' -Stroke '#242424'
+```
+
+To inspect available keys and current values:
+
+```powershell
+Get-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram
+```
+
+Override only one diagram without changing session defaults:
+
+```powershell
+Get-PowerPlatformCheckerArchitectureDiagram `
+  -SolutionPath "C:\Solutions\MySolution\Managed" `
+  -StyleOverrides @{ Flow = '#4CC9F0'; Stroke = '#2B2D42' }
+```
+
+`-StyleOverrides` applies recognized, non-empty keys to that call only. Other classes retain the
+current session values. The resolved styles are also exposed in graph output through `Styles` and
+`StyleOrder`, so downstream renderers can use the same palette.
 
 ## Telemetry
 

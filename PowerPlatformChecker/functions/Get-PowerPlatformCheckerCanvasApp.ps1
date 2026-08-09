@@ -39,8 +39,11 @@
     }
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerCanvasApp" -PropertiesHash $telemetryProperties
 
-    # Get the right file
-    $canvasFiles = Get-PowerPlatformCheckerCanvasAppFile -SolutionPath $SolutionPath
+    $canvasAppRoot = Join-Path $SolutionPath "CanvasApps"
+    $canvasFiles = @()
+    if (Test-Path -Path $canvasAppRoot) {
+        $canvasFiles = @(Get-ChildItem -Path (Join-Path $canvasAppRoot "*.meta.xml") -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)
+    }
 
     # Create a empty return object
     $returnObject = @()

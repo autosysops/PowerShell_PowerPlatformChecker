@@ -6,20 +6,22 @@
 # ================== DIAGRAM STYLE DEFAULTS =========================
 # ===================================================================
 
-# Keep default Mermaid class styles in a single startup location so all
-# diagram functions and style override helpers share the same baseline.
-if (-not $script:PowerPlatformCheckerDiagramColors) {
-	$script:PowerPlatformCheckerDiagramColors = @{
-		Default = "red"
-		EnvVar = "#DF9A57"
-		Connection = "#FCD757"
-		Entity = "#B56784"
-		DefaultEntity = "#71374D"
-		Flow = "#DBE4EE"
-		CanvasApp = "#8BC34A"
-		ModelDrivenApp = "#7BAFD4"
-		WebResource = "#D7C8F3"
-		Stroke = "#5E5B52"
+# Keep style defaults in a target-keyed store so new renderers can add
+# dedicated style maps without changing command contracts.
+if (-not $script:PowerPlatformCheckerStyles) {
+	$script:PowerPlatformCheckerStyles = @{
+		ArchitectureDiagram = @{
+			Default = "red"
+			EnvVar = "#DF9A57"
+			Connection = "#FCD757"
+			Entity = "#B56784"
+			DefaultEntity = "#71374D"
+			Flow = "#DBE4EE"
+			CanvasApp = "#8BC34A"
+			ModelDrivenApp = "#7BAFD4"
+			WebResource = "#D7C8F3"
+			Stroke = "#5E5B52"
+		}
 	}
 }
 

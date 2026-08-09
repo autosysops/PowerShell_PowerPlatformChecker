@@ -31,8 +31,11 @@
     # Create an array to return
     $returnObject = @()
 
-    # Get the relation files
-    $relationFiles = Get-PowerPlatformCheckerRelationFile -SolutionPath $SolutionPath
+    $relationRoot = Join-Path $SolutionPath "Other\Relationships"
+    $relationFiles = @()
+    if (Test-Path -Path $relationRoot) {
+        $relationFiles = @(Get-ChildItem -Path $relationRoot -Recurse -File -Filter "*.xml" | Select-Object -ExpandProperty FullName)
+    }
 
     foreach ($relationFile in $relationFiles) {
         # Load the XML file

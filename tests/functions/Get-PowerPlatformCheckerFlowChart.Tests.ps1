@@ -1,72 +1,227 @@
 ﻿. "$PSScriptRoot\PowerPlatformChecker.TestCommon.ps1"
 
 Describe "Get-PowerPlatformCheckerFlowChart" {
+    $snapshotCases = @(
+        @{ Name = "SampleFlow TB"; ActionsRef = "sampleActions"; Direction = "TB"; Snapshot = "FlowChart.SampleFlow.expected.md" }
+        @{ Name = "SampleFlow LR"; ActionsRef = "sampleActions"; Direction = "LR"; Snapshot = "FlowChart.SampleFlow.LR.expected.md" }
+        @{ Name = "SampleFlow RL"; ActionsRef = "sampleActions"; Direction = "RL"; Snapshot = "FlowChart.SampleFlow.RL.expected.md" }
+        @{ Name = "ChildFlow BT"; ActionsRef = "childActions"; Direction = "BT"; Snapshot = "FlowChart.ChildFlow.BT.expected.md" }
+        @{ Name = "SubgraphFlow TB"; ActionsRef = "subgraphActions"; Direction = "TB"; Snapshot = "FlowChart.SubgraphFlow.expected.md" }
+    )
+    $graphSnapshotCases = @(
+        @{ Name = "SampleFlow TB"; ActionsRef = "sampleActions"; Direction = "TB"; Snapshot = "FlowChart.SampleFlow.expected.graph.json" }
+        @{ Name = "ChildFlow BT"; ActionsRef = "childActions"; Direction = "BT"; Snapshot = "FlowChart.ChildFlow.BT.expected.graph.json" }
+        @{ Name = "SubgraphFlow TB"; ActionsRef = "subgraphActions"; Direction = "TB"; Snapshot = "FlowChart.SubgraphFlow.expected.graph.json" }
+    )
+
     BeforeAll {
         Initialize-PowerPlatformCheckerTestData
         $script:solutionPath = Get-PowerPlatformCheckerFixtureSolutionPath
         $script:flowPath = Join-Path $script:solutionPath "Workflows\SampleFlow-11111111-1111-1111-1111-111111111111.json"
         $script:childFlowPath = Join-Path $script:solutionPath "Workflows\ChildFlow-22222222-2222-2222-2222-222222222222.json"
-        $script:expectedFlowChart = Get-PowerPlatformCheckerExpectedSnapshot -FileName "FlowChart.SampleFlow.expected.md"
-        $script:expectedSampleLr = Get-PowerPlatformCheckerExpectedSnapshot -FileName "FlowChart.SampleFlow.LR.expected.md"
-        $script:expectedSampleRl = Get-PowerPlatformCheckerExpectedSnapshot -FileName "FlowChart.SampleFlow.RL.expected.md"
-        $script:expectedChildBt = Get-PowerPlatformCheckerExpectedSnapshot -FileName "FlowChart.ChildFlow.BT.expected.md"
-        $script:expectedEmptyRl = Get-PowerPlatformCheckerExpectedSnapshot -FileName "FlowChart.Empty.RL.expected.md"
+        $script:subgraphFlowPath = Join-Path $script:solutionPath "Workflows\SubgraphFlow-33333333-3333-3333-3333-333333333333.json"
 
         $script:sampleActions = Get-PowerPlatformCheckerFlowActionList -Path $script:flowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
         $script:childActions = Get-PowerPlatformCheckerFlowActionList -Path $script:childFlowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
+        $script:subgraphActions = Get-PowerPlatformCheckerFlowActionList -Path $script:subgraphFlowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
+        $script:actionsByRef = @{
+            sampleActions = $script:sampleActions
+            childActions = $script:childActions
+            subgraphActions = $script:subgraphActions
+        }
+        $script:flowGraphSnapshotNormalizer = {
+            param(
+                [Parameter(Mandatory = $true)]
+                [object] $Graph
+            )
+
+            return [ordered]@{
+                GraphType = [string]$Graph.GraphType
+                Id = if ($null -eq $Graph.Id) { $null } else { [string]$Graph.Id }
+                ActionName = if ($null -eq $Graph.ActionName) { $null } else { [string]$Graph.ActionName }
+                Title = if ($null -eq $Graph.Title) { $null } else { [string]$Graph.Title }
+                Direction = [string]$Graph.Direction
+                IsEmpty = [bool]$Graph.IsEmpty
+                Nodes = @($Graph.Nodes | ForEach-Object {
+                        [ordered]@{
+                            Id = [string]$_.Id
+                            Label = [string]$_.Label
+                            Shape = [string]$_.Shape
+                        }
+                    })
+                Edges = @($Graph.Edges | ForEach-Object {
+                        [ordered]@{
+                            From = [string]$_.From
+                            Label = [string]$_.Label
+                            To = [string]$_.To
+                        }
+                    })
+                Subgraphs = @($Graph.Subgraphs | ForEach-Object {
+                        & $script:flowGraphSnapshotNormalizer -Graph $_
+                    })
+            }
+        }
+        $script:flowGraphSnapshotConverter = {
+            param(
+                [Parameter(Mandatory = $true)]
+                [object] $Graph
+            )
+
+            return (& $script:flowGraphSnapshotNormalizer -Graph $Graph | ConvertTo-Json -Depth 30)
+        }
     }
     BeforeEach { Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {} }
 
-    It "matches the expected flowchart snapshot" {
-        $markdown = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions
+    Context "Scenario Snapshots" {
+        It "matches expected flowchart snapshots for key scenarios" -TestCases $snapshotCases {
+            param($Name, $ActionsRef, $Direction, $Snapshot)
 
-        (Normalize-PowerPlatformCheckerSnapshotText -Text $markdown) |
-            Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $script:expectedFlowChart)
+            $actions = $script:actionsByRef[$ActionsRef]
+            if ($null -eq $actions) { throw "Unknown actions reference: $ActionsRef" }
+
+            $expected = Get-PowerPlatformCheckerExpectedSnapshot -FileName $Snapshot
+            $markdown = Get-PowerPlatformCheckerFlowChart -Actions $actions -Direction $Direction
+
+            (Normalize-PowerPlatformCheckerSnapshotText -Text $markdown) |
+                Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $expected)
+        }
+
+        It "matches expected graph snapshots for key scenarios" -TestCases $graphSnapshotCases {
+            param($Name, $ActionsRef, $Direction, $Snapshot)
+
+            $actions = $script:actionsByRef[$ActionsRef]
+            if ($null -eq $actions) { throw "Unknown actions reference: $ActionsRef" }
+
+            $expected = Get-PowerPlatformCheckerExpectedSnapshot -FileName $Snapshot
+            $graph = Get-PowerPlatformCheckerFlowChart -Actions $actions -Direction $Direction -OutputFormat Graph
+            $actual = & $script:flowGraphSnapshotConverter -Graph $graph
+
+            (Normalize-PowerPlatformCheckerSnapshotText -Text $actual) |
+                Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $expected)
+        }
     }
 
-    It "matches expected sample-flow chart in LR direction" {
-        $markdown = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction LR
+    Context "General Behavior" {
+        It "uses TB as default direction" {
+            $implicitDirection = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions
+            $explicitDirection = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction TB
 
-        (Normalize-PowerPlatformCheckerSnapshotText -Text $markdown) |
-            Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $script:expectedSampleLr)
-    }
+            (Normalize-PowerPlatformCheckerSnapshotText -Text $implicitDirection) |
+                Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $explicitDirection)
+        }
 
-    It "matches expected sample-flow chart in RL direction" {
-        $markdown = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction RL
+        It "throws for unsupported direction values" {
+            { Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction "INVALID" } | Should -Throw
+        }
 
-        (Normalize-PowerPlatformCheckerSnapshotText -Text $markdown) |
-            Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $script:expectedSampleRl)
-    }
+        It "marks actions parameter as mandatory in command metadata" {
+            $command = Get-Command Get-PowerPlatformCheckerFlowChart
+            $actionsParameter = $command.Parameters["Actions"]
 
-    It "matches expected child-flow chart in BT direction" {
-        $markdown = Get-PowerPlatformCheckerFlowChart -Actions $script:childActions -Direction BT
+            $actionsParameter.Attributes.Mandatory | Should -Contain $true
+        }
 
-        (Normalize-PowerPlatformCheckerSnapshotText -Text $markdown) |
-            Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $script:expectedChildBt)
-    }
+        It "sends telemetry with direction metadata" {
+            [void](Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction LR)
 
-    It "matches expected empty-input chart in RL direction" {
-        $markdown = Get-PowerPlatformCheckerFlowChart -Actions @() -Direction RL
-
-        (Normalize-PowerPlatformCheckerSnapshotText -Text $markdown) |
-            Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $script:expectedEmptyRl)
-    }
-
-    It "does not emit dangling edge endpoints" {
-        $markdown = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions
-        $lines = @($markdown -split [Environment]::NewLine)
-
-        $nodeIds = @($lines |
-            Where-Object { $_ -match '^(action\d+)(\(|\[|\{)' } |
-            ForEach-Object { $matches[1] } |
-            Select-Object -Unique)
-
-        $edgeLines = @($lines | Where-Object { $_ -match '-->' })
-        foreach ($edgeLine in $edgeLines) {
-            $edgeNodeIds = @([regex]::Matches($edgeLine, 'action\d+') | ForEach-Object { $_.Value } | Select-Object -Unique)
-            foreach ($edgeNodeId in $edgeNodeIds) {
-                $edgeNodeId | Should -BeIn $nodeIds
+            Should -Invoke -CommandName Send-THEvent -ModuleName PowerPlatformChecker -Times 1 -Exactly -ParameterFilter {
+                $EventName -eq "Get-PowerPlatformCheckerFlowChart" -and
+                $PropertiesHash.Direction -eq "LR"
             }
+        }
+
+        It "returns graph output when requested" {
+            $graph = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction TB -OutputFormat Graph
+
+            $graph.GraphType | Should -Be "FlowchartGraph"
+            $graph.Direction | Should -Be "TB"
+            @($graph.Nodes).Count | Should -BeGreaterThan 0
+            @($graph.Edges).Count | Should -BeGreaterThan 0
+        }
+
+        It "renders Mermaid from graph output equivalently" {
+            $graph = Get-PowerPlatformCheckerFlowChart -Actions $script:subgraphActions -Direction TB -OutputFormat Graph
+            $mermaidFromPublic = Get-PowerPlatformCheckerFlowChart -Actions $script:subgraphActions -Direction TB -OutputFormat Mermaid
+
+            $mermaidFromGraph = InModuleScope PowerPlatformChecker {
+                param($InnerGraph)
+                Convert-PowerPlatformCheckerFlowChartGraphToMermaid -Graph $InnerGraph
+            } -Parameters @{ InnerGraph = $graph }
+
+            (Normalize-PowerPlatformCheckerSnapshotText -Text $mermaidFromGraph) |
+                Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $mermaidFromPublic)
+        }
+
+        It "marks outputformat parameter with Mermaid and Graph validate-set values" {
+            $command = Get-Command Get-PowerPlatformCheckerFlowChart
+            $outputParameter = $command.Parameters["OutputFormat"]
+            $validateSetAttribute = $outputParameter.Attributes | Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] } | Select-Object -First 1
+
+            $validateSetAttribute.ValidValues | Should -Be @("Mermaid", "Graph")
+        }
+
+        It "does not emit dangling edge endpoints" -TestCases $snapshotCases {
+            param($Name, $ActionsRef, $Direction, $Snapshot)
+
+            $actions = $script:actionsByRef[$ActionsRef]
+            if ($null -eq $actions) { throw "Unknown actions reference: $ActionsRef" }
+
+            $markdown = Get-PowerPlatformCheckerFlowChart -Actions $actions -Direction $Direction
+            $lines = @($markdown -split [Environment]::NewLine)
+
+            $nodeIds = @($lines |
+                Where-Object { $_ -match '^(action\d+)(\(|\[|\{)' } |
+                ForEach-Object { $matches[1] } |
+                Select-Object -Unique)
+
+            $subgraphIds = @($lines |
+                Where-Object { $_ -match '^subgraph (action\d+_group)\[' } |
+                ForEach-Object { $matches[1] } |
+                Select-Object -Unique)
+
+            $declaredIds = @($nodeIds + $subgraphIds | Select-Object -Unique)
+
+            $edgeLines = @($lines | Where-Object { $_ -match '-->' })
+            foreach ($edgeLine in $edgeLines) {
+                $edgeNodeIds = @([regex]::Matches($edgeLine, 'action\d+(_group)?') | ForEach-Object { $_.Value } | Select-Object -Unique)
+                foreach ($edgeNodeId in $edgeNodeIds) {
+                    $edgeNodeId | Should -BeIn $declaredIds
+                }
+            }
+        }
+
+        It "builds expected wrapper boundaries in graph output" {
+            $graph = Get-PowerPlatformCheckerFlowChart -Actions $script:subgraphActions -Direction TB -OutputFormat Graph
+            $rootEdgeKeys = @($graph.Edges | ForEach-Object { "{0}|{1}|{2}" -f $_.From, $_.Label, $_.To })
+            $supplierGraph = $graph.Subgraphs | Where-Object ActionName -eq "Try_Supplier_check"
+            $supplierEdgeKeys = @($supplierGraph.Edges | ForEach-Object { "{0}|{1}|{2}" -f $_.From, $_.Label, $_.To })
+
+            $supplierEdgeKeys | Should -Contain "action11|Succeeded|action10_group"
+            $rootEdgeKeys | Should -Not -Contain "action11|Succeeded|action10_group"
+            $rootEdgeKeys | Should -Contain "action12_group|Succeeded|action5"
+            $rootEdgeKeys | Should -Not -Contain "action10_group|Succeeded|action5"
+        }
+
+        It "uses the same graph contract recursively" {
+            $graph = Get-PowerPlatformCheckerFlowChart -Actions $script:subgraphActions -Direction TB -OutputFormat Graph
+            $pendingGraphs = [System.Collections.Generic.Queue[object]]::new()
+            $pendingGraphs.Enqueue($graph)
+            $graphCount = 0
+
+            while ($pendingGraphs.Count -gt 0) {
+                $currentGraph = $pendingGraphs.Dequeue()
+                $currentGraph.GraphType | Should -Be "FlowchartGraph"
+                $currentGraph.PSObject.Properties.Name | Should -Contain "Nodes"
+                $currentGraph.PSObject.Properties.Name | Should -Contain "Edges"
+                $currentGraph.PSObject.Properties.Name | Should -Contain "Subgraphs"
+                $graphCount++
+
+                foreach ($nestedGraph in @($currentGraph.Subgraphs)) {
+                    $pendingGraphs.Enqueue($nestedGraph)
+                }
+            }
+
+            $graphCount | Should -BeGreaterThan 1
         }
     }
 }

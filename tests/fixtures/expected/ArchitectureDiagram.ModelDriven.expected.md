@@ -62,7 +62,6 @@ class ppc_script_Shared_js["Shared Script"]:::WebResource {
 ppc_ApiBaseUrl ..> flow11111111-1111-1111-1111-111111111111:ppc_ApiBaseUrl
 shared_commondataserviceforapps --> flow11111111-1111-1111-1111-111111111111:shared_commondataserviceforapps
 flow11111111-1111-1111-1111-111111111111 --> ppc_orders:ppc_order
-flow11111111-1111-1111-1111-111111111111 --> flow22222222-2222-2222-2222-222222222222:Call_Child_Workflow
 shared_office365 --> flow11111111-1111-1111-1111-111111111111:shared_office365
 flow11111111-1111-1111-1111-111111111111 --> ppc_orders:ppc_orders
 flow11111111-1111-1111-1111-111111111111 --> ppc_orderlines:ppc_orderlines

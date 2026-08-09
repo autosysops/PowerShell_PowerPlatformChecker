@@ -1,0 +1,179 @@
+{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action0",
+      "Label": "Manual",
+      "Shape": "Trigger"
+    },
+    {
+      "Id": "action6",
+      "Label": "Parse_Input_A",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action7",
+      "Label": "Parse_Input_B",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action8",
+      "Label": "Parse_Input_C",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action5",
+      "Label": "Initialize_materieelnummer",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action4",
+      "Label": "Compose",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action13",
+      "Label": "Update_a_row",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0",
+      "Label": "",
+      "To": "action6"
+    },
+    {
+      "From": "action12_group",
+      "Label": "Succeeded",
+      "To": "action5"
+    },
+    {
+      "From": "action3_group",
+      "Label": "Succeeded",
+      "To": "action13"
+    },
+    {
+      "From": "action4",
+      "Label": "Succeeded",
+      "To": "action3_group"
+    },
+    {
+      "From": "action5",
+      "Label": "Succeeded",
+      "To": "action4"
+    },
+    {
+      "From": "action6",
+      "Label": "Succeeded",
+      "To": "action7"
+    },
+    {
+      "From": "action7",
+      "Label": "Succeeded",
+      "To": "action8"
+    },
+    {
+      "From": "action8",
+      "Label": "Succeeded",
+      "To": "action12_group"
+    }
+  ],
+  "Subgraphs": [
+    {
+      "GraphType": "FlowchartGraph",
+      "Id": "action3_group",
+      "ActionName": "Check_is_approval_is_needed",
+      "Title": " ",
+      "Direction": "TB",
+      "IsEmpty": false,
+      "Nodes": [
+        {
+          "Id": "action3",
+          "Label": "Check_is_approval_is_needed",
+          "Shape": "Decision"
+        },
+        {
+          "Id": "action1",
+          "Label": "Maintain_status",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action2",
+          "Label": "Set_status_to_Ready_for_approval",
+          "Shape": "Action"
+        }
+      ],
+      "Edges": [
+        {
+          "From": "action3",
+          "Label": "False",
+          "To": "action2"
+        },
+        {
+          "From": "action3",
+          "Label": "True",
+          "To": "action1"
+        }
+      ],
+      "Subgraphs": []
+    },
+    {
+      "GraphType": "FlowchartGraph",
+      "Id": "action12_group",
+      "ActionName": "Try_Supplier_check",
+      "Title": "Try_Supplier_check",
+      "Direction": "TB",
+      "IsEmpty": false,
+      "Nodes": [
+        {
+          "Id": "action11",
+          "Label": "List_Supplier",
+          "Shape": "Action"
+        }
+      ],
+      "Edges": [
+        {
+          "From": "action11",
+          "Label": "Succeeded",
+          "To": "action10_group"
+        }
+      ],
+      "Subgraphs": [
+        {
+          "GraphType": "FlowchartGraph",
+          "Id": "action10_group",
+          "ActionName": "Check_if_Supplier_exists_in_dataverse",
+          "Title": " ",
+          "Direction": "TB",
+          "IsEmpty": false,
+          "Nodes": [
+            {
+              "Id": "action10",
+              "Label": "Check_if_Supplier_exists_in_dataverse",
+              "Shape": "Decision"
+            },
+            {
+              "Id": "action9",
+              "Label": "Add_a_new_supplier",
+              "Shape": "Action"
+            }
+          ],
+          "Edges": [
+            {
+              "From": "action10",
+              "Label": "False",
+              "To": "action9"
+            }
+          ],
+          "Subgraphs": []
+        }
+      ]
+    }
+  ]
+}

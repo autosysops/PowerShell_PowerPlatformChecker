@@ -46,8 +46,14 @@
     }
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerEntity" -PropertiesHash $telemetryProperties
 
-    # Get the right file
-    $entityfiles = Get-PowerPlatformCheckerEntityFile -SolutionPath $SolutionPath -EntityName $EntityName
+    $entityRoot = Join-Path $SolutionPath "Entities"
+    $entityNamePattern = if ([string]::IsNullOrWhiteSpace($EntityName)) { "*" } else { $EntityName }
+    $entityFiles = @()
+    if (Test-Path -Path $entityRoot) {
+        $entityFiles = @(Get-ChildItem -Path (Join-Path $entityRoot "*\Entity.xml") -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.Directory.Name -like $entityNamePattern } |
+                Select-Object -ExpandProperty FullName)
+    }
 
     # Create a empty return object
     $returnObject = @()
@@ -66,7 +72,7 @@
     }
 
     # Loop through all files and read the xml files. Take the name and attributes and return them in a object where the attributes are an array
-    foreach ($file in $entityfiles) {
+    foreach ($file in $entityFiles) {
         $xmlfile = Select-Xml -Path $file -XPath "*"
         $attributes = @()
         foreach ($attribute in $xmlfile.Node.EntityInfo.entity.attributes.attribute) {

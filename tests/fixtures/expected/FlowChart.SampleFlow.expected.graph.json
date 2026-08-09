@@ -1,0 +1,102 @@
+{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action0",
+      "Label": "When_a_row_is_added",
+      "Shape": "Trigger"
+    },
+    {
+      "Id": "action5",
+      "Label": "Create_orderline",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action6",
+      "Label": "Parallel_A",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action7",
+      "Label": "Parallel_B",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action1",
+      "Label": "Call_Child_Workflow",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0",
+      "Label": "",
+      "To": "action5"
+    },
+    {
+      "From": "action4_group",
+      "Label": "Succeeded/Failed/TimedOut/Skipped",
+      "To": "action1"
+    },
+    {
+      "From": "action5",
+      "Label": "Succeeded",
+      "To": "action6"
+    },
+    {
+      "From": "action5",
+      "Label": "Succeeded",
+      "To": "action7"
+    },
+    {
+      "From": "action5",
+      "Label": "Succeeded/Failed",
+      "To": "action4_group"
+    }
+  ],
+  "Subgraphs": [
+    {
+      "GraphType": "FlowchartGraph",
+      "Id": "action4_group",
+      "ActionName": "Condition_Check_Order",
+      "Title": " ",
+      "Direction": "TB",
+      "IsEmpty": false,
+      "Nodes": [
+        {
+          "Id": "action4",
+          "Label": "Condition_Check_Order",
+          "Shape": "Decision"
+        },
+        {
+          "Id": "action2",
+          "Label": "Send_an_email",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action3",
+          "Label": "Update_row",
+          "Shape": "Action"
+        }
+      ],
+      "Edges": [
+        {
+          "From": "action4",
+          "Label": "False",
+          "To": "action3"
+        },
+        {
+          "From": "action4",
+          "Label": "True",
+          "To": "action2"
+        }
+      ],
+      "Subgraphs": []
+    }
+  ]
+}
