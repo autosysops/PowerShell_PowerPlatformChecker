@@ -1,0 +1,157 @@
+{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action0",
+      "Label": "Manual",
+      "Shape": "Trigger"
+    },
+    {
+      "Id": "action10",
+      "Label": "Initialize_value",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action1",
+      "Label": "Finish",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0",
+      "Label": "",
+      "To": "action10"
+    },
+    {
+      "From": "action10",
+      "Label": "Succeeded",
+      "To": "action9_group"
+    },
+    {
+      "From": "action9_group",
+      "Label": "Succeeded",
+      "To": "action1"
+    }
+  ],
+  "Subgraphs": [
+    {
+      "GraphType": "FlowchartGraph",
+      "Id": "action9_group",
+      "ActionName": "For_each_item",
+      "Title": "For_each_item",
+      "Direction": "TB",
+      "IsEmpty": false,
+      "Nodes": [],
+      "Edges": [],
+      "Subgraphs": [
+        {
+          "GraphType": "FlowchartGraph",
+          "Id": "action8_group",
+          "ActionName": "Switch_option",
+          "Title": "Switch_option",
+          "Direction": "TB",
+          "IsEmpty": false,
+          "Nodes": [
+            {
+              "Id": "action8",
+              "Label": "Switch_option",
+              "Shape": "Decision"
+            }
+          ],
+          "Edges": [
+            {
+              "From": "action8",
+              "Label": "Case_-_Option_A",
+              "To": "action3_group"
+            },
+            {
+              "From": "action8",
+              "Label": "Case_-_Option_B",
+              "To": "action5_group"
+            },
+            {
+              "From": "action8",
+              "Label": "Case_-_Option_C",
+              "To": "action7_group"
+            },
+            {
+              "From": "action8",
+              "Label": "Default",
+              "To": "action11_group"
+            }
+          ],
+          "Subgraphs": [
+            {
+              "GraphType": "FlowchartGraph",
+              "Id": "action3_group",
+              "ActionName": "Case_-_Option_A",
+              "Title": "Case_-_Option_A",
+              "Direction": "TB",
+              "IsEmpty": false,
+              "Nodes": [
+                {
+                  "Id": "action2",
+                  "Label": "Handle_option_A",
+                  "Shape": "Action"
+                }
+              ],
+              "Edges": [],
+              "Subgraphs": []
+            },
+            {
+              "GraphType": "FlowchartGraph",
+              "Id": "action5_group",
+              "ActionName": "Case_-_Option_B",
+              "Title": "Case_-_Option_B",
+              "Direction": "TB",
+              "IsEmpty": false,
+              "Nodes": [
+                {
+                  "Id": "action4",
+                  "Label": "Handle_option_B",
+                  "Shape": "Action"
+                }
+              ],
+              "Edges": [],
+              "Subgraphs": []
+            },
+            {
+              "GraphType": "FlowchartGraph",
+              "Id": "action7_group",
+              "ActionName": "Case_-_Option_C",
+              "Title": "Case_-_Option_C",
+              "Direction": "TB",
+              "IsEmpty": false,
+              "Nodes": [
+                {
+                  "Id": "action6",
+                  "Label": "Handle_option_C",
+                  "Shape": "Action"
+                }
+              ],
+              "Edges": [],
+              "Subgraphs": []
+            },
+            {
+              "GraphType": "FlowchartGraph",
+              "Id": "action11_group",
+              "ActionName": "Default",
+              "Title": "Default",
+              "Direction": "TB",
+              "IsEmpty": false,
+              "Nodes": [],
+              "Edges": [],
+              "Subgraphs": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

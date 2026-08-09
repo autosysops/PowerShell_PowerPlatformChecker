@@ -131,12 +131,32 @@
 
     # Loop through the actions and get the information of the actions, if there are nested actions then loop through those as well
     $actionsList += $actions | Get-Member -MemberType NoteProperty | ForEach-Object {
+        $switchBranches = @()
         if ($actions.$($_.Name).actions -and $Recurse) {
             Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions.$($_.Name).actions -ParentAction @{"Name" = $($_.Name); "Type" = "actions"} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1)
 
             # Check if there is an else statement and loop through those actions as well
             if ($actions.$($_.Name).else -and $Recurse) {
                 Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions.$($_.Name).else.actions -ParentAction @{"Name" = $($_.Name); "Type" = "else"} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1)
+            }
+        }
+
+        if ($actions.$($_.Name).type -eq "Switch" -and $Recurse) {
+            $switchName = $_.Name
+            foreach ($caseProperty in @($actions.$switchName.cases | Get-Member -MemberType NoteProperty)) {
+                $caseName = $caseProperty.Name
+                $caseActions = $actions.$switchName.cases.$caseName.actions
+                $switchBranches += [pscustomobject]@{ Type = "case"; Name = $caseName }
+                if ($caseActions) {
+                    Get-PowerPlatformCheckerFlowActionListInternal -Actions $caseActions -ParentAction @{"Name" = $switchName; "Type" = "case"; "BranchName" = $caseName} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1)
+                }
+            }
+
+            if ($null -ne $actions.$switchName.default) {
+                $switchBranches += [pscustomobject]@{ Type = "default"; Name = "Default" }
+                if ($actions.$switchName.default.actions) {
+                    Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions.$switchName.default.actions -ParentAction @{"Name" = $switchName; "Type" = "default"; "BranchName" = "Default"} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1)
+                }
             }
         }
         # Store the data from the action
@@ -151,6 +171,10 @@
             Name  = $_.Name
             Type  = $type
             Group = $group
+        }
+
+        if ($type -eq "Switch") {
+            $actionObject | Add-Member -MemberType NoteProperty -Name "SwitchBranches" -Value $switchBranches
         }
 
         if ($Properties -contains "References") {

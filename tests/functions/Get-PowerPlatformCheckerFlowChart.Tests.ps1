@@ -8,12 +8,14 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
         @{ Name = "ChildFlow BT"; ActionsRef = "childActions"; Direction = "BT"; Snapshot = "FlowChart.ChildFlow.BT.expected.md" }
         @{ Name = "SubgraphFlow TB"; ActionsRef = "subgraphActions"; Direction = "TB"; Snapshot = "FlowChart.SubgraphFlow.expected.md" }
         @{ Name = "TrueOnlyConditionFlow TB"; ActionsRef = "trueOnlyConditionActions"; Direction = "TB"; Snapshot = "FlowChart.TrueOnlyConditionFlow.expected.md" }
+        @{ Name = "SwitchCaseFlow TB"; ActionsRef = "switchCaseActions"; Direction = "TB"; Snapshot = "FlowChart.SwitchCaseFlow.expected.md" }
     )
     $graphSnapshotCases = @(
         @{ Name = "SampleFlow TB"; ActionsRef = "sampleActions"; Direction = "TB"; Snapshot = "FlowChart.SampleFlow.expected.graph.json" }
         @{ Name = "ChildFlow BT"; ActionsRef = "childActions"; Direction = "BT"; Snapshot = "FlowChart.ChildFlow.BT.expected.graph.json" }
         @{ Name = "SubgraphFlow TB"; ActionsRef = "subgraphActions"; Direction = "TB"; Snapshot = "FlowChart.SubgraphFlow.expected.graph.json" }
         @{ Name = "TrueOnlyConditionFlow TB"; ActionsRef = "trueOnlyConditionActions"; Direction = "TB"; Snapshot = "FlowChart.TrueOnlyConditionFlow.expected.graph.json" }
+        @{ Name = "SwitchCaseFlow TB"; ActionsRef = "switchCaseActions"; Direction = "TB"; Snapshot = "FlowChart.SwitchCaseFlow.expected.graph.json" }
     )
 
     BeforeAll {
@@ -23,16 +25,19 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
         $script:childFlowPath = Join-Path $script:solutionPath "Workflows\ChildFlow-22222222-2222-2222-2222-222222222222.json"
         $script:subgraphFlowPath = Join-Path $script:solutionPath "Workflows\SubgraphFlow-33333333-3333-3333-3333-333333333333.json"
         $script:trueOnlyConditionFlowPath = Join-Path $script:solutionPath "Workflows\TrueOnlyConditionFlow-44444444-4444-4444-4444-444444444444.json"
+        $script:switchCaseFlowPath = Join-Path $script:solutionPath "Workflows\SwitchCaseFlow-55555555-5555-5555-5555-555555555555.json"
 
         $script:sampleActions = Get-PowerPlatformCheckerFlowActionList -Path $script:flowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
         $script:childActions = Get-PowerPlatformCheckerFlowActionList -Path $script:childFlowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
         $script:subgraphActions = Get-PowerPlatformCheckerFlowActionList -Path $script:subgraphFlowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
         $script:trueOnlyConditionActions = Get-PowerPlatformCheckerFlowActionList -Path $script:trueOnlyConditionFlowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
+        $script:switchCaseActions = Get-PowerPlatformCheckerFlowActionList -Path $script:switchCaseFlowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
         $script:actionsByRef = @{
             sampleActions = $script:sampleActions
             childActions = $script:childActions
             subgraphActions = $script:subgraphActions
             trueOnlyConditionActions = $script:trueOnlyConditionActions
+            switchCaseActions = $script:switchCaseActions
         }
         $script:flowGraphSnapshotNormalizer = {
             param(

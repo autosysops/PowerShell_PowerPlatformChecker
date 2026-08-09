@@ -26,7 +26,65 @@
         [object] $Actions
     )
 
-    $actionArray = @($Actions)
+    $actionArray = [System.Collections.Generic.List[object]]::new()
+    $switchBranchByName = @{}
+    foreach ($sourceAction in @($Actions)) {
+        $isSwitchBranchChild = ($sourceAction.PSObject.Properties.Name -contains "ParentAction") -and
+            $null -ne $sourceAction.ParentAction -and
+            $sourceAction.ParentAction.Type -in @("case", "default")
+
+        if (-not $isSwitchBranchChild) {
+            [void]$actionArray.Add($sourceAction)
+            continue
+        }
+
+        $switchName = [string]$sourceAction.ParentAction.Name
+        $branchName = [string]$sourceAction.ParentAction.BranchName
+        $branchActionName = "__SwitchBranch__::{0}::{1}::{2}" -f $switchName, $sourceAction.ParentAction.Type, $branchName
+
+        $childAction = $sourceAction.PSObject.Copy()
+        $childAction.ParentAction = [pscustomobject]@{ Name = $branchActionName; Type = "actions" }
+        [void]$actionArray.Add($childAction)
+
+        if (-not $switchBranchByName.ContainsKey($branchActionName)) {
+            $branchAction = [pscustomobject]@{
+                Name = $branchActionName
+                Type = "SwitchBranch"
+                Group = "*"
+                RunAfter = @()
+                RunAfterStatus = $null
+                ParentAction = [pscustomobject]@{ Name = $switchName; Type = "cases" }
+                IsTrigger = $false
+                DisplayName = $branchName
+                BranchLabel = $branchName
+            }
+            $switchBranchByName[$branchActionName] = $branchAction
+            [void]$actionArray.Add($branchAction)
+        }
+    }
+
+    foreach ($switchAction in @($Actions | Where-Object { $_.Type -eq "Switch" })) {
+        foreach ($branch in @($switchAction.SwitchBranches)) {
+            $branchActionName = "__SwitchBranch__::{0}::{1}::{2}" -f $switchAction.Name, $branch.Type, $branch.Name
+            if ($switchBranchByName.ContainsKey($branchActionName)) { continue }
+
+            $branchAction = [pscustomobject]@{
+                Name = $branchActionName
+                Type = "SwitchBranch"
+                Group = "*"
+                RunAfter = @()
+                RunAfterStatus = $null
+                ParentAction = [pscustomobject]@{ Name = $switchAction.Name; Type = "cases" }
+                IsTrigger = $false
+                DisplayName = [string]$branch.Name
+                BranchLabel = [string]$branch.Name
+            }
+            $switchBranchByName[$branchActionName] = $branchAction
+            [void]$actionArray.Add($branchAction)
+        }
+    }
+
+    $actionArray = @($actionArray)
     $rootActionName = "__FlowchartRoot__"
     $nodeByName = @{}
     $actionByName = @{}
@@ -90,10 +148,11 @@
         if ($action.IsTrigger -eq $true) { continue }
 
         $hasChildren = $childrenByParent.ContainsKey($action.Name) -and @($childrenByParent[$action.Name]).Count -gt 0
-        if (-not $hasChildren) { continue }
+        $isSwitchBranch = $action.Type -eq "SwitchBranch"
+        if (-not $hasChildren -and -not $isSwitchBranch) { continue }
 
         $descendants = $descendantsByAction[$action.Name]
-        $isDecision = $action.Type -eq "If"
+        $isDecision = $action.Type -in @("If", "Switch")
         $hasExternalIncoming = $false
 
         if ($null -ne $action.RunAfter -and $action.RunAfter -ne "") {
@@ -105,7 +164,7 @@
             }
         }
 
-        if ($isDecision -or $hasExternalIncoming) {
+        if ($isDecision -or $isSwitchBranch -or $hasExternalIncoming) {
             $wrappedByName[$action.Name] = [pscustomobject]@{
                 SubgraphId = "{0}_group" -f $nodeByName[$action.Name]
             }
@@ -116,20 +175,20 @@
     $nodeById = @{}
     foreach ($action in $actionArray) {
         $isWrapped = $wrappedByName.ContainsKey($action.Name)
-        $isBranchWrapper = $action.Type -eq "If"
+        $isBranchWrapper = $action.Type -in @("If", "Switch")
         if ($isWrapped -and -not $isBranchWrapper) { continue }
 
         $shape = "Action"
         if ($action.IsTrigger -eq $true) {
             $shape = "Trigger"
         }
-        elseif ($action.Type -eq "If") {
+        elseif ($action.Type -in @("If", "Switch")) {
             $shape = "Decision"
         }
 
         $node = [pscustomobject]@{
             Id = $nodeByName[$action.Name]
-            Label = [string]$action.Name
+            Label = if ($action.PSObject.Properties.Name -contains "DisplayName") { [string]$action.DisplayName } else { [string]$action.Name }
             Shape = $shape
         }
         $nodes += $node
@@ -177,14 +236,21 @@
             $parentName = $action.ParentAction.Name
             if ($nodeByName.ContainsKey($parentName)) {
                 $label = ""
-                $isBranchParent = $actionByName.ContainsKey($parentName) -and $actionByName[$parentName].Type -eq "If"
+                $isBranchParent = $actionByName.ContainsKey($parentName) -and $actionByName[$parentName].Type -in @("If", "Switch")
                 if ($isBranchParent) {
-                    if ($action.ParentAction.Type -eq "actions") { $label = "True" }
+                    if ($actionByName[$parentName].Type -eq "Switch" -and $action.PSObject.Properties.Name -contains "BranchLabel") {
+                        $label = [string]$action.BranchLabel
+                    }
+                    elseif ($action.ParentAction.Type -eq "actions") { $label = "True" }
                     elseif ($action.ParentAction.Type -eq "else") { $label = "False" }
                 }
 
                 $fromId = $nodeByName[$parentName]
                 if ($wrappedByName.ContainsKey($parentName) -and -not $isBranchParent) { continue }
+
+                if ($wrappedByName.ContainsKey($action.Name)) {
+                    $toId = Resolve-PowerPlatformCheckerFlowChartToRenderId -SourceName $parentName -TargetName $action.Name -WrappedByName $wrappedByName -ActionByName $actionByName -NodeByName $nodeByName
+                }
 
                 $edgeKey = "{0}|{1}|{2}" -f $fromId, $label, $toId
                 if ($edgeKeySet.Add($edgeKey)) {

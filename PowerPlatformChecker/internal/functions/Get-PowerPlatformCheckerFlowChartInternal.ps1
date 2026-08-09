@@ -42,7 +42,7 @@
 
     $isSyntheticRoot = $RootActionName -eq $GraphContext.RootActionName
     $isWrapped = $GraphContext.WrappedByName.ContainsKey($RootActionName)
-    $isBranchWrapper = $GraphContext.ActionByName.ContainsKey($RootActionName) -and $GraphContext.ActionByName[$RootActionName].Type -eq "If"
+    $isBranchWrapper = $GraphContext.ActionByName.ContainsKey($RootActionName) -and $GraphContext.ActionByName[$RootActionName].Type -in @("If", "Switch")
     $nodes = @()
     $subgraphs = @()
 
@@ -77,12 +77,18 @@
     )
 
     $wrapperId = if ($isWrapped) { $GraphContext.WrappedByName[$RootActionName].SubgraphId } else { $null }
-    $wrapperTitle = if (-not $isWrapped) { $null } elseif ($isBranchWrapper) { " " } else { $RootActionName }
+    $displayName = if ($GraphContext.ActionByName.ContainsKey($RootActionName) -and $GraphContext.ActionByName[$RootActionName].PSObject.Properties.Name -contains "DisplayName") {
+        [string]$GraphContext.ActionByName[$RootActionName].DisplayName
+    }
+    else {
+        $RootActionName
+    }
+    $wrapperTitle = if (-not $isWrapped) { $null } elseif ($GraphContext.ActionByName[$RootActionName].Type -eq "If") { " " } else { $displayName }
 
     return [pscustomobject]@{
         GraphType = "FlowchartGraph"
         Id = $wrapperId
-        ActionName = if ($isSyntheticRoot) { $null } else { $RootActionName }
+        ActionName = if ($isSyntheticRoot) { $null } else { $displayName }
         Title = $wrapperTitle
         Direction = $Direction
         IsEmpty = $isSyntheticRoot -and $GraphContext.IsEmpty

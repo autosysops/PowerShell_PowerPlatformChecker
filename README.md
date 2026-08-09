@@ -14,7 +14,7 @@ Use this module when you want to:
 - Inspect flows, connectors, actions, and parameters from exported JSON/XML
 - Check if flow action names still match default operation names
 - Build architecture diagrams (Mermaid classDiagram) from solution assets
-- Build flowcharts (Mermaid flowchart) with runAfter labels and grouped Scope/If branches
+- Build flowcharts (Mermaid flowchart) with runAfter labels and grouped Scope/If/Switch branches
 - Read canvas app metadata, model-driven app metadata, and JavaScript web resources
 - Resolve model-driven app form libraries and their dependent JavaScript web resources
 - Summarize entities, relations, environment variables, and connection references
@@ -152,7 +152,7 @@ $actions = Get-PowerPlatformCheckerFlowActionList `
 Get-PowerPlatformCheckerFlowChart -Actions $actions
 ```
 
-Flowchart output groups scope blocks and If blocks with explicit post-branch continuation into Mermaid subgraphs, which keeps branch internals separate from downstream "Succeeded" continuation actions.
+Flowchart output groups Scope and If blocks with explicit post-branch continuation into Mermaid subgraphs. Switch blocks include a titled subgraph for each case and the default branch, including empty branches, keeping branch internals separate from downstream "Succeeded" continuation actions.
 
 ### 5) Generate architecture diagram for entire solution
 
@@ -253,9 +253,10 @@ resolved Mermaid arrow such as `-->` or `..>`. Edge endpoints always refer to no
 | `Edges` | Edges directly owned by this graph, each with `From`, `To`, and `Label` |
 | `Subgraphs` | Nested objects using this same `FlowchartGraph` schema |
 
-Node `Shape` is `Trigger`, `Decision`, or `Action`. Scope and continuation-style condition
-boundaries are represented by recursive `Subgraphs`; an edge is stored at the graph level that
-owns both of its endpoints. This ownership prevents nested edges from leaking into the root graph.
+Node `Shape` is `Trigger`, `Decision`, or `Action`. Scope, continuation-style condition, Switch,
+and Switch case/default boundaries are represented by recursive `Subgraphs`; an edge is stored
+at the graph level that owns both of its endpoints. This ownership prevents nested edges from
+leaking into the root graph.
 
 ## Architecture Diagram Styles
 

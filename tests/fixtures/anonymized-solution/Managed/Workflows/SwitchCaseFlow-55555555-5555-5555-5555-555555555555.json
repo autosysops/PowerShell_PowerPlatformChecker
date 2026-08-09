@@ -1,0 +1,85 @@
+{
+  "properties": {
+    "connectionReferences": {},
+    "definition": {
+      "parameters": {
+        "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+        "$connections": { "defaultValue": {}, "type": "Object" }
+      },
+      "triggers": {
+        "Manual": {
+          "type": "Request",
+          "inputs": { "schema": {} }
+        }
+      },
+      "actions": {
+        "Initialize_value": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              { "name": "DummyValue", "type": "string", "value": "" }
+            ]
+          },
+          "runAfter": {}
+        },
+        "For_each_item": {
+          "type": "Foreach",
+          "foreach": "@createArray('dummy')",
+          "actions": {
+            "Switch_option": {
+              "type": "Switch",
+              "expression": "@item()",
+              "cases": {
+                "Case_-_Option_A": {
+                  "case": "A",
+                  "actions": {
+                    "Handle_option_A": {
+                      "type": "Compose",
+                      "inputs": "A",
+                      "runAfter": {}
+                    }
+                  }
+                },
+                "Case_-_Option_B": {
+                  "case": "B",
+                  "actions": {
+                    "Handle_option_B": {
+                      "type": "Compose",
+                      "inputs": "B",
+                      "runAfter": {}
+                    }
+                  }
+                },
+                "Case_-_Option_C": {
+                  "case": "C",
+                  "actions": {
+                    "Handle_option_C": {
+                      "type": "Compose",
+                      "inputs": "C",
+                      "runAfter": {}
+                    }
+                  }
+                }
+              },
+              "default": {
+                "actions": {}
+              },
+              "runAfter": {}
+            }
+          },
+          "runAfter": {
+            "Initialize_value": ["Succeeded"]
+          }
+        },
+        "Finish": {
+          "type": "Compose",
+          "inputs": "Done",
+          "runAfter": {
+            "For_each_item": ["Succeeded"]
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": "1.0.0.0"
+}
