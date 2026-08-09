@@ -42,7 +42,7 @@
 
     $isSyntheticRoot = $RootActionName -eq $GraphContext.RootActionName
     $isWrapped = $GraphContext.WrappedByName.ContainsKey($RootActionName)
-    $isBranchWrapper = $GraphContext.HasElseBranchByParent.ContainsKey($RootActionName) -and $GraphContext.HasElseBranchByParent[$RootActionName]
+    $isBranchWrapper = $GraphContext.ActionByName.ContainsKey($RootActionName) -and $GraphContext.ActionByName[$RootActionName].Type -eq "If"
     $nodes = @()
     $subgraphs = @()
 

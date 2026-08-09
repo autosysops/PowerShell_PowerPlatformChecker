@@ -93,7 +93,7 @@
         if (-not $hasChildren) { continue }
 
         $descendants = $descendantsByAction[$action.Name]
-        $hasBranchingChildren = $hasElseBranchByParent.ContainsKey($action.Name) -and $hasElseBranchByParent[$action.Name]
+        $isDecision = $action.Type -eq "If"
         $hasExternalIncoming = $false
 
         if ($null -ne $action.RunAfter -and $action.RunAfter -ne "") {
@@ -105,7 +105,7 @@
             }
         }
 
-        if ($hasBranchingChildren -or $hasExternalIncoming) {
+        if ($isDecision -or $hasExternalIncoming) {
             $wrappedByName[$action.Name] = [pscustomobject]@{
                 SubgraphId = "{0}_group" -f $nodeByName[$action.Name]
             }
@@ -116,7 +116,7 @@
     $nodeById = @{}
     foreach ($action in $actionArray) {
         $isWrapped = $wrappedByName.ContainsKey($action.Name)
-        $isBranchWrapper = $hasElseBranchByParent.ContainsKey($action.Name) -and $hasElseBranchByParent[$action.Name]
+        $isBranchWrapper = $action.Type -eq "If"
         if ($isWrapped -and -not $isBranchWrapper) { continue }
 
         $shape = "Action"
@@ -177,13 +177,13 @@
             $parentName = $action.ParentAction.Name
             if ($nodeByName.ContainsKey($parentName)) {
                 $label = ""
-                if ($hasElseBranchByParent.ContainsKey($parentName) -and $hasElseBranchByParent[$parentName]) {
+                $isBranchParent = $actionByName.ContainsKey($parentName) -and $actionByName[$parentName].Type -eq "If"
+                if ($isBranchParent) {
                     if ($action.ParentAction.Type -eq "actions") { $label = "True" }
                     elseif ($action.ParentAction.Type -eq "else") { $label = "False" }
                 }
 
                 $fromId = $nodeByName[$parentName]
-                $isBranchParent = $hasElseBranchByParent.ContainsKey($parentName) -and $hasElseBranchByParent[$parentName]
                 if ($wrappedByName.ContainsKey($parentName) -and -not $isBranchParent) { continue }
 
                 $edgeKey = "{0}|{1}|{2}" -f $fromId, $label, $toId
@@ -200,6 +200,7 @@
 
         if ($trigger -and $nodeByName.ContainsKey($trigger.Name)) {
             $fromId = $nodeByName[$trigger.Name]
+            $toId = Resolve-PowerPlatformCheckerFlowChartToRenderId -SourceName $trigger.Name -TargetName $action.Name -WrappedByName $wrappedByName -ActionByName $actionByName -NodeByName $nodeByName
             $edgeKey = "{0}||{1}" -f $fromId, $toId
             if ($edgeKeySet.Add($edgeKey)) {
                 [void]$edges.Add([pscustomobject]@{

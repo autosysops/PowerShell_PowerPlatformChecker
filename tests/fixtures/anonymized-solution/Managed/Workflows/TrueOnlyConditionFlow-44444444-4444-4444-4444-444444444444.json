@@ -1,0 +1,59 @@
+{
+  "properties": {
+    "connectionReferences": {},
+    "definition": {
+      "parameters": {
+        "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+        "$connections": { "defaultValue": {}, "type": "Object" }
+      },
+      "triggers": {
+        "Manual": {
+          "type": "Request",
+          "inputs": { "schema": {} }
+        }
+      },
+      "actions": {
+        "First_condition": {
+          "type": "If",
+          "expression": "@equals(1,1)",
+          "actions": {
+            "First_true_action": {
+              "type": "Select",
+              "inputs": {
+                "from": [],
+                "select": {}
+              },
+              "runAfter": {}
+            }
+          },
+          "runAfter": {}
+        },
+        "Second_condition": {
+          "type": "If",
+          "expression": "@equals(1,1)",
+          "actions": {
+            "Second_true_action": {
+              "type": "Select",
+              "inputs": {
+                "from": [],
+                "select": {}
+              },
+              "runAfter": {}
+            }
+          },
+          "runAfter": {
+            "First_condition": ["Succeeded"]
+          }
+        },
+        "After_conditions": {
+          "type": "Compose",
+          "inputs": "Done",
+          "runAfter": {
+            "Second_condition": ["Succeeded"]
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": "1.0.0.0"
+}

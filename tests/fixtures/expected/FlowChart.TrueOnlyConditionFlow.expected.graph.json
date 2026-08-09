@@ -1,0 +1,95 @@
+{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action0",
+      "Label": "Manual",
+      "Shape": "Trigger"
+    },
+    {
+      "Id": "action1",
+      "Label": "After_conditions",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0",
+      "Label": "",
+      "To": "action3_group"
+    },
+    {
+      "From": "action3_group",
+      "Label": "Succeeded",
+      "To": "action5_group"
+    },
+    {
+      "From": "action5_group",
+      "Label": "Succeeded",
+      "To": "action1"
+    }
+  ],
+  "Subgraphs": [
+    {
+      "GraphType": "FlowchartGraph",
+      "Id": "action3_group",
+      "ActionName": "First_condition",
+      "Title": " ",
+      "Direction": "TB",
+      "IsEmpty": false,
+      "Nodes": [
+        {
+          "Id": "action3",
+          "Label": "First_condition",
+          "Shape": "Decision"
+        },
+        {
+          "Id": "action2",
+          "Label": "First_true_action",
+          "Shape": "Action"
+        }
+      ],
+      "Edges": [
+        {
+          "From": "action3",
+          "Label": "True",
+          "To": "action2"
+        }
+      ],
+      "Subgraphs": []
+    },
+    {
+      "GraphType": "FlowchartGraph",
+      "Id": "action5_group",
+      "ActionName": "Second_condition",
+      "Title": " ",
+      "Direction": "TB",
+      "IsEmpty": false,
+      "Nodes": [
+        {
+          "Id": "action5",
+          "Label": "Second_condition",
+          "Shape": "Decision"
+        },
+        {
+          "Id": "action4",
+          "Label": "Second_true_action",
+          "Shape": "Action"
+        }
+      ],
+      "Edges": [
+        {
+          "From": "action5",
+          "Label": "True",
+          "To": "action4"
+        }
+      ],
+      "Subgraphs": []
+    }
+  ]
+}
