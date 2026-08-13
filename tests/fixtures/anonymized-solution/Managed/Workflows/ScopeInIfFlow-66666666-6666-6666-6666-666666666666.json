@@ -1,0 +1,85 @@
+﻿{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": { "name": "shared_commondataserviceforapps" },
+        "connection": { "connectionReferenceLogicalName": "ppc_sharedcommondataserviceforapps" },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "parameters": {
+        "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+        "$connections": { "defaultValue": {}, "type": "Object" }
+      },
+      "triggers": {
+        "Manual": {
+          "type": "Request",
+          "inputs": { "schema": {} }
+        }
+      },
+      "actions": {
+        "Initialize_materieelnummer": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "materieelnummer",
+                "type": "string",
+                "value": ""
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Is_Material": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@true",
+                  "@true"
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Try_Adding_or_Updating_Material": {
+              "type": "Scope",
+              "actions": {
+                "Genereer_materieelnummer": {
+                  "type": "Compose",
+                  "inputs": "GEN_MATERIAL",
+                  "runAfter": {}
+                },
+                "Calculate_Prijs": {
+                  "type": "Compose",
+                  "inputs": "CALC_PRICE",
+                  "runAfter": {
+                    "Genereer_materieelnummer": ["Succeeded"]
+                  }
+                }
+              },
+              "runAfter": {}
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Initialize_materieelnummer": ["Succeeded"]
+          }
+        },
+        "Final_Update": {
+          "type": "Compose",
+          "inputs": "FINAL",
+          "runAfter": {
+            "Is_Material": ["Succeeded"]
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": "1.0.0.0"
+}

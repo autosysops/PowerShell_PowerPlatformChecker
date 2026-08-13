@@ -1,0 +1,96 @@
+﻿{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action0",
+      "Label": "Manual",
+      "Shape": "Trigger"
+    },
+    {
+      "Id": "action2",
+      "Label": "Initialize_materieelnummer",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action1",
+      "Label": "Final_Update",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0",
+      "Label": "",
+      "To": "action2"
+    },
+    {
+      "From": "action2",
+      "Label": "Succeeded",
+      "To": "action6_group"
+    },
+    {
+      "From": "action6_group",
+      "Label": "Succeeded",
+      "To": "action1"
+    }
+  ],
+  "Subgraphs": [
+    {
+      "GraphType": "FlowchartGraph",
+      "Id": "action6_group",
+      "ActionName": "Is_Material",
+      "Title": " ",
+      "Direction": "TB",
+      "IsEmpty": false,
+      "Nodes": [
+        {
+          "Id": "action6",
+          "Label": "Is_Material",
+          "Shape": "Decision"
+        }
+      ],
+      "Edges": [
+        {
+          "From": "action6",
+          "Label": "True",
+          "To": "action5_group"
+        }
+      ],
+      "Subgraphs": [
+        {
+          "GraphType": "FlowchartGraph",
+          "Id": "action5_group",
+          "ActionName": "Try_Adding_or_Updating_Material",
+          "Title": "Try_Adding_or_Updating_Material",
+          "Direction": "TB",
+          "IsEmpty": false,
+          "Nodes": [
+            {
+              "Id": "action4",
+              "Label": "Genereer_materieelnummer",
+              "Shape": "Action"
+            },
+            {
+              "Id": "action3",
+              "Label": "Calculate_Prijs",
+              "Shape": "Action"
+            }
+          ],
+          "Edges": [
+            {
+              "From": "action4",
+              "Label": "Succeeded",
+              "To": "action3"
+            }
+          ],
+          "Subgraphs": []
+        }
+      ]
+    }
+  ]
+}

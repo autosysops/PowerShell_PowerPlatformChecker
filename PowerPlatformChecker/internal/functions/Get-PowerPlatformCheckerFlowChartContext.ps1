@@ -153,6 +153,8 @@
 
         $descendants = $descendantsByAction[$action.Name]
         $isDecision = $action.Type -in @("If", "Switch")
+        # Scope blocks always render as subgraphs regardless of edge topology.
+        $isScope = $action.Type -eq "Scope"
         $hasExternalIncoming = $false
 
         if ($null -ne $action.RunAfter -and $action.RunAfter -ne "") {
@@ -164,7 +166,7 @@
             }
         }
 
-        if ($isDecision -or $isSwitchBranch -or $hasExternalIncoming) {
+        if ($isDecision -or $isSwitchBranch -or $isScope -or $hasExternalIncoming) {
             $wrappedByName[$action.Name] = [pscustomobject]@{
                 SubgraphId = "{0}_group" -f $nodeByName[$action.Name]
             }
