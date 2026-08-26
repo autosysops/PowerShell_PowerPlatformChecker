@@ -67,16 +67,59 @@
 
     $nodes = @($nodes | Select-Object -Unique Id, Label, Shape)
     $subgraphs = @($subgraphs | Sort-Object { [int]($_.Id -replace "\D", "") })
+    $wrapperId = if ($isWrapped) { $GraphContext.WrappedByName[$RootActionName].SubgraphId } else { $null }
+
+    $directSubgraphIds = @($subgraphs | ForEach-Object { [string]$_.Id } | Select-Object -Unique)
+    $descendantNodeIdsBySubgraphId = @{}
+    foreach ($subgraph in @($subgraphs)) {
+        $pendingGraphs = [System.Collections.Generic.Queue[object]]::new()
+        $pendingGraphs.Enqueue($subgraph)
+        $descendantIds = [System.Collections.Generic.List[string]]::new()
+        while ($pendingGraphs.Count -gt 0) {
+            $currentGraph = $pendingGraphs.Dequeue()
+            foreach ($node in @($currentGraph.Nodes)) {
+                [void]$descendantIds.Add([string]$node.Id)
+            }
+            foreach ($nestedSubgraph in @($currentGraph.Subgraphs)) {
+                $pendingGraphs.Enqueue($nestedSubgraph)
+            }
+        }
+
+        $descendantNodeIdsBySubgraphId[[string]$subgraph.Id] = @($descendantIds | Select-Object -Unique)
+    }
+
     $memberIds = @($nodes | ForEach-Object { $_.Id })
     $memberIds += @($subgraphs | ForEach-Object { $_.Id })
     $memberIds = @($memberIds | Select-Object -Unique)
+
     $edges = @(
         $GraphContext.Edges |
-            Where-Object { $memberIds -contains $_.From -and $memberIds -contains $_.To } |
+            Where-Object {
+                $fromId = [string]$_.From
+                $toId = [string]$_.To
+
+                if ($memberIds -contains $fromId -and $memberIds -contains $toId) {
+                    return $true
+                }
+
+                # Keep cross-boundary links on the parent graph to avoid rendering
+                # boundary edges inside their own Mermaid subgraph block.
+                if ($directSubgraphIds -contains $fromId -and
+                    $descendantNodeIdsBySubgraphId.ContainsKey($fromId) -and
+                    ($descendantNodeIdsBySubgraphId[$fromId] -contains $toId)) {
+                    return $true
+                }
+                if ($directSubgraphIds -contains $toId -and
+                    $descendantNodeIdsBySubgraphId.ContainsKey($toId) -and
+                    ($descendantNodeIdsBySubgraphId[$toId] -contains $fromId)) {
+                    return $true
+                }
+
+                return $false
+            } |
             Sort-Object From, Label, To
     )
 
-    $wrapperId = if ($isWrapped) { $GraphContext.WrappedByName[$RootActionName].SubgraphId } else { $null }
     $displayName = if ($GraphContext.ActionByName.ContainsKey($RootActionName) -and $GraphContext.ActionByName[$RootActionName].PSObject.Properties.Name -contains "DisplayName") {
         [string]$GraphContext.ActionByName[$RootActionName].DisplayName
     }

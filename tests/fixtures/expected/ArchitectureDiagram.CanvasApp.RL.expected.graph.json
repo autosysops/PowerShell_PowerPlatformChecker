@@ -7,6 +7,7 @@
       "DefaultEntities",
       "Entities",
       "EnvironmentVariables",
+      "ExternalDomains",
       "Flows",
       "ModelDrivenApps",
       "WebResources"
@@ -22,7 +23,12 @@
       "Type": "CanvasApp",
       "DisplayName": "Sales Canvas App",
       "ClassKind": "CanvasApp",
-      "Properties": {},
+      "Properties": {
+        "Destination": "dataverse",
+        "DestinationConfidence": "Low",
+        "DestinationEvidence": "ConnectionReference",
+        "DestinationType": "Service"
+      },
       "Members": [],
       "HasExplicitDisplayName": true
     },

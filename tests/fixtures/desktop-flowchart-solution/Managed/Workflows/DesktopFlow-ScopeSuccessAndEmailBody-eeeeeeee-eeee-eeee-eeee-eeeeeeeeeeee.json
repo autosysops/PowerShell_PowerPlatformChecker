@@ -1,0 +1,8 @@
+{
+  "name": "Desktop Scope Success And Email Body Flow",
+  "type": "Microsoft.ProcessSimple/flows",
+  "properties": {
+    "displayName": "Desktop Scope Success And Email Body Flow",
+    "state": "Started"
+  }
+}

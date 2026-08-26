@@ -47,9 +47,9 @@
         return [pscustomobject]@{ Nodes = @(); Edges = @() }
     }
 
+    $connected = @($ConnectedConnectorNames | Where-Object { $_ } | Select-Object -Unique)
     $connections = @($SolutionObject.ConnectionReferences | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_.ConnectorId) })
     if ($IsScopedDiagram.IsPresent) {
-        $connected = @($ConnectedConnectorNames | Where-Object { $_ } | Select-Object -Unique)
         $connections = @($connections | Where-Object {
                 $connectorName = Convert-PowerPlatformCheckerMermaidId -InputString ($_.ConnectorId.Split("/")[-1])
                 $connectorName -in $connected
@@ -60,6 +60,28 @@
             $connectorName = Convert-PowerPlatformCheckerMermaidId -InputString ($_.ConnectorId.Split("/")[-1])
             [pscustomobject]@{ Id = $connectorName; Type = "Connection"; DisplayName = $connectorName; ClassKind = "Connection"; Properties = @{}; Members = @("  ConnectionReference", "  $($_.DisplayName)()"); HasExplicitDisplayName = $false }
         })
+
+    $existingNodeIds = @($nodes | ForEach-Object { [string]$_.Id })
+    foreach ($connectedConnector in @($connected)) {
+        if ([string]::IsNullOrWhiteSpace([string]$connectedConnector)) {
+            continue
+        }
+
+        $connectorNodeId = Convert-PowerPlatformCheckerMermaidId -InputString ([string]$connectedConnector)
+        if ($connectorNodeId -in $existingNodeIds) {
+            continue
+        }
+
+        $nodes += [pscustomobject]@{
+            Id = [string]$connectorNodeId
+            Type = "Connection"
+            DisplayName = [string]$connectorNodeId
+            ClassKind = "Connection"
+            Properties = @{}
+            Members = @("  ConnectionReference", "  $connectorNodeId()")
+            HasExplicitDisplayName = $false
+        }
+    }
 
     return [pscustomobject]@{ Nodes = $nodes; Edges = @() }
 }

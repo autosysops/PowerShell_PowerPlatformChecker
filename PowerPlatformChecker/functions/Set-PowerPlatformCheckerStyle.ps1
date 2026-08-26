@@ -151,10 +151,9 @@
         }
 
         $telemetryProperties = @{
-            StyleTarget = $StyleTarget
+            StyleTargetExplicit = $PSBoundParameters.ContainsKey('StyleTarget')
             UpdateCount = @($updates.Keys).Count
-            UpdateKeys = (@($updates.Keys | Sort-Object -Unique) -join ',')
-            UpdateSource = 'DynamicParameters'
+            UsesMultipleUpdates = (@($updates.Keys).Count -gt 1)
         }
         Send-THEvent -ModuleName 'PowerPlatformChecker' -EventName 'Set-PowerPlatformCheckerStyle' -PropertiesHash $telemetryProperties
 

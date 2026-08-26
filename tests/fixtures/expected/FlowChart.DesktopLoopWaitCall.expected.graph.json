@@ -1,0 +1,61 @@
+﻿{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action0",
+      "Label": "WAIT for 5 seconds",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action1",
+      "Label": "WAIT for web page content (contain element)",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action4",
+      "Label": "WRITE",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0",
+      "Label": "Succeeded",
+      "To": "action1"
+    },
+    {
+      "From": "action1",
+      "Label": "Succeeded",
+      "To": "action2_group"
+    },
+    {
+      "From": "action2_group",
+      "Label": "Succeeded",
+      "To": "action4"
+    }
+  ],
+  "Subgraphs": [
+    {
+      "GraphType": "FlowchartGraph",
+      "Id": "action2_group",
+      "ActionName": "LOOP FOREACH CurrentItem IN Items",
+      "Title": "LOOP FOREACH CurrentItem IN Items",
+      "Direction": "TB",
+      "IsEmpty": false,
+      "Nodes": [
+        {
+          "Id": "action3",
+          "Label": "CALL Subflow_ProcessItem",
+          "Shape": "Action"
+        }
+      ],
+      "Edges": [],
+      "Subgraphs": []
+    }
+  ]
+}

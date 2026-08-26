@@ -1,0 +1,14 @@
+﻿<desktopflowbinary desktopflowbinaryid="aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaa1">
+  <data mimetype="application/json">ConnectorDefinition_aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.json</data>
+  <iscustomizable>1</iscustomizable>
+  <metadata>{}</metadata>
+  <mimetype>application/json</mimetype>
+  <name>Desktop flow connector definition</name>
+  <process>
+    <workflowid>77777777-7777-7777-7777-777777777777</workflowid>
+  </process>
+  <reference>/providers/Microsoft.PowerApps/apis/shared_desktopautomation</reference>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+  <type>ConnectorDefinition</type>
+</desktopflowbinary>

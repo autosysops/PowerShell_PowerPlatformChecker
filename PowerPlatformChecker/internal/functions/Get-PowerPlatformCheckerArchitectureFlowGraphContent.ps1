@@ -118,10 +118,27 @@
 
         $flowNode = "flow$($flow.Id)"
         $flowMembers = @()
+        $flowPath = Join-Path (Join-Path $SolutionPath "Workflows") ("*" + $flow.Id + "*.json")
+        $flowType = Get-PowerPlatformCheckerFlowType -Path $flowPath
+        $triggerMode = "Unknown"
+        $interactionDirection = "Unknown"
+        $directionConfidence = "Low"
+        $sourceEvidence = "NoDirectionSignal"
+        $destination = ""
+        $destinationType = "Unknown"
+        $destinationConfidence = "Low"
+        $destinationEvidence = "NoDestinationSignal"
+        if ([string]::IsNullOrWhiteSpace($flowType)) {
+            $flowType = "Unknown"
+        }
+
+        if ($flowType -eq "Desktop") {
+            $flowMembers += @(Get-PowerPlatformCheckerDesktopFlowClassMemberList -Path $flowPath)
+        }
 
         # Flow parameters provide environment-variable usage links into the flow node.
         try {
-            $parameters = Get-PowerPlatformCheckerFlowParameter -Path (Join-Path (Join-Path $SolutionPath "Workflows") ("*" + $flow.Id + "*.json"))
+            $parameters = Get-PowerPlatformCheckerFlowParameter -Path $flowPath
             foreach ($parameter in @($parameters)) {
                 if (-not $IncludeEnvironmentVariables.IsPresent) { continue }
                 $flowMembers += "    [$($parameter.Type)]$($parameter.SchemaName)"
@@ -135,7 +152,18 @@
 
         # Flow action metadata drives flow-to-flow, flow-to-connector, and flow-to-entity links.
         try {
-            $actions = Get-PowerPlatformCheckerFlowActionList -Path (Join-Path (Join-Path $SolutionPath "Workflows") ("*" + $flow.Id + "*.json")) -Recurse -IncludeTrigger -Properties References,Entities
+            $actions = Get-PowerPlatformCheckerFlowActionList -Path $flowPath -Recurse -IncludeTrigger -Properties References,Entities
+            $triggerMode = Get-PowerPlatformCheckerFlowTriggerMode -Actions $actions
+            $directionMetadata = Get-PowerPlatformCheckerFlowDirectionProfile -Actions $actions
+            $interactionDirection = [string]$directionMetadata.InteractionDirection
+            $directionConfidence = [string]$directionMetadata.DirectionConfidence
+            $sourceEvidence = [string]$directionMetadata.SourceEvidence
+
+            $destinationMetadata = Get-PowerPlatformCheckerFlowDestinationProfile -Path $flowPath -Actions $actions
+            $destination = [string]$destinationMetadata.Destination
+            $destinationType = [string]$destinationMetadata.DestinationType
+            $destinationConfidence = [string]$destinationMetadata.DestinationConfidence
+            $destinationEvidence = [string]$destinationMetadata.DestinationEvidence
             foreach ($action in @($actions)) {
                 if ($null -ne $action.Reference -and $action.Reference -ne "") {
                     $referenceFlow = $SolutionObject.Workflows | Where-Object { $_.Id -eq $action.Reference } | Select-Object -First 1
@@ -168,12 +196,43 @@
             Write-Warning "Error in reading the actions of flow $($flow.Name)"
         }
 
+        if ($IncludeConnections.IsPresent -and $flowType -eq "Desktop") {
+            try {
+                $desktopConnectors = @(Get-PowerPlatformCheckerFlowConnectorTier -Path $flowPath)
+                foreach ($desktopConnector in @($desktopConnectors)) {
+                    $connectorName = [string]$desktopConnector.Name
+                    if ([string]::IsNullOrWhiteSpace($connectorName)) {
+                        continue
+                    }
+
+                    $connectorNodeId = Convert-PowerPlatformCheckerMermaidId -InputString $connectorName
+
+                    $flowMembers += "    ConnectionReference($connectorNodeId)"
+                    $edges += [pscustomobject]@{ SourceId = $connectorNodeId; TargetId = $flowNode; Label = $connectorNodeId; EdgeType = "Link"; Metadata = @{ Arrow = "-->" } }
+                    $connectedConnections += $connectorNodeId
+                }
+            }
+            catch {
+                Write-Warning "Error in resolving desktop connectors for flow $($flow.Name)"
+            }
+        }
+
         $nodes += [pscustomobject]@{
             Id = $flowNode
             Type = "Flow"
             DisplayName = [string]$flow.Name
             ClassKind = "Flow"
-            Properties = @{}
+            Properties = @{
+                FlowType = [string]$flowType
+                TriggerMode = [string]$triggerMode
+                InteractionDirection = [string]$interactionDirection
+                DirectionConfidence = [string]$directionConfidence
+                SourceEvidence = [string]$sourceEvidence
+                Destination = [string]$destination
+                DestinationType = [string]$destinationType
+                DestinationConfidence = [string]$destinationConfidence
+                DestinationEvidence = [string]$destinationEvidence
+            }
             Members = @($flowMembers)
             HasExplicitDisplayName = $true
         }

@@ -1,0 +1,8 @@
+﻿<Workflow>
+    <WorkflowId>{16161616-1616-1616-1616-161616161616}</WorkflowId>
+    <Category>6</Category>
+    <UIFlowType>2</UIFlowType>
+    <Inputs>{"environmentVariables":[{"name":"runtime_only_input","schemaName":"runtime_only_input","type":"string"}]}</Inputs>
+    <Dependencies>{"environmentVariables":[{"name":"Api Url","schemaName":"ppc_api_url","type":"string"}]}</Dependencies>
+    <Definition>DISPLAY Message='x'</Definition>
+</Workflow>

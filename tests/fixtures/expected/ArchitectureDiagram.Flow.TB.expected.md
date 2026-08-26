@@ -1,7 +1,7 @@
 ﻿:::mermaid
 classDiagram
 direction TB
-class flow11111111-1111-1111-1111-111111111111["Sample Flow"]:::Flow {
+class flow11111111-1111-1111-1111-111111111111["[CLOUD] Sample Flow"]:::Flow {
     [String]ppc_ApiBaseUrl
     When_a_row_is_added(shared_commondataserviceforapps)
     When_a_row_is_added(ppc_orders)

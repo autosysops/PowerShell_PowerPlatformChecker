@@ -1,0 +1,67 @@
+{
+  "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_desktopautomation",
+  "Definition": {
+    "Id": "/providers/Microsoft.PowerApps/apis/shared_desktopautomation",
+    "Name": "shared_desktopautomation",
+    "Properties": {
+      "IsCustomApi": false,
+      "DisplayName": "Desktop Automations",
+      "Tier": "Premium",
+      "Swagger": {
+        "basePath": "/apim/desktopautomation",
+        "host": "anonymized.azure-apim.net",
+        "info": {
+          "title": "Desktop Automations",
+          "version": "1.0"
+        },
+        "definitions": {
+          "DesktopRunInput": {
+            "type": "object",
+            "properties": {
+              "ppc_desktop_baseurl": {
+                "type": "string",
+                "x-ms-summary": "Base URL"
+              },
+              "message": {
+                "type": "string",
+                "x-ms-summary": "Message"
+              }
+            },
+            "required": [
+              "ppc_desktop_baseurl"
+            ]
+          }
+        },
+        "paths": {
+          "/{connectionId}/runDesktopFlow": {
+            "post": {
+              "operationId": "RunDesktopFlow",
+              "description": "Run desktop flow action.",
+              "parameters": [
+                {
+                  "in": "path",
+                  "name": "connectionId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "in": "body",
+                  "name": "runInput",
+                  "required": true,
+                  "schema": {
+                    "$ref": "#/definitions/DesktopRunInput"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Operation was successful"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

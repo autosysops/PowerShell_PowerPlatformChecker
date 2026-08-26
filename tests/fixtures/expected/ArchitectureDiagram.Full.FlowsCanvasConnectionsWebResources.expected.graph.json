@@ -18,7 +18,17 @@
       "Type": "Flow",
       "DisplayName": "Sample Flow",
       "ClassKind": "Flow",
-      "Properties": {},
+      "Properties": {
+        "Destination": "api.example.test",
+        "DestinationConfidence": "High",
+        "DestinationEvidence": "FlowParameterDefault",
+        "DestinationType": "Domain",
+        "DirectionConfidence": "High",
+        "FlowType": "Cloud",
+        "InteractionDirection": "Write",
+        "SourceEvidence": "OperationCatalog+Heuristic",
+        "TriggerMode": "Webhook"
+      },
       "Members": [
         "    When_a_row_is_added(shared_commondataserviceforapps)",
         "    Send_an_email(shared_office365)",
@@ -32,10 +42,39 @@
       "Type": "Flow",
       "DisplayName": "Child Flow",
       "ClassKind": "Flow",
-      "Properties": {},
+      "Properties": {
+        "Destination": "office365",
+        "DestinationConfidence": "Low",
+        "DestinationEvidence": "ConnectorGroup",
+        "DestinationType": "Service",
+        "DirectionConfidence": "High",
+        "FlowType": "Cloud",
+        "InteractionDirection": "Write",
+        "SourceEvidence": "OperationCatalog+Heuristic",
+        "TriggerMode": "ManualHttp"
+      },
       "Members": [
         "    Notify(shared_office365)"
       ],
+      "HasExplicitDisplayName": true
+    },
+    {
+      "Id": "flow23232323-2323-2323-2323-232323232323",
+      "Type": "Flow",
+      "DisplayName": "Cloud HTTP profile flow",
+      "ClassKind": "Flow",
+      "Properties": {
+        "Destination": "api.contoso.example",
+        "DestinationConfidence": "High",
+        "DestinationEvidence": "FlowParameterDefault",
+        "DestinationType": "Domain",
+        "DirectionConfidence": "Low",
+        "FlowType": "Cloud",
+        "InteractionDirection": "Unknown",
+        "SourceEvidence": "NoDirectionSignal",
+        "TriggerMode": "ManualHttp"
+      },
+      "Members": [],
       "HasExplicitDisplayName": true
     },
     {
@@ -43,7 +82,12 @@
       "Type": "CanvasApp",
       "DisplayName": "Sales Canvas App",
       "ClassKind": "CanvasApp",
-      "Properties": {},
+      "Properties": {
+        "Destination": "dataverse",
+        "DestinationConfidence": "Low",
+        "DestinationEvidence": "ConnectionReference",
+        "DestinationType": "Service"
+      },
       "Members": [],
       "HasExplicitDisplayName": true
     },

@@ -102,7 +102,21 @@
 
         $canvasId = Convert-PowerPlatformCheckerMermaidId -InputString $canvasKey
         $canvasDisplayName = if ($canvasApp.DisplayName) { [string]$canvasApp.DisplayName } else { $canvasKey }
-        $nodes += [pscustomobject]@{ Id = $canvasId; Type = "CanvasApp"; DisplayName = $canvasDisplayName; ClassKind = "CanvasApp"; Properties = @{}; Members = @(); HasExplicitDisplayName = $true }
+        $destinationMetadata = Get-PowerPlatformCheckerCanvasDestinationProfile -CanvasApp $canvasApp
+        $nodes += [pscustomobject]@{
+            Id = $canvasId
+            Type = "CanvasApp"
+            DisplayName = $canvasDisplayName
+            ClassKind = "CanvasApp"
+            Properties = @{
+                Destination = [string]$destinationMetadata.Destination
+                DestinationType = [string]$destinationMetadata.DestinationType
+                DestinationConfidence = [string]$destinationMetadata.DestinationConfidence
+                DestinationEvidence = [string]$destinationMetadata.DestinationEvidence
+            }
+            Members = @()
+            HasExplicitDisplayName = $true
+        }
 
         # Connection reference edges show which connectors are used by this canvas app.
         foreach ($connection in @($canvasApp.ConnectionReferences)) {

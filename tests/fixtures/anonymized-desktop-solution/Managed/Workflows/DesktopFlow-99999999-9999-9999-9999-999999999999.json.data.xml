@@ -1,0 +1,10 @@
+<Workflow WorkflowId="{99999999-9999-9999-9999-999999999999}" Name="Desktop Manifest Connector Flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/DesktopFlow-99999999-9999-9999-9999-999999999999.json</JsonFileName>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Description>An anonymized desktop flow fixture that relies on manifest connection references.</Description>
+  <ConnectionReferences>{}</ConnectionReferences>
+  <Inputs>{"environmentVariables":[]}</Inputs>
+  <Outputs>{"result":{"type":"string"}}</Outputs>
+  <Definition>DISPLAY Message='Start';\nExternal.InvokeCloudConnector Connection: 'conn-office' ConnectorId: '/providers/Microsoft.PowerApps/apis/shared_office365' OperationId: 'SendEmailV2' @'emailMessage/To': 'test@example.com';\nWRITE Text='Done'</Definition>
+</Workflow>

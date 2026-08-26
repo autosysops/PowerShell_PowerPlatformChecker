@@ -1,0 +1,10 @@
+﻿<Workflow>
+  <WorkflowId>{20202020-2020-2020-2020-202020202020}</WorkflowId>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Definition>WAIT 5
+ON ERROR TimeoutError
+    CALL Subflow_Address_NotAvailable
+END
+WRITE Text='Done'</Definition>
+</Workflow>

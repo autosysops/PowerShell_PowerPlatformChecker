@@ -1,0 +1,9 @@
+<AppModule>
+  <UniqueName>invalid-sitemap-app</UniqueName>
+  <LocalizedNames>
+    <LocalizedName description="Invalid Sitemap App" languagecode="1033" />
+  </LocalizedNames>
+  <AppModuleComponents>
+    <AppModuleComponent type="1" schemaName="sample_entity" />
+  </AppModuleComponents>
+</AppModule>

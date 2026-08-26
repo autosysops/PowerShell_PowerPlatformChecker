@@ -1,0 +1,11 @@
+﻿<Workflow>
+  <WorkflowId>{19191919-1919-1919-1919-191919191919}</WorkflowId>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Definition>BLOCK 'Scope: Try executing the flow'
+ON BLOCK ERROR all
+    CALL Subflow_SendErrorEmail
+END
+    Variables.ConvertJsonToCustomObject Json: var_ExcelList CustomObject=&gt; ExcelRows
+END</Definition>
+</Workflow>

@@ -4,6 +4,7 @@ Describe "Get-PowerPlatformCheckerModelDrivenApp" {
     BeforeAll {
         Initialize-PowerPlatformCheckerTestData
         $script:solutionPath = Get-PowerPlatformCheckerFixtureSolutionPath
+        $script:invalidAppPath = (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\invalid-app-edge\Managed")).Path
     }
     BeforeEach { Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {} }
 
@@ -20,6 +21,23 @@ Describe "Get-PowerPlatformCheckerModelDrivenApp" {
         ($apps[0].Components | Where-Object { $_.ComponentType -eq 1 }).Count | Should -BeGreaterThan 0
         ($apps[0].Components | Where-Object { $_.ComponentType -eq 29 }).Count | Should -BeGreaterThan 0
         ($apps[0].Components | Where-Object { $_.ComponentType -eq 62 }).Count | Should -BeGreaterThan 0
+    }
+
+    It "handles invalid model-driven metadata fixtures gracefully" {
+        $warnings = @()
+        $apps = Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:invalidAppPath -AppName "invalid-model-app" -WarningVariable warnings -WarningAction SilentlyContinue
+
+        @($apps).Count | Should -Be 0
+        (@($warnings) -join " `n") | Should -Match "Invalid model-driven app"
+    }
+
+    It "keeps app output when sitemap metadata is invalid" {
+        $warnings = @()
+        $apps = Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:invalidAppPath -AppName "invalid-sitemap-app" -WarningVariable warnings -WarningAction SilentlyContinue
+
+        @($apps).Count | Should -Be 1
+        $apps[0].UniqueName | Should -Be "invalid-sitemap-app"
+        (@($warnings) -join " `n") | Should -Match "Invalid model-driven app sitemap metadata"
     }
 
     It "discovers fixture web resources from entity form xml without appmodule js components" {
@@ -152,5 +170,21 @@ Describe "Get-PowerPlatformCheckerModelDrivenApp" {
                 $app.WebResources | Should -Contain "sample_script/App.js"
                 ($app.Components | Where-Object { $_.ComponentType -eq 61 } | Select-Object -First 1).ComponentTypeName | Should -Be "Web Resources"
         }
+
+                It "sends sanitized telemetry for filtered and unfiltered app lookup" {
+                    $telemetryCalls = [System.Collections.Generic.List[object]]::new()
+                    Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {
+                        param([string]$ModuleName, [string]$EventName, [hashtable]$PropertiesHash)
+                        [void]$telemetryCalls.Add([pscustomobject]@{ ModuleName = $ModuleName; EventName = $EventName; PropertiesHash = $PropertiesHash })
+                    }
+
+                    $secretAppName = "secret_model_app"
+                    [void](Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:solutionPath -AppName $secretAppName)
+                    Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerModelDrivenApp" -ExpectedKeys @("AppNameFilterUsed") -ConfidentialValues @($script:solutionPath, $secretAppName)
+
+                    $telemetryCalls.Clear()
+                    [void](Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:solutionPath)
+                    Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerModelDrivenApp" -ExpectedKeys @("AppNameFilterUsed") -ConfidentialValues @($script:solutionPath)
+                }
 }
 

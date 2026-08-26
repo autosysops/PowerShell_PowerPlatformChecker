@@ -1,0 +1,11 @@
+{
+  "ConnectionReferences": [
+    {
+      "name": "7b435bb9579e4faeaaf922c261cee35d",
+      "api": {
+        "name": "/providers/Microsoft.PowerApps/apis/shared_office365"
+      },
+      "displayName": "Office 365 Outlook"
+    }
+  ]
+}

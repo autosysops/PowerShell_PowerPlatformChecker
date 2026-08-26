@@ -60,6 +60,7 @@ The module expects a folder structure similar to unpacked solutions:
   - `AppModuleSiteMaps/*/AppModuleSiteMap*.xml`
   - `WebResources/**/*.data.xml`
   - `Entities/*/FormXml/**/*.xml`
+  - `desktopflowbinaries/*/desktopflowbinary.xml` (+ referenced `data/*.json` payloads)
 
 ## Command Overview
 
@@ -68,9 +69,31 @@ The module expects a folder structure similar to unpacked solutions:
 - `Get-PowerPlatformCheckerFlowActionList`
 - `Get-PowerPlatformCheckerFlowActionDefaultName`
 - `Test-PowerPlatformCheckerFlowOperationName`
+- `Get-PowerPlatformCheckerFlowType`
+- `Get-PowerPlatformCheckerAppType`
 - `Get-PowerPlatformCheckerFlowParameter`
 - `Get-PowerPlatformCheckerFlowDescription`
 - `Get-PowerPlatformCheckerFlowConnectorTier`
+- `Get-PowerPlatformCheckerAppConnectorTier`
+
+Path-based flow commands (`Get-PowerPlatformCheckerFlowActionList`,
+`Get-PowerPlatformCheckerFlowParameter`, and `Get-PowerPlatformCheckerFlowConnectorTier`)
+auto-detect cloud and desktop flows.
+
+`Get-PowerPlatformCheckerFlowActionList` supports optional action profile fields:
+
+- `InteractionProfile` adds `Method`, `GetSetAction`, and `InteractionDirection`
+- `ExternalProfile` adds `ExternalUrl`, `ExternalProtocol`, `ExternalDomain`, `ExternalMainDomain`, and `ExternalResolutionState`
+
+`Get-PowerPlatformCheckerFlowType` classifies as `Cloud` when the JSON includes
+`properties.connectionReferences` and `properties.definition`; otherwise it checks
+desktop metadata markers (`Category=6` or `UIFlowType=2`) in the companion
+`Workflows/*.json.data.xml` file.
+
+Desktop flow parsing also normalizes escaped `Definition` payloads before tokenizing
+commands. That allows flowcharts and architecture members to handle multiline email
+bodies, escaped selector literals, and `@INPUT`/`@OUTPUT` directives without leaking
+metadata lines or free-form text into rendered diagrams.
 
 ### Solution Metadata
 
@@ -98,6 +121,7 @@ The module expects a folder structure similar to unpacked solutions:
 
 - `Get-PowerPlatformCheckerArchitectureDiagram`
 - `Get-PowerPlatformCheckerFlowChart`
+- `Get-PowerPlatformCheckerExternalInteraction`
 
 `Get-PowerPlatformCheckerArchitectureDiagram` supports:
 
@@ -106,6 +130,15 @@ The module expects a folder structure similar to unpacked solutions:
 - Per-call style overrides with `-StyleOverrides`
 - Session-level style defaults with `Set-PowerPlatformCheckerStyle`
 - Output format selection with `-OutputFormat Mermaid|Graph`
+- Flow nodes are tagged in the diagram label as `[CLOUD]` or `[DESKTOP]`.
+- External-domain rendering can be toggled with `-IncludeElements ExternalDomains`.
+
+`Get-PowerPlatformCheckerExternalInteraction` supports multi-solution interaction generation:
+
+- Accepts multiple input paths
+- Optional recursive discovery of solution folders
+- Optional include/exclude wildcard filters for solution folder names
+- Returns either Mermaid or combined Graph output
 
 `Get-PowerPlatformCheckerFlowChart` supports Mermaid and recursive graph output with
 `-OutputFormat Mermaid|Graph`.
@@ -114,6 +147,16 @@ The module expects a folder structure similar to unpacked solutions:
 
 - `Get-PowerPlatformCheckerConnectorData`
 - `Get-PowerPlatformCheckerOperationData`
+
+## Telemetry
+
+Public commands send lightweight usage telemetry through `TelemetryHelper`.
+
+- Telemetry is opt-in through `$Env:PowerPlatformChecker_TELEMETRY_OPTIN`.
+- Payloads are limited to non-sensitive metadata such as parameter-set selection,
+  counts, or classification outcomes.
+- File paths, solution names, flow names, action contents, and other customer data
+  are not intentionally added to telemetry payloads by module commands.
 
 ## Usage Examples
 
@@ -136,6 +179,21 @@ $flowPath = "C:\Solutions\MySolution\Managed\Workflows\MyFlow.json"
 Get-PowerPlatformCheckerFlowConnectorTier -Path $flowPath
 ```
 
+### 2c) Check connector tiers used by canvas and model-driven apps
+
+```powershell
+Get-PowerPlatformCheckerAppConnectorTier -SolutionPath "C:\Solutions\MySolution\Managed"
+```
+
+`Get-PowerPlatformCheckerAppConnectorTier` auto-detects app type from solution files and emits rows for both canvas and model-driven apps.
+
+### 2b) Detect flow type before analysis
+
+```powershell
+$flowPath = "C:\Solutions\MySolution\Managed\Workflows\MyFlow.json"
+Get-PowerPlatformCheckerFlowType -Path $flowPath
+```
+
 ### 3) Validate flow action names against defaults
 
 ```powershell
@@ -147,12 +205,14 @@ Test-PowerPlatformCheckerFlowOperationName -Path "C:\Solutions\MySolution\Manage
 ```powershell
 $actions = Get-PowerPlatformCheckerFlowActionList `
   -Path "C:\Solutions\MySolution\Managed\Workflows\MyFlow.json" `
-  -Recurse -IncludeTrigger -Properties RunAfter, ParentAction, References, Entities
+  -Recurse -IncludeTrigger -Properties RunAfter, ParentAction, References, Entities, InteractionProfile, ExternalProfile
 
 Get-PowerPlatformCheckerFlowChart -Actions $actions
 ```
 
 Flowchart output groups Scope and If blocks with explicit post-branch continuation into Mermaid subgraphs. Switch blocks include a titled subgraph for each case and the default branch, including empty branches, keeping branch internals separate from downstream "Succeeded" continuation actions.
+
+When generating per-flow documentation, `Get-PowerPlatformCheckerFlowType` is used to show the flow type and the flowchart section is generated from the same flow-specific metadata.
 
 ### 5) Generate architecture diagram for entire solution
 
@@ -205,6 +265,17 @@ $flowGraph = Get-PowerPlatformCheckerFlowChart `
 
 $flowGraph.Nodes.Count
 $flowGraph.Subgraphs.Count
+```
+
+### 8) Build a combined external interaction graph from multiple solutions
+
+```powershell
+Get-PowerPlatformCheckerExternalInteraction `
+  -SolutionPaths @(
+    "C:\Solutions\Energy\Managed",
+    "C:\Solutions\Telecom\Managed"
+  ) `
+  -OutputFormat Mermaid
 ```
 
 ## Graph Schemas
@@ -321,7 +392,7 @@ Get-PowerPlatformCheckerArchitectureDiagram `
 current session values. The resolved styles are also exposed in graph output through `Styles` and
 `StyleOrder`, so downstream renderers can use the same palette.
 
-## Telemetry
+## Telemetry Details
 
 This module uses `TelemetryHelper` for lightweight usage telemetry.
 

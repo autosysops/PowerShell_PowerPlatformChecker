@@ -1,0 +1,7 @@
+﻿<Workflow>
+    <WorkflowId>{12121212-1212-1212-1212-121212121212}</WorkflowId>
+    <Category>6</Category>
+    <UIFlowType>2</UIFlowType>
+    <ConnectionReferences>{"shared_mapconnector":{"tier":"Standard"}}</ConnectionReferences>
+    <Definition>DISPLAY Message='x'</Definition>
+</Workflow>

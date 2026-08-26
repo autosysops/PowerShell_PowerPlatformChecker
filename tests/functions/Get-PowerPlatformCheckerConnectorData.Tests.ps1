@@ -15,5 +15,19 @@ Describe "Get-PowerPlatformCheckerConnectorData" {
         $result.Count | Should -Be 1
         $result[0].tier | Should -Be "Premium"
     }
+
+    It "sends sanitized telemetry for option usage" {
+        $telemetryCalls = [System.Collections.Generic.List[object]]::new()
+        Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {
+            param([string]$ModuleName, [string]$EventName, [hashtable]$PropertiesHash)
+            [void]$telemetryCalls.Add([pscustomobject]@{ ModuleName = $ModuleName; EventName = $EventName; PropertiesHash = $PropertiesHash })
+        }
+
+        $secretName = "secret-connector-name"
+        $secretPublisher = "secret-publisher"
+        [void](Get-PowerPlatformCheckerConnectorData -Name $secretName -Tier "Premium" -ReleaseTag "Production" -Publisher $secretPublisher)
+
+        Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerConnectorData" -ExpectedKeys @("NameFiltered", "TierFiltered", "ReleaseTagFiltered", "PublisherFiltered") -ConfidentialValues @($secretName, $secretPublisher)
+    }
 }
 

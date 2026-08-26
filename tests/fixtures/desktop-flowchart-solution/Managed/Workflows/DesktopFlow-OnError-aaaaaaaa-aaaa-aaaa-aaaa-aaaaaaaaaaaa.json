@@ -1,0 +1,8 @@
+{
+  "name": "Desktop On Error Flow",
+  "type": "Microsoft.ProcessSimple/flows",
+  "properties": {
+    "displayName": "Desktop On Error Flow",
+    "state": "Started"
+  }
+}

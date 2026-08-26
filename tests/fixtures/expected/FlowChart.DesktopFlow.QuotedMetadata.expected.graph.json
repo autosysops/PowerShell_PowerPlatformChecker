@@ -1,0 +1,28 @@
+﻿{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action0",
+      "Label": "DISPLAY",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action1",
+      "Label": "WRITE",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0",
+      "Label": "Succeeded",
+      "To": "action1"
+    }
+  ],
+  "Subgraphs": []
+}

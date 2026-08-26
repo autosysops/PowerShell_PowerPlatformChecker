@@ -1,0 +1,6 @@
+﻿<Workflow>
+    <WorkflowId>{15151515-1515-1515-1515-151515151515}</WorkflowId>
+    <Category>6</Category>
+    <UIFlowType>2</UIFlowType>
+    <Definition>DISPLAY Message='x'</Definition>
+</Workflow>

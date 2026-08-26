@@ -1,0 +1,6 @@
+<CanvasApp>
+  <Name>invalid_canvas</Name>
+  <DisplayName>Invalid Canvas</DisplayName>
+  <ConnectionReferences>{"bad":</ConnectionReferences>
+  <DatabaseReferences>{"bad":</DatabaseReferences>
+</CanvasApp>

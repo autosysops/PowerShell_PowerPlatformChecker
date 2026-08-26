@@ -1,0 +1,11 @@
+<Workflow WorkflowId="{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}" Name="Desktop On Error Flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/DesktopFlow-OnError-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.json</JsonFileName>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Description>Desktop flow fixture with typed ON ERROR handler.</Description>
+  <Definition>WAIT 5
+ON ERROR TimeoutError
+    CALL Subflow_Address_NotAvailable
+END
+WRITE Text='Done'</Definition>
+</Workflow>

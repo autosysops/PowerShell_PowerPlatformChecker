@@ -23,10 +23,9 @@
         [int] $Type
     )
 
-    $telemetryProperties = @{
-        ComponentType = $Type
-    }
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerModelDrivenAppComponentType" -PropertiesHash $telemetryProperties
+    # The function only supports one invocation shape and the type code itself is
+    # not needed for usage analytics, so emit a simple invocation metric.
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerModelDrivenAppComponentType" -PropertiesHash @{}
 
     switch ($Type) {
         1 { return "Entities" }

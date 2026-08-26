@@ -1,0 +1,8 @@
+﻿{
+  "name": "Desktop Sample Flow",
+  "type": "Microsoft.ProcessSimple/flows",
+  "properties": {
+    "displayName": "Desktop Sample Flow",
+    "state": "Started"
+  }
+}

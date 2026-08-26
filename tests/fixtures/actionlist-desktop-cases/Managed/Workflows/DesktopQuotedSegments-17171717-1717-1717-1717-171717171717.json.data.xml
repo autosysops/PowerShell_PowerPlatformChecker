@@ -1,0 +1,6 @@
+﻿<Workflow>
+  <WorkflowId>{17171717-1717-1717-1717-171717171717}</WorkflowId>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Definition>DISPLAY Message='Bob''s; note';WRITE Text='ok'</Definition>
+</Workflow>

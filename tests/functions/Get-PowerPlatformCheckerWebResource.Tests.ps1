@@ -16,9 +16,38 @@ Describe "Get-PowerPlatformCheckerWebResource" {
         $orderForm.Type | Should -Be "JavaScript"
         $orderForm.Kind | Should -Be "Script"
         $orderForm.Methods | Should -Contain "onLoad"
+        $orderForm.ExternalDomains.Count | Should -Be 0
         $orderForm.Dependencies | Should -Contain "ppc_script/Shared.js"
         $shared.Type | Should -Be "JavaScript"
         $shared.Methods | Should -Contain "setTabVisibility"
+    }
+
+    It "extracts external domains from javascript web resource source" {
+        $testRoot = Join-Path $TestDrive "ExternalDomainFixture"
+        $resourcePath = Join-Path $testRoot "WebResources\sample_script"
+        New-Item -ItemType Directory -Path $resourcePath -Force | Out-Null
+
+@"
+<WebResource>
+    <Name>sample_script/Outbound.js</Name>
+    <DisplayName>Outbound Script</DisplayName>
+    <WebResourceType>3</WebResourceType>
+    <DependencyXml></DependencyXml>
+    <FileName>/WebResources/sample_scriptOutboundjs11111111-1111-1111-1111-111111111111</FileName>
+</WebResource>
+"@ | Set-Content -Path (Join-Path $resourcePath "Outbound.js.data.xml") -Encoding utf8BOM
+
+@"
+function callExternal() {
+    fetch('https://api.example.test/orders');
+    axios.get('//portal.contoso.test/path');
+}
+"@ | Set-Content -Path (Join-Path $resourcePath "Outbound.js") -Encoding utf8BOM
+
+        $resources = Get-PowerPlatformCheckerWebResource -SolutionPath $testRoot -JavaScriptOnly
+
+        $resources.Count | Should -Be 1
+        $resources[0].ExternalDomains | Should -Be @("api.example.test", "portal.contoso.test")
     }
 
     It "ignores malformed dependency xml without failing" {
@@ -99,6 +128,19 @@ Sample.Form.onSave = function(context) {
         $resources[0].Methods | Should -Contain "onLoad"
         $resources[0].Methods | Should -Contain "onSave"
         $resources[0].Methods | Should -Not -Contain "if"
+    }
+
+    It "sends sanitized telemetry for filtered JavaScript-only lookup" {
+        $telemetryCalls = [System.Collections.Generic.List[object]]::new()
+        Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {
+            param([string]$ModuleName, [string]$EventName, [hashtable]$PropertiesHash)
+            [void]$telemetryCalls.Add([pscustomobject]@{ ModuleName = $ModuleName; EventName = $EventName; PropertiesHash = $PropertiesHash })
+        }
+
+        $secretName = "secret_script_name"
+        [void](Get-PowerPlatformCheckerWebResource -SolutionPath $script:solutionPath -Name $secretName -JavaScriptOnly)
+
+        Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerWebResource" -ExpectedKeys @("NameFilterUsed", "JavaScriptOnly") -ConfidentialValues @($script:solutionPath, $secretName)
     }
 }
 

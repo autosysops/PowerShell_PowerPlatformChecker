@@ -26,4 +26,17 @@ Describe "Get-PowerPlatformCheckerEntityFormXmlWebResource" {
 
         $usage.Count | Should -Be 0
     }
+
+    It "sends sanitized telemetry for entity filtering" {
+        $telemetryCalls = [System.Collections.Generic.List[object]]::new()
+        Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {
+            param([string]$ModuleName, [string]$EventName, [hashtable]$PropertiesHash)
+            [void]$telemetryCalls.Add([pscustomobject]@{ ModuleName = $ModuleName; EventName = $EventName; PropertiesHash = $PropertiesHash })
+        }
+
+        $secretEntity = "secret_entity_name"
+        [void](Get-PowerPlatformCheckerEntityFormXmlWebResource -SolutionPath $script:solutionPath -EntityName $secretEntity)
+
+        Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerEntityFormXmlWebResource" -ExpectedKeys @("EntityFilterUsed") -ConfidentialValues @($script:solutionPath, $secretEntity)
+    }
 }

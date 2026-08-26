@@ -19,4 +19,32 @@ Describe "Get-PowerPlatformCheckerStyle" {
         $style.Flow | Should -Not -BeNullOrEmpty
         $style.Stroke | Should -Be "#5E5B52"
     }
+
+    It "throws for unsupported style targets in module state" {
+        InModuleScope PowerPlatformChecker {
+            $originalStyles = $script:PowerPlatformCheckerStyles
+            try {
+                $script:PowerPlatformCheckerStyles = @{}
+                { Get-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram } | Should -Throw "Unsupported style target*"
+            }
+            finally {
+                $script:PowerPlatformCheckerStyles = $originalStyles
+            }
+        }
+    }
+
+    It "sends usage telemetry without style values" {
+        $telemetryCalls = [System.Collections.Generic.List[object]]::new()
+        Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {
+            param([string]$ModuleName, [string]$EventName, [hashtable]$PropertiesHash)
+            [void]$telemetryCalls.Add([pscustomobject]@{ ModuleName = $ModuleName; EventName = $EventName; PropertiesHash = $PropertiesHash })
+        }
+
+        [void](Get-PowerPlatformCheckerStyle)
+        Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerStyle" -ExpectedKeys @("StyleTargetExplicit") -ConfidentialValues @("ArchitectureDiagram")
+
+        $telemetryCalls.Clear()
+        [void](Get-PowerPlatformCheckerStyle -StyleTarget "ArchitectureDiagram")
+        Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerStyle" -ExpectedKeys @("StyleTargetExplicit") -ConfidentialValues @("ArchitectureDiagram")
+    }
 }

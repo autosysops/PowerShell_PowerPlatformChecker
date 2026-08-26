@@ -52,6 +52,7 @@
         IncludeEntities = "Entities" -in $IncludeElements
         IncludeDefaultEntities = "DefaultEntities" -in $IncludeElements
         IncludeWebResources = "WebResources" -in $IncludeElements
+        IncludeExternalDomains = "ExternalDomains" -in $IncludeElements
         IsScopedDiagram = $isScopedDiagram
         AllowFlowPass = ("Flows" -in $IncludeElements) -and -not $HasCanvasFilter.IsPresent
         AllowCanvasPass = ("CanvasApps" -in $IncludeElements) -and -not $HasFlowFilter.IsPresent -and -not $HasModelDrivenFilter.IsPresent

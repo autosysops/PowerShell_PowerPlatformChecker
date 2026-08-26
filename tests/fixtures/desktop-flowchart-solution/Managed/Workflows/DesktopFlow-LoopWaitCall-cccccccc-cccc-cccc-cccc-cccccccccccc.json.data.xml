@@ -1,0 +1,12 @@
+﻿<Workflow WorkflowId="{cccccccc-cccc-cccc-cccc-cccccccccccc}" Name="Desktop Loop Wait Call Flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/DesktopFlow-LoopWaitCall-cccccccc-cccc-cccc-cccc-cccccccccccc.json</JsonFileName>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Description>Desktop flow fixture for loop/call/wait display semantics.</Description>
+  <Definition>WAIT 5
+WAIT (WebAutomation.WaitForWebPageContent.WebPageToContainElement BrowserInstance: Browser Control: appmask['Web Page ''https://example''']['Div ''Ready''']) FOR 10
+LOOP FOREACH CurrentItem IN Items
+    CALL Subflow_ProcessItem
+END
+WRITE Text='Done'</Definition>
+</Workflow>

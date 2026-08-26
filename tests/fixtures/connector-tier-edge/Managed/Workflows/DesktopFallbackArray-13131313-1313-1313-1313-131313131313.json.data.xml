@@ -1,0 +1,7 @@
+﻿<Workflow>
+    <WorkflowId>{13131313-1313-1313-1313-131313131313}</WorkflowId>
+    <Category>6</Category>
+    <UIFlowType>2</UIFlowType>
+    <ConnectionReferences>[{"api":{"name":"/providers/Microsoft.PowerApps/apis/shared_arrayconnector"},"displayName":"Array Connector","tier":"Premium"}]</ConnectionReferences>
+    <Definition>DISPLAY Message='x'</Definition>
+</Workflow>

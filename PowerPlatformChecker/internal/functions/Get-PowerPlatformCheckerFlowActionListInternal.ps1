@@ -22,13 +22,18 @@
         A switch to indicate if the trigger should be included in the list
 
     .PARAMETER Properties
-        A list of additional properties to include in the output, options are References, RunAfter, and ParentAction
+        A list of additional properties to include in the output, options are References,
+        Entities, RunAfter, ParentAction, InteractionProfile, and ExternalProfile
 
     .PARAMETER IsTrigger
         A switch to indicate if the current actions are triggers, used in combination with the IncludeTrigger switch
 
     .PARAMETER Depth
         An integer to indicate how deep the action is nested, used for internal purposes when calling recursively
+
+    .PARAMETER DefinitionParameters
+        Flow definition parameters used to resolve expression-backed values when
+        InteractionProfile or ExternalProfile properties are requested.
 
     .EXAMPLE
         Get a list of actions in a Power Platform flow
@@ -79,6 +84,16 @@
         Get a list of action and add a specific depth value to the output
 
         PS> Get-PowerPlatformCheckerFlowActionListInternal -Actions $flowdata.definition.actions -Recurse -Properties ParentAction -Depth 2
+
+    .EXAMPLE
+        Get action interaction metadata including read/write classification
+
+        PS> Get-PowerPlatformCheckerFlowActionListInternal -Actions $flowdata.definition.actions -Properties InteractionProfile
+
+    .EXAMPLE
+        Get action external URL/domain metadata with definition parameters for expression resolution
+
+        PS> Get-PowerPlatformCheckerFlowActionListInternal -Actions $flowdata.definition.actions -Properties ExternalProfile -DefinitionParameters $flowdata.definition.parameters
     #>
 
     [CmdLetBinding(defaultParameterSetName = "Path")]
@@ -103,8 +118,8 @@
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 5)]
         [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 5)]
-        [ValidateSet("References", "Entities", "RunAfter", "ParentAction")]
-        [String[]] $Properties,
+        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile")]
+        [String[]] $Properties = @(),
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 6)]
         [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 6)]
@@ -112,13 +127,19 @@
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 7)]
         [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 7)]
-        [int] $Depth = 0
+        [int] $Depth = 0,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 8)]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 8)]
+        [AllowNull()]
+        [Object] $DefinitionParameters = $null
     )
 
     # Import the flow data
     if ($Path) {
         $flowdata = Import-PowerPlatformCheckerFlow -Path $Path
         $actions = $flowdata.properties.definition.actions
+        $DefinitionParameters = $flowdata.properties.definition.parameters
     }
 
     # Create an empty actionList
@@ -126,18 +147,18 @@
 
     # If the trigger is included call this recursivly to add the trigger as well
     if ($IncludeTrigger -and $null -eq $ParentAction) {
-        $actionsList += Get-PowerPlatformCheckerFlowActionListInternal -Actions $flowdata.properties.definition.triggers -ParentAction "Trigger" -Recurse:$Recurse -Properties $Properties -IncludeTrigger -IsTrigger -Depth $Depth
+        $actionsList += Get-PowerPlatformCheckerFlowActionListInternal -Actions $flowdata.properties.definition.triggers -ParentAction "Trigger" -Recurse:$Recurse -Properties $Properties -IncludeTrigger -IsTrigger -Depth $Depth -DefinitionParameters $DefinitionParameters
     }
 
     # Loop through the actions and get the information of the actions, if there are nested actions then loop through those as well
     $actionsList += $actions | Get-Member -MemberType NoteProperty | ForEach-Object {
         $switchBranches = @()
         if ($actions.$($_.Name).actions -and $Recurse) {
-            Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions.$($_.Name).actions -ParentAction @{"Name" = $($_.Name); "Type" = "actions"} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1)
+            Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions.$($_.Name).actions -ParentAction @{"Name" = $($_.Name); "Type" = "actions"} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1) -DefinitionParameters $DefinitionParameters
 
             # Check if there is an else statement and loop through those actions as well
             if ($actions.$($_.Name).else -and $Recurse) {
-                Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions.$($_.Name).else.actions -ParentAction @{"Name" = $($_.Name); "Type" = "else"} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1)
+                Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions.$($_.Name).else.actions -ParentAction @{"Name" = $($_.Name); "Type" = "else"} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1) -DefinitionParameters $DefinitionParameters
             }
         }
 
@@ -148,14 +169,14 @@
                 $caseActions = $actions.$switchName.cases.$caseName.actions
                 $switchBranches += [pscustomobject]@{ Type = "case"; Name = $caseName }
                 if ($caseActions) {
-                    Get-PowerPlatformCheckerFlowActionListInternal -Actions $caseActions -ParentAction @{"Name" = $switchName; "Type" = "case"; "BranchName" = $caseName} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1)
+                    Get-PowerPlatformCheckerFlowActionListInternal -Actions $caseActions -ParentAction @{"Name" = $switchName; "Type" = "case"; "BranchName" = $caseName} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1) -DefinitionParameters $DefinitionParameters
                 }
             }
 
             if ($null -ne $actions.$switchName.default) {
                 $switchBranches += [pscustomobject]@{ Type = "default"; Name = "Default" }
                 if ($actions.$switchName.default.actions) {
-                    Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions.$switchName.default.actions -ParentAction @{"Name" = $switchName; "Type" = "default"; "BranchName" = "Default"} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1)
+                    Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions.$switchName.default.actions -ParentAction @{"Name" = $switchName; "Type" = "default"; "BranchName" = "Default"} -Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties -Depth ($Depth + 1) -DefinitionParameters $DefinitionParameters
                 }
             }
         }
@@ -235,6 +256,24 @@
             }
 
             $actionObject | Add-Member -MemberType NoteProperty -Name "Entities" -Value ($entities | Sort-Object -Unique)
+        }
+
+        if (($Properties -contains "InteractionProfile") -or ($Properties -contains "ExternalProfile")) {
+            $interactionProfile = Get-PowerPlatformCheckerFlowActionInteractionProfile -Action $actions.$($_.Name) -ActionType $type -DefinitionParameters $DefinitionParameters
+
+            if ($Properties -contains "InteractionProfile") {
+                $actionObject | Add-Member -MemberType NoteProperty -Name "Method" -Value ([string]$interactionProfile.Method)
+                $actionObject | Add-Member -MemberType NoteProperty -Name "GetSetAction" -Value ([string]$interactionProfile.GetSetAction)
+                $actionObject | Add-Member -MemberType NoteProperty -Name "InteractionDirection" -Value ([string]$interactionProfile.InteractionDirection)
+            }
+
+            if ($Properties -contains "ExternalProfile") {
+                $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalUrl" -Value ([string]$interactionProfile.ExternalUrl)
+                $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalProtocol" -Value ([string]$interactionProfile.ExternalProtocol)
+                $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalDomain" -Value ([string]$interactionProfile.ExternalDomain)
+                $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalMainDomain" -Value ([string]$interactionProfile.ExternalMainDomain)
+                $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalResolutionState" -Value ([string]$interactionProfile.ExternalResolutionState)
+            }
         }
 
         $actionObject

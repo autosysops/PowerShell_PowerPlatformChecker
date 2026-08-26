@@ -1,0 +1,11 @@
+﻿<Workflow WorkflowId="{77777777-7777-7777-7777-777777777777}" Name="Desktop Sample Flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/DesktopFlow-77777777-7777-7777-7777-777777777777.json</JsonFileName>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Description>An anonymized desktop flow fixture for parser and diagram tests.</Description>
+  <ConnectionReferences>{"shared_uiflow":{"runtimeSource":"embedded","tier":"Premium"}}</ConnectionReferences>
+  <Inputs>{"schema":{"properties":{"runtimeInput":{"title":"Runtime Input","type":"string"}}}}</Inputs>
+  <Outputs>{"result":{"type":"string"}}</Outputs>
+  <Definition>DISPLAY Message='Start desktop flow';\nLAUNCH Excel;\nWRITE Text='Done'</Definition>
+  <Dependencies>{"childFlows":[],"workQueues":[],"environmentVariables":[{"name":"ppc_desktop_baseurl","type":"string"}]}</Dependencies>
+</Workflow>

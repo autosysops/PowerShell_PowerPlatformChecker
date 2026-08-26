@@ -96,8 +96,8 @@
         [string] $Direction = "LR",
 
         [Parameter(Mandatory = $false)]
-        [ValidateSet("Flows", "CanvasApps", "ModelDrivenApps", "EnvironmentVariables", "Connections", "Entities", "DefaultEntities", "WebResources")]
-        [string[]] $IncludeElements = @("Flows", "CanvasApps", "ModelDrivenApps", "EnvironmentVariables", "Connections", "Entities", "DefaultEntities", "WebResources"),
+        [ValidateSet("Flows", "CanvasApps", "ModelDrivenApps", "EnvironmentVariables", "Connections", "Entities", "DefaultEntities", "WebResources", "ExternalDomains")]
+        [string[]] $IncludeElements = @("Flows", "CanvasApps", "ModelDrivenApps", "EnvironmentVariables", "Connections", "Entities", "DefaultEntities", "WebResources", "ExternalDomains"),
 
         [Parameter(Mandatory = $false)]
         [ValidateSet("Mermaid", "Graph")]
@@ -136,6 +136,7 @@
     $includeEntities = $includePolicy.IncludeEntities
     $includeDefaultEntities = $includePolicy.IncludeDefaultEntities
     $includeWebResources = $includePolicy.IncludeWebResources
+    $includeExternalDomains = $includePolicy.IncludeExternalDomains
 
     # Start from module defaults and apply per-call style overrides if provided.
     $style = @{}
@@ -200,6 +201,7 @@
         -SolutionPath $SolutionPath `
         -SolutionObject $solutionObject `
         -IncludeWebResources:$includeWebResources `
+        -IncludeExternalDomains:$includeExternalDomains `
         -HasModelDrivenFilter:$($PSBoundParameters.ContainsKey("ModelDrivenAppName")) `
         -ModelApps $modelApps
 

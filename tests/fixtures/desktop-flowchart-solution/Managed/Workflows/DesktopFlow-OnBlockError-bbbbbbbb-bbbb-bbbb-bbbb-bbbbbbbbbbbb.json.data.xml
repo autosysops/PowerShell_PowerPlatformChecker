@@ -1,0 +1,14 @@
+<Workflow WorkflowId="{bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb}" Name="Desktop On Block Error Flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/DesktopFlow-OnBlockError-bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb.json</JsonFileName>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Description>Desktop flow fixture with ON BLOCK ERROR handler and scoped title.</Description>
+  <Definition>BLOCK 'Scope: Try executing the flow'
+ON BLOCK ERROR all
+    CALL Subflow_SendErrorEmail
+    THROW ERROR
+END
+    Variables.ConvertJsonToCustomObject Json: var_ExcelList CustomObject=&gt; ExcelRows
+END
+WRITE Text='Done'</Definition>
+</Workflow>

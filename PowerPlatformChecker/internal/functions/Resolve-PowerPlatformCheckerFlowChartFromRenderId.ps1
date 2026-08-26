@@ -48,14 +48,18 @@
 
     if ($WrappedByName.ContainsKey($SourceName)) {
         $targetParent = $null
+        $targetIsErrorHandler = $false
         if ($ActionByName.ContainsKey($TargetName) -and
             ($ActionByName[$TargetName].PSObject.Properties.Name -contains "ParentAction") -and
             $null -ne $ActionByName[$TargetName].ParentAction) {
             $targetParent = $ActionByName[$TargetName].ParentAction.Name
         }
+        if ($ActionByName.ContainsKey($TargetName) -and ($ActionByName[$TargetName].PSObject.Properties.Name -contains "IsErrorHandler")) {
+            $targetIsErrorHandler = [bool]$ActionByName[$TargetName].IsErrorHandler
+        }
 
         # External edges leave a wrapped block through the subgraph boundary.
-        if ($targetParent -ne $SourceName) {
+        if ($targetParent -ne $SourceName -or $targetIsErrorHandler) {
             return $WrappedByName[$SourceName].SubgraphId
         }
     }

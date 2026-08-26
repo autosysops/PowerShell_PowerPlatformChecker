@@ -2,6 +2,10 @@
     return (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\anonymized-solution\Managed")).Path
 }
 
+function Get-PowerPlatformCheckerDesktopFixtureSolutionPath {
+    return (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\anonymized-desktop-solution\Managed")).Path
+}
+
 function Get-PowerPlatformCheckerExpectedSnapshot {
     param(
         [Parameter(Mandatory = $true)]
@@ -82,6 +86,42 @@ function Initialize-PowerPlatformCheckerTestData {
                 builtin = $true
             }
         )
+    }
+}
+
+function global:Assert-PowerPlatformCheckerTelemetrySafe {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object[]] $TelemetryCalls,
+
+        [Parameter(Mandatory = $true)]
+        [string] $EventName,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]] $ExpectedKeys,
+
+        [Parameter(Mandatory = $false)]
+        [string[]] $ConfidentialValues = @()
+    )
+
+    $matchingCalls = @($TelemetryCalls | Where-Object { $_.EventName -eq $EventName })
+    $matchingCalls.Count | Should -Be 1
+
+    $properties = $matchingCalls[0].PropertiesHash
+    ($null -ne $properties) | Should -BeTrue
+
+    $actualKeys = @($properties.Keys | ForEach-Object { [string]$_ } | Sort-Object)
+    $actualKeys | Should -Be @($ExpectedKeys | Sort-Object)
+
+    foreach ($key in @($actualKeys)) {
+        $key | Should -Not -Match '(?i)(password|passphrase|secret|token|apikey|api_key|connectionstring|sas|certificate|privatekey|clientsecret)'
+    }
+
+    $propertiesJson = ($properties | ConvertTo-Json -Depth 10 -Compress)
+    foreach ($confidentialValue in @($ConfidentialValues | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })) {
+        $escapedValue = [regex]::Escape([string]$confidentialValue)
+        $propertiesJson | Should -Not -Match $escapedValue
     }
 }
 

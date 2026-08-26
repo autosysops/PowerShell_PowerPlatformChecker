@@ -1,0 +1,14 @@
+﻿{
+  "properties": {
+    "connectionReferences": {
+      "shared_dynamicssmbsaas": {
+        "api": {
+          "name": "dynamicssmbsaas"
+        }
+      }
+    },
+    "definition": {
+      "actions": {}
+    }
+  }
+}

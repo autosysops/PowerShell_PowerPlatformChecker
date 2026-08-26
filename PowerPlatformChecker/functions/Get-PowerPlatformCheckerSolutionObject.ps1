@@ -21,12 +21,6 @@
         [String] $SolutionPath
     )
 
-    # Send telemetry data
-    $telemetryProperties = @{
-        PathProvided = [bool]$SolutionPath
-    }
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerSolutionObject" -PropertiesHash $telemetryProperties
-
     # Create the object to return
     $solutionObject = [PSCustomObject] @{}
 
@@ -106,6 +100,10 @@
     if($webResources.Count -gt 0) {
         $solutionObject | Add-Member -MemberType NoteProperty -Name "WebResources" -Value $webResources
     }
+
+    # This command currently has one required input and no optional usage shape,
+    # so a simple invocation metric is enough to understand adoption.
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerSolutionObject" -PropertiesHash @{}
 
     # return the solution object
     return $solutionObject

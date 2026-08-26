@@ -10,13 +10,24 @@ Describe "Get-PowerPlatformCheckerSolutionObject" {
     It "returns all expected sections" {
         $solution = Get-PowerPlatformCheckerSolutionObject -SolutionPath $script:solutionPath
 
-        $solution.Workflows.Count | Should -Be 2
+        $solution.Workflows.Count | Should -Be 3
         $solution.EnvironmentVariables.Count | Should -Be 2
         $solution.ConnectionReferences.Count | Should -Be 3
         $solution.Entities.Count | Should -Be 5
         $solution.CanvasApps.Count | Should -Be 1
         $solution.ModelDrivenApps.Count | Should -Be 1
         $solution.WebResources.Count | Should -Be 2
+    }
+
+    It "sends invocation telemetry without solution paths or result counts" {
+        $telemetryCalls = [System.Collections.Generic.List[object]]::new()
+        Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {
+            param([string]$ModuleName, [string]$EventName, [hashtable]$PropertiesHash)
+            [void]$telemetryCalls.Add([pscustomobject]@{ ModuleName = $ModuleName; EventName = $EventName; PropertiesHash = $PropertiesHash })
+        }
+
+        [void](Get-PowerPlatformCheckerSolutionObject -SolutionPath $script:solutionPath)
+        Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerSolutionObject" -ExpectedKeys @() -ConfidentialValues @($script:solutionPath)
     }
 }
 

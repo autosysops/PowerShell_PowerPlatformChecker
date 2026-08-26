@@ -1,0 +1,28 @@
+{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action0",
+      "Label": "External.InvokeCloudConnector (shared_office365.SendEmailV2)",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action1",
+      "Label": "WRITE",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0",
+      "Label": "Succeeded",
+      "To": "action1"
+    }
+  ],
+  "Subgraphs": []
+}

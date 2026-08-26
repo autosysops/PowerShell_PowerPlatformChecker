@@ -1,0 +1,8 @@
+{
+  "name": "Desktop Connector Multiline Flow",
+  "type": "Microsoft.ProcessSimple/flows",
+  "properties": {
+    "displayName": "Desktop Connector Multiline Flow",
+    "state": "Started"
+  }
+}

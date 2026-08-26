@@ -7,7 +7,7 @@ Describe "Get-PowerPlatformCheckerDiagramIncludePolicy" {
 
     It "returns include flags for all supported element types" {
         InModuleScope PowerPlatformChecker {
-            $policy = Get-PowerPlatformCheckerDiagramIncludePolicy -IncludeElements @("Flows", "CanvasApps", "ModelDrivenApps", "EnvironmentVariables", "Connections", "Entities", "DefaultEntities", "WebResources")
+            $policy = Get-PowerPlatformCheckerDiagramIncludePolicy -IncludeElements @("Flows", "CanvasApps", "ModelDrivenApps", "EnvironmentVariables", "Connections", "Entities", "DefaultEntities", "WebResources", "ExternalDomains")
 
             $policy.IncludeFlows | Should -BeTrue
             $policy.IncludeCanvasApps | Should -BeTrue
@@ -17,6 +17,7 @@ Describe "Get-PowerPlatformCheckerDiagramIncludePolicy" {
             $policy.IncludeEntities | Should -BeTrue
             $policy.IncludeDefaultEntities | Should -BeTrue
             $policy.IncludeWebResources | Should -BeTrue
+            $policy.IncludeExternalDomains | Should -BeTrue
         }
     }
 
@@ -28,6 +29,7 @@ Describe "Get-PowerPlatformCheckerDiagramIncludePolicy" {
             $policy.IncludeConnections | Should -BeTrue
             $policy.IncludeEntities | Should -BeFalse
             $policy.IncludeWebResources | Should -BeFalse
+            $policy.IncludeExternalDomains | Should -BeFalse
             $policy.IncludeCanvasApps | Should -BeFalse
         }
     }

@@ -32,7 +32,7 @@
     }
 
     $telemetryProperties = @{
-        StyleTarget = $StyleTarget
+        StyleTargetExplicit = $PSBoundParameters.ContainsKey('StyleTarget')
     }
     Send-THEvent -ModuleName 'PowerPlatformChecker' -EventName 'Get-PowerPlatformCheckerStyle' -PropertiesHash $telemetryProperties
 

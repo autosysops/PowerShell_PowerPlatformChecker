@@ -19,7 +19,9 @@
         A switch to indicate if the trigger should be included in the list
 
     .PARAMETER Properties
-        A list of additional properties to include in the output, options are References, Entities, RunAfter, and ParentAction
+        A list of additional properties to include in the output.
+        Supported values are References, Entities, RunAfter, ParentAction,
+        InteractionProfile, and ExternalProfile.
 
     .EXAMPLE
         Get a list of actions in a Power Platform flow
@@ -53,6 +55,7 @@
     #>
 
     [CmdLetBinding(defaultParameterSetName = "Path")]
+    [OutputType([object[]])]
     Param (
         [Parameter(Mandatory = $true, ParameterSetName = 'Path', Position = 1)]
         [String] $Path,
@@ -70,8 +73,8 @@
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 5)]
         [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 5)]
-        [ValidateSet("References", "Entities", "RunAfter", "ParentAction")]
-        [String[]] $Properties
+        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile")]
+        [String[]] $Properties = @()
     )
 
     # Send telemetry data (captures non-sensitive option usage).
@@ -83,14 +86,20 @@
     }
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowActionList" -PropertiesHash $telemetryProperties
 
-    # Create an empty array if Properties is not set to pass that along
-    if(-not $Properties) {
-        $Properties = @()
-    }
-
     # Call the internal function to get the list of actions
     if($Path) {
-        return Get-PowerPlatformCheckerFlowActionListInternal -Path $Path -Recurse:$Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties
+        try {
+            $flowType = Get-PowerPlatformCheckerFlowType -Path $Path
+            if ($flowType -eq "Desktop") {
+                return Get-PowerPlatformCheckerDesktopFlowActionList -Path $Path -IncludeTrigger:$IncludeTrigger -Properties $Properties
+            }
+
+            return Get-PowerPlatformCheckerFlowActionListInternal -Path $Path -Recurse:$Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties
+        }
+        catch {
+            Write-Warning "Invalid flow input. Unable to parse actions."
+            return @()
+        }
     }
     if ($Actions) {
         return Get-PowerPlatformCheckerFlowActionListInternal -Actions $Actions -Recurse:$Recurse -IncludeTrigger:$IncludeTrigger -Properties $Properties

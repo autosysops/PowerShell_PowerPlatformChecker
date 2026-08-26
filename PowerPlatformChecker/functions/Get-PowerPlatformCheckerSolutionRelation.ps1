@@ -22,12 +22,6 @@
         [String] $SolutionPath
     )
 
-    # Send telemetry data
-    $telemetryProperties = @{
-        PathProvided = [bool]$SolutionPath
-    }
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerSolutionRelation" -PropertiesHash $telemetryProperties
-
     # Create an array to return
     $returnObject = @()
 
@@ -52,6 +46,10 @@
             }
         }
     }
+
+    # This command has no optional usage switches, so the call count is the
+    # useful telemetry signal rather than the number of discovered relations.
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerSolutionRelation" -PropertiesHash @{}
 
     # Return the object
     return $returnObject

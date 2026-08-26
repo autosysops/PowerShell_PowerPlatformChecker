@@ -1,0 +1,6 @@
+﻿<Workflow>
+  <WorkflowId>{41414141-4141-4141-4141-414141414141}</WorkflowId>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Definition>@INPUT var_FromDefinition : { 'Type': 'String' }</Definition>
+</Workflow>

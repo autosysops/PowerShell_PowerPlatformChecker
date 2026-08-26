@@ -1,0 +1,10 @@
+﻿<Workflow>
+  <WorkflowId>{31313131-3131-3131-3131-313131313131}</WorkflowId>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Inputs>{"schema":{"properties":{"var_Input":{"type":"string"}}}}</Inputs>
+  <Outputs>{"var_Output":{"type":"string"}}</Outputs>
+  <Definition>@INPUT var_Input : { 'Type': 'String' }
+@OUTPUT var_Output : { 'Type': 'String' }
+@OUTPUT var_Extra : { 'Type': 'String' }</Definition>
+</Workflow>

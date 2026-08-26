@@ -1,0 +1,8 @@
+﻿<Workflow>
+  <WorkflowId>{21212121-2121-2121-2121-212121212121}</WorkflowId>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Definition>WAIT (WebAutomation.WaitForWebPageContent.WebPageToContainElement BrowserInstance: Browser Control: appmask['Web Page \'h ... eload=true\' 2']['Input password  ... elecom.com\''])
+WebAutomation.Focus.Focus BrowserInstance: Browser
+WRITE Text='Done'</Definition>
+</Workflow>

@@ -1,0 +1,162 @@
+{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action1",
+      "Label": "CALL Subflow_SendErrorEmail",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action2",
+      "Label": "THROW",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action12",
+      "Label": "Logging.LogMessage_2",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action13",
+      "Label": "External.InvokeCloudConnector (shared_office365.SendEmailV2)",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action14",
+      "Label": "WRITE",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0_group",
+      "Label": "Error",
+      "To": "action1"
+    },
+    {
+      "From": "action0_group",
+      "Label": "Succeeded",
+      "To": "action12"
+    },
+    {
+      "From": "action1",
+      "Label": "Succeeded",
+      "To": "action2"
+    },
+    {
+      "From": "action12",
+      "Label": "Succeeded",
+      "To": "action13"
+    },
+    {
+      "From": "action13",
+      "Label": "Succeeded",
+      "To": "action14"
+    }
+  ],
+  "Subgraphs": [
+    {
+      "GraphType": "FlowchartGraph",
+      "Id": "action0_group",
+      "ActionName": "Scope: Try executing the flow",
+      "Title": "Scope: Try executing the flow",
+      "Direction": "TB",
+      "IsEmpty": false,
+      "Nodes": [
+        {
+          "Id": "action3",
+          "Label": "Variables.CreateNewDatatable",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action4",
+          "Label": "Logging.LogMessage",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action5",
+          "Label": "DISABLE",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action6",
+          "Label": "SET",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action7",
+          "Label": "THROW_2",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action8",
+          "Label": "Variables.ConvertJsonToCustomObject",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action9",
+          "Label": "WebAutomation.LaunchChrome.LaunchChrome",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action10",
+          "Label": "WAIT for web page content (contain element in state)",
+          "Shape": "Action"
+        },
+        {
+          "Id": "action11",
+          "Label": "WebAutomation.PressButton.PressButton",
+          "Shape": "Action"
+        }
+      ],
+      "Edges": [
+        {
+          "From": "action10",
+          "Label": "Succeeded",
+          "To": "action11"
+        },
+        {
+          "From": "action3",
+          "Label": "Succeeded",
+          "To": "action4"
+        },
+        {
+          "From": "action4",
+          "Label": "Succeeded",
+          "To": "action5"
+        },
+        {
+          "From": "action5",
+          "Label": "Error",
+          "To": "action6"
+        },
+        {
+          "From": "action5",
+          "Label": "Succeeded",
+          "To": "action8"
+        },
+        {
+          "From": "action6",
+          "Label": "Succeeded",
+          "To": "action7"
+        },
+        {
+          "From": "action8",
+          "Label": "Succeeded",
+          "To": "action9"
+        },
+        {
+          "From": "action9",
+          "Label": "Succeeded",
+          "To": "action10"
+        }
+      ],
+      "Subgraphs": []
+    }
+  ]
+}

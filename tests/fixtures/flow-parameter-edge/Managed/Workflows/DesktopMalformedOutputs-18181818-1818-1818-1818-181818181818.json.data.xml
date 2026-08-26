@@ -1,0 +1,8 @@
+﻿<Workflow>
+  <WorkflowId>{18181818-1818-1818-1818-181818181818}</WorkflowId>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Dependencies>{"environmentVariables":[{"name":"Api Url","schemaName":"ppc_api_url","type":"string"}]}</Dependencies>
+  <Outputs>{"broken":</Outputs>
+  <Definition>DISPLAY Message='x'</Definition>
+</Workflow>

@@ -29,7 +29,7 @@ Describe "Get-PowerPlatformCheckerArchitectureWebResourceGraphContent" {
             )
 
             Mock -CommandName Get-PowerPlatformCheckerWebResource -ModuleName PowerPlatformChecker -MockWith { $webResources }
-            $result = Get-PowerPlatformCheckerArchitectureWebResourceGraphContent -SolutionPath "C:\dummy" -SolutionObject ([pscustomobject]@{ Entities = @() }) -IncludeWebResources:$true
+            $result = Get-PowerPlatformCheckerArchitectureWebResourceGraphContent -SolutionPath "C:\dummy" -SolutionObject ([pscustomobject]@{ Entities = @() }) -IncludeWebResources:$true -IncludeExternalDomains:$true
 
             @($result.Nodes | Where-Object { $_.Id -eq "main_js" }).Count | Should -Be 1
             ($result.Nodes | Where-Object Id -eq "main_js").Members | Should -Contain "  [Script]onLoad"
@@ -52,9 +52,32 @@ Describe "Get-PowerPlatformCheckerArchitectureWebResourceGraphContent" {
             )
 
             Mock -CommandName Get-PowerPlatformCheckerWebResource -ModuleName PowerPlatformChecker -MockWith { $webResources }
-            $result = Get-PowerPlatformCheckerArchitectureWebResourceGraphContent -SolutionPath "C:\dummy" -SolutionObject ([pscustomobject]@{ Entities = @() }) -IncludeWebResources:$true
+            $result = Get-PowerPlatformCheckerArchitectureWebResourceGraphContent -SolutionPath "C:\dummy" -SolutionObject ([pscustomobject]@{ Entities = @() }) -IncludeWebResources:$true -IncludeExternalDomains:$true
 
             @($result.Nodes | Where-Object { $_.Id -eq "external_js" -and $_.DisplayName -eq "external.js" }).Count | Should -Be 1
+        }
+    }
+
+    It "adds external domain nodes and edges for outbound web resource calls" {
+        InModuleScope PowerPlatformChecker {
+            $webResources = @(
+                [pscustomobject]@{
+                    Name = "main.js"
+                    MermaidId = "main_js"
+                    DisplayName = "Main"
+                    Kind = "Script"
+                    Type = "JavaScript"
+                    Methods = @()
+                    Dependencies = @()
+                    ExternalDomains = @("api.example.test")
+                }
+            )
+
+            Mock -CommandName Get-PowerPlatformCheckerWebResource -ModuleName PowerPlatformChecker -MockWith { $webResources }
+            $result = Get-PowerPlatformCheckerArchitectureWebResourceGraphContent -SolutionPath "C:\dummy" -SolutionObject ([pscustomobject]@{ Entities = @() }) -IncludeWebResources:$true -IncludeExternalDomains:$true
+
+            @($result.Nodes | Where-Object { $_.ClassKind -eq "ExternalDomain" -and $_.DisplayName -eq "api.example.test" }).Count | Should -Be 1
+            @($result.Edges | Where-Object { $_.SourceId -eq "main_js" -and $_.Label -eq "ExternalCall" }).Count | Should -Be 1
         }
     }
 }

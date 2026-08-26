@@ -1,0 +1,33 @@
+﻿{
+  "name": "Cloud HTTP profile flow",
+  "properties": {
+    "connectionReferences": {},
+    "definition": {
+      "parameters": {
+        "apiBaseUrl": {
+          "type": "String",
+          "defaultValue": "https://api.contoso.example"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {}
+          }
+        }
+      },
+      "actions": {
+        "CallApi": {
+          "type": "Http",
+          "inputs": {
+            "method": "GET",
+            "uri": "@parameters('apiBaseUrl')"
+          },
+          "runAfter": {}
+        }
+      }
+    }
+  }
+}

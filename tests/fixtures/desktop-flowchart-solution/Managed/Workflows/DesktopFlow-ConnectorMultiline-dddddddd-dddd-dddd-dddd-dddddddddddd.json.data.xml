@@ -1,0 +1,10 @@
+<Workflow WorkflowId="{dddddddd-dddd-dddd-dddd-dddddddddddd}" Name="Desktop Connector Multiline Flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/DesktopFlow-ConnectorMultiline-dddddddd-dddd-dddd-dddd-dddddddddddd.json</JsonFileName>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Description>Desktop flow fixture for multiline connector body parsing.</Description>
+  <Definition>External.InvokeCloudConnector Connection: '62447747-909c-4913-9a8c-cc110a84f4ea' ConnectorId: '/providers/Microsoft.PowerApps/apis/shared_office365' OperationId: 'SendEmailV2' @'emailMessage/To': $'''test@example.com''' @'emailMessage/Subject': $'''Completed''' @'emailMessage/Body': $'''Line one
+Please review these entries
+Line two'''
+WRITE Text='Done'</Definition>
+</Workflow>

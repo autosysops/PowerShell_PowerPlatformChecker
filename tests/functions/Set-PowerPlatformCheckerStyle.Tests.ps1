@@ -44,4 +44,24 @@ Describe "Set-PowerPlatformCheckerStyle" {
     It "throws for unsupported style keys" {
         { Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -NotARealKey "#000000" } | Should -Throw
     }
+
+    It "sends usage telemetry without style values" {
+        try {
+            $telemetryCalls = [System.Collections.Generic.List[object]]::new()
+            Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {
+                param([string]$ModuleName, [string]$EventName, [hashtable]$PropertiesHash)
+                [void]$telemetryCalls.Add([pscustomobject]@{ ModuleName = $ModuleName; EventName = $EventName; PropertiesHash = $PropertiesHash })
+            }
+
+            [void](Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Flow "#112233" -Stroke "#445566")
+            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Set-PowerPlatformCheckerStyle" -ExpectedKeys @("StyleTargetExplicit", "UpdateCount", "UsesMultipleUpdates") -ConfidentialValues @("#112233", "#445566")
+
+            $telemetryCalls.Clear()
+            [void](Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Flow "#334455")
+            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Set-PowerPlatformCheckerStyle" -ExpectedKeys @("StyleTargetExplicit", "UpdateCount", "UsesMultipleUpdates") -ConfidentialValues @("#334455")
+        }
+        finally {
+            Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Flow "#DBE4EE" -Stroke "#5E5B52" | Out-Null
+        }
+    }
 }

@@ -1,0 +1,8 @@
+﻿{
+  "name": "Desktop Quoted Metadata Flow",
+  "type": "Microsoft.ProcessSimple/flows",
+  "properties": {
+    "displayName": "Desktop Quoted Metadata Flow",
+    "state": "Started"
+  }
+}

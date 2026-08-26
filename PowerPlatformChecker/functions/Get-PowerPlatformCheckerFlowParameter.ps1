@@ -22,19 +22,29 @@
         [String] $Path
     )
 
-    # Send telemetry data
-    $telemetryProperties = @{
-        PathProvided = [bool]$Path
-    }
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowParameter" -PropertiesHash $telemetryProperties
-
     # Create an array to return
     $parametersList = @()
+    $telemetryProperties = @{}
+
+    $flowType = Get-PowerPlatformCheckerFlowType -Path $Path
+    if ($flowType -eq "Desktop") {
+        $parametersList = @(Get-PowerPlatformCheckerDesktopFlowParameterList -Path $Path)
+        Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowParameter" -PropertiesHash $telemetryProperties
+        return $parametersList
+    }
 
     # Import the flow data
-    $flowdata = Import-PowerPlatformCheckerFlow -Path $Path
+    try {
+        $flowdata = Import-PowerPlatformCheckerFlow -Path $Path
+    }
+    catch {
+        Write-Warning "Invalid flow input. Unable to resolve parameters."
+        Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowParameter" -PropertiesHash $telemetryProperties
+        return @()
+    }
 
-    # Get the parameters
+    # Cloud flow parameters live in definition.parameters. Skip Power Automate's
+    # internal $-prefixed entries so callers only receive user-meaningful input.
     $flowdata.properties.definition.parameters | Get-Member -MemberType NoteProperty | Where-Object {-not $_.Name.StartsWith("$")} | Foreach-Object {
         $parametersList += [pscustomobject]@{
             Name = $_.Name
@@ -42,6 +52,8 @@
             SchemaName = $flowdata.properties.definition.parameters.($_.Name).metadata.schemaName
         }
     }
+
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowParameter" -PropertiesHash $telemetryProperties
 
     # Return the list
     return $parametersList

@@ -1,0 +1,216 @@
+﻿{
+  "Metadata": {
+    "Direction": "LR",
+    "IncludeElements": [
+      "CanvasApps",
+      "Connections",
+      "DefaultEntities",
+      "Entities",
+      "EnvironmentVariables",
+      "ExternalDomains",
+      "Flows",
+      "ModelDrivenApps",
+      "WebResources"
+    ],
+    "IsScopedDiagram": false,
+    "SourceFilterType": "None",
+    "SourceFilterValue": "",
+    "OutputFormat": "Graph"
+  },
+  "Nodes": [
+    {
+      "Id": "flow23232323-3434-4545-5656-676767676767",
+      "Type": "Flow",
+      "DisplayName": "Desktop external profile flow",
+      "ClassKind": "Flow",
+      "Properties": {
+        "Destination": "",
+        "DestinationConfidence": "Low",
+        "DestinationEvidence": "NoDestinationSignal",
+        "DestinationType": "Unknown",
+        "DirectionConfidence": "Low",
+        "FlowType": "Desktop",
+        "InteractionDirection": "Unknown",
+        "SourceEvidence": "NoDirectionSignal",
+        "TriggerMode": "Unknown"
+      },
+      "Members": [],
+      "HasExplicitDisplayName": true
+    },
+    {
+      "Id": "flow77777777-7777-7777-7777-777777777777",
+      "Type": "Flow",
+      "DisplayName": "Desktop Sample Flow",
+      "ClassKind": "Flow",
+      "Properties": {
+        "Destination": "",
+        "DestinationConfidence": "Low",
+        "DestinationEvidence": "NoDestinationSignal",
+        "DestinationType": "Unknown",
+        "DirectionConfidence": "Medium",
+        "FlowType": "Desktop",
+        "InteractionDirection": "Write",
+        "SourceEvidence": "OperationHeuristic",
+        "TriggerMode": "Unknown"
+      },
+      "Members": [
+        "    [INPUT]runtimeInput",
+        "    [OUTPUT]result",
+        "    [string]ppc_desktop_baseurl",
+        "    ConnectionReference(shared_desktopautomation)",
+        "    ConnectionReference(shared_uiflow)"
+      ],
+      "HasExplicitDisplayName": true
+    },
+    {
+      "Id": "flow88888888-8888-8888-8888-888888888888",
+      "Type": "Flow",
+      "DisplayName": "Desktop Quoted Metadata Flow",
+      "ClassKind": "Flow",
+      "Properties": {
+        "Destination": "",
+        "DestinationConfidence": "Low",
+        "DestinationEvidence": "NoDestinationSignal",
+        "DestinationType": "Unknown",
+        "DirectionConfidence": "Medium",
+        "FlowType": "Desktop",
+        "InteractionDirection": "Write",
+        "SourceEvidence": "OperationHeuristic",
+        "TriggerMode": "Unknown"
+      },
+      "Members": [
+        "    [INPUT]account"
+      ],
+      "HasExplicitDisplayName": true
+    },
+    {
+      "Id": "flow99999999-9999-9999-9999-999999999999",
+      "Type": "Flow",
+      "DisplayName": "Desktop Manifest Connector Flow",
+      "ClassKind": "Flow",
+      "Properties": {
+        "Destination": "",
+        "DestinationConfidence": "Low",
+        "DestinationEvidence": "NoDestinationSignal",
+        "DestinationType": "Unknown",
+        "DirectionConfidence": "Medium",
+        "FlowType": "Desktop",
+        "InteractionDirection": "Write",
+        "SourceEvidence": "OperationHeuristic",
+        "TriggerMode": "Unknown"
+      },
+      "Members": [
+        "    [OUTPUT]result",
+        "    ConnectionReference(shared_office365)"
+      ],
+      "HasExplicitDisplayName": true
+    },
+    {
+      "Id": "ppc_desktop_baseurl",
+      "Type": "EnvVar",
+      "DisplayName": "ppc_desktop_baseurl",
+      "ClassKind": "EnvVar",
+      "Properties": {},
+      "Members": [
+        "  EnvironmentalVariable"
+      ],
+      "HasExplicitDisplayName": false
+    },
+    {
+      "Id": "shared_desktopautomation",
+      "Type": "Connection",
+      "DisplayName": "shared_desktopautomation",
+      "ClassKind": "Connection",
+      "Properties": {},
+      "Members": [
+        "  ConnectionReference",
+        "  shared_desktopautomation()"
+      ],
+      "HasExplicitDisplayName": false
+    },
+    {
+      "Id": "shared_office365",
+      "Type": "Connection",
+      "DisplayName": "shared_office365",
+      "ClassKind": "Connection",
+      "Properties": {},
+      "Members": [
+        "  ConnectionReference",
+        "  shared_office365()"
+      ],
+      "HasExplicitDisplayName": false
+    },
+    {
+      "Id": "shared_uiflow",
+      "Type": "Connection",
+      "DisplayName": "shared_uiflow",
+      "ClassKind": "Connection",
+      "Properties": {},
+      "Members": [
+        "  ConnectionReference",
+        "  shared_uiflow()"
+      ],
+      "HasExplicitDisplayName": false
+    }
+  ],
+  "Edges": [
+    {
+      "SourceId": "ppc_desktop_baseurl",
+      "TargetId": "flow77777777-7777-7777-7777-777777777777",
+      "Label": "ppc_desktop_baseurl",
+      "EdgeType": "Reference",
+      "Metadata": {
+        "Arrow": "..>"
+      }
+    },
+    {
+      "SourceId": "shared_desktopautomation",
+      "TargetId": "flow77777777-7777-7777-7777-777777777777",
+      "Label": "shared_desktopautomation",
+      "EdgeType": "Link",
+      "Metadata": {
+        "Arrow": "-->"
+      }
+    },
+    {
+      "SourceId": "shared_office365",
+      "TargetId": "flow99999999-9999-9999-9999-999999999999",
+      "Label": "shared_office365",
+      "EdgeType": "Link",
+      "Metadata": {
+        "Arrow": "-->"
+      }
+    },
+    {
+      "SourceId": "shared_uiflow",
+      "TargetId": "flow77777777-7777-7777-7777-777777777777",
+      "Label": "shared_uiflow",
+      "EdgeType": "Link",
+      "Metadata": {
+        "Arrow": "-->"
+      }
+    }
+  ],
+  "Styles": {
+    "CanvasApp": "fill:#8BC34A,stroke:#5E5B52",
+    "Connection": "fill:#FCD757,stroke:#5E5B52",
+    "default": "fill:red,stroke:#5E5B52",
+    "DefaultEntity": "fill:#71374D,stroke:#5E5B52",
+    "Entity": "fill:#B56784,stroke:#5E5B52",
+    "EnvVar": "fill:#DF9A57,stroke:#5E5B52",
+    "Flow": "fill:#DBE4EE,stroke:#5E5B52",
+    "ModelDrivenApp": "fill:#7BAFD4,stroke:#5E5B52",
+    "WebResource": "fill:#D7C8F3,stroke:#5E5B52"
+  },
+  "StyleOrder": [
+    "default",
+    "EnvVar",
+    "Connection",
+    "Entity",
+    "DefaultEntity",
+    "Flow",
+    "CanvasApp",
+    "ModelDrivenApp",
+    "WebResource"
+  ]
+}

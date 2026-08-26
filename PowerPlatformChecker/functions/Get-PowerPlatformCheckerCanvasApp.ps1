@@ -50,7 +50,13 @@
 
     # Loop through all files and read the xml files. Take the name and attributes and return them in a object where the attributes are an array
     foreach ($file in $canvasFiles) {
-        $xmlfile = Select-Xml -Path $file -XPath "*"
+        try {
+            $xmlfile = Select-Xml -Path $file -XPath "*" -ErrorAction Stop
+        }
+        catch {
+            Write-Warning "Invalid canvas app metadata file skipped."
+            continue
+        }
 
         if($xmlfile.Node.DisplayName -like $CanvasAppDisplayName -or $CanvasAppDisplayName -eq "") {
 
@@ -60,8 +66,14 @@
 
             # Get all the data sources
             $dataSources = @()
-            $databaseReferences = $xmlfile.Node.DatabaseReferences | ConvertFrom-Json
-            foreach($db in ($databaseReferences | Get-Member -MemberType NoteProperty).Name) {
+            try {
+                $databaseReferences = $xmlfile.Node.DatabaseReferences | ConvertFrom-Json
+            }
+            catch {
+                Write-Warning "Invalid canvas app database reference payload."
+                continue
+            }
+            foreach($db in @($databaseReferences | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)) {
                 $dataSources += [PSCustomObject]@{
                     Database = $db
                     DataSources = ($databaseReferences.$db.DataSources | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
@@ -75,13 +87,20 @@
             }
 
             # Get all the connection references
-            $connectionReferencesJson = $xmlfile.Node.ConnectionReferences | ConvertFrom-Json
-            $connectionReferenceNames = $connectionReferencesJson | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+            try {
+                $connectionReferencesJson = $xmlfile.Node.ConnectionReferences | ConvertFrom-Json
+            }
+            catch {
+                Write-Warning "Invalid canvas app connection reference payload."
+                continue
+            }
+            $connectionReferenceNames = @($connectionReferencesJson | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)
             $connectionReferences = foreach ($connectionReferenceName in $connectionReferenceNames) {
                 $connectionReferencesJson.$connectionReferenceName | Select-Object id, xrmConnectionReferenceLogicalName, displayName
             }
 
             $returnObject += [PSCustomObject]@{
+                AppType = Get-PowerPlatformCheckerAppType -Path $file
                 Name = $appName
                 DisplayName = $appDisplayName
                 Description = $xmlfile.Node.Description

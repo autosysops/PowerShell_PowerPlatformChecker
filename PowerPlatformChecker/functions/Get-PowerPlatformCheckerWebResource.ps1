@@ -77,9 +77,11 @@
         $sourcePath = Join-Path $metadataFile.DirectoryName ($metadataFile.BaseName -replace '\.data$','')
         if ($resourceType -eq "JavaScript") {
             $methodNames = @(Get-PowerPlatformCheckerWebResourceJavaScriptMethod -SourcePath $sourcePath)
+            $externalDomains = @(Get-PowerPlatformCheckerWebResourceExternalDomain -SourcePath $sourcePath)
         }
         else {
             $methodNames = @()
+            $externalDomains = @()
         }
 
         # DependencyXml is HTML-encoded inside metadata; decode then parse inner XML structure.
@@ -106,6 +108,7 @@
             FileName = [string] $xml.Node.FileName
             Dependencies = $dependencies
             Methods = $methodNames
+            ExternalDomains = $externalDomains
             SourcePath = $sourcePath
             MermaidId = Convert-PowerPlatformCheckerMermaidId -InputString ([string] $xml.Node.Name)
         }

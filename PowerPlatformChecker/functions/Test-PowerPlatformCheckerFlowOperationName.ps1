@@ -21,12 +21,6 @@
         [String] $Path
     )
 
-    # Send telemetry data
-    $telemetryProperties = @{
-        PathProvided = [bool]$Path
-    }
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Test-PowerPlatformCheckerFlowOperationName" -PropertiesHash $telemetryProperties
-
     # Get the list of actions in the flow
     $actionlist = Get-PowerPlatformCheckerFlowActionList -Path $Path -Recurse
 
@@ -50,6 +44,10 @@
             Equal = $equal
         }
     }
+
+    # The command has one required path input and no optional usage shape, so a
+    # simple invocation event is enough for adoption telemetry.
+    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Test-PowerPlatformCheckerFlowOperationName" -PropertiesHash @{}
 
     # Return the list of actions with the result
     return $testedactionlist

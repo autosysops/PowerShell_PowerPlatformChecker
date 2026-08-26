@@ -7,6 +7,7 @@
       "DefaultEntities",
       "Entities",
       "EnvironmentVariables",
+      "ExternalDomains",
       "Flows",
       "ModelDrivenApps",
       "WebResources"
@@ -22,7 +23,17 @@
       "Type": "Flow",
       "DisplayName": "Sample Flow",
       "ClassKind": "Flow",
-      "Properties": {},
+      "Properties": {
+        "Destination": "api.example.test",
+        "DestinationConfidence": "High",
+        "DestinationEvidence": "FlowParameterDefault",
+        "DestinationType": "Domain",
+        "DirectionConfidence": "High",
+        "FlowType": "Cloud",
+        "InteractionDirection": "Write",
+        "SourceEvidence": "OperationCatalog+Heuristic",
+        "TriggerMode": "Webhook"
+      },
       "Members": [
         "    [String]ppc_ApiBaseUrl",
         "    When_a_row_is_added(shared_commondataserviceforapps)",

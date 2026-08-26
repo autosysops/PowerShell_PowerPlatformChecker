@@ -1,0 +1,8 @@
+﻿{
+  "name": "Desktop Loop Wait Call Flow",
+  "type": "Microsoft.ProcessSimple/flows",
+  "properties": {
+    "displayName": "Desktop Loop Wait Call Flow",
+    "state": "Started"
+  }
+}

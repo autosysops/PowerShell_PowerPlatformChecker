@@ -3,6 +3,7 @@
 Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
     $mermaidSnapshotCases = @(
         @{ Name = "full"; Arguments = @{}; Snapshot = "ArchitectureDiagram.Full.expected.md" }
+        @{ Name = "desktop full"; Arguments = @{ SolutionPath = "__DESKTOP__" }; Snapshot = "ArchitectureDiagram.Desktop.expected.md" }
         @{ Name = "model-driven"; Arguments = @{ ModelDrivenAppName = "ppc_ModelApp" }; Snapshot = "ArchitectureDiagram.ModelDriven.expected.md" }
         @{ Name = "flow TB"; Arguments = @{ FlowId = "11111111-1111-1111-1111-111111111111"; Direction = "TB" }; Snapshot = "ArchitectureDiagram.Flow.TB.expected.md" }
         @{ Name = "canvas RL"; Arguments = @{ CanvasAppName = "ppc_canvas_sales_0001"; Direction = "RL" }; Snapshot = "ArchitectureDiagram.CanvasApp.RL.expected.md" }
@@ -16,6 +17,7 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
 
     $graphSnapshotCases = @(
         @{ Name = "full"; Arguments = @{}; Snapshot = "ArchitectureDiagram.Full.expected.graph.json" }
+        @{ Name = "desktop full"; Arguments = @{ SolutionPath = "__DESKTOP__" }; Snapshot = "ArchitectureDiagram.Desktop.expected.graph.json" }
         @{ Name = "flow TB"; Arguments = @{ FlowId = "11111111-1111-1111-1111-111111111111"; Direction = "TB" }; Snapshot = "ArchitectureDiagram.Flow.TB.expected.graph.json" }
         @{ Name = "canvas RL"; Arguments = @{ CanvasAppName = "ppc_canvas_sales_0001"; Direction = "RL" }; Snapshot = "ArchitectureDiagram.CanvasApp.RL.expected.graph.json" }
         @{ Name = "model-driven"; Arguments = @{ ModelDrivenAppName = "ppc_ModelApp" }; Snapshot = "ArchitectureDiagram.ModelDriven.expected.graph.json" }
@@ -34,6 +36,7 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
     BeforeAll {
         Initialize-PowerPlatformCheckerTestData
         $script:solutionPath = Get-PowerPlatformCheckerFixtureSolutionPath
+        $script:desktopSolutionPath = Get-PowerPlatformCheckerDesktopFixtureSolutionPath
         $script:graphSnapshotConverter = {
             param(
                 [Parameter(Mandatory = $true)]
@@ -106,7 +109,12 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
             param($Name, $Arguments, $Snapshot)
 
             $expected = Get-PowerPlatformCheckerExpectedSnapshot -FileName $Snapshot
-            $markdown = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath @Arguments
+            $solutionPath = $script:solutionPath
+            if ($Arguments.ContainsKey("SolutionPath") -and $Arguments.SolutionPath -eq "__DESKTOP__") {
+                $solutionPath = $script:desktopSolutionPath
+                $Arguments = @{}
+            }
+            $markdown = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $solutionPath @Arguments
 
             (Normalize-PowerPlatformCheckerSnapshotText -Text $markdown) |
                 Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $expected)
@@ -116,7 +124,12 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
             param($Name, $Arguments, $Snapshot)
 
             $expected = Get-PowerPlatformCheckerExpectedSnapshot -FileName $Snapshot
-            $graph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -OutputFormat Graph @Arguments
+            $solutionPath = $script:solutionPath
+            if ($Arguments.ContainsKey("SolutionPath") -and $Arguments.SolutionPath -eq "__DESKTOP__") {
+                $solutionPath = $script:desktopSolutionPath
+                $Arguments = @{}
+            }
+            $graph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $solutionPath -OutputFormat Graph @Arguments
             $actual = & $script:graphSnapshotConverter -Graph $graph
 
             (Normalize-PowerPlatformCheckerSnapshotText -Text $actual) |
@@ -125,6 +138,38 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
     }
 
     Context "General Behavior" {
+        It "renders desktop scoped connection references when desktop flow declares connectors" {
+            $desktopGraph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:desktopSolutionPath -FlowId "99999999-9999-9999-9999-999999999999" -OutputFormat Graph
+
+            ($desktopGraph.Nodes | Where-Object { $_.ClassKind -eq "Connection" } | Select-Object -ExpandProperty Id) | Should -Contain "shared_office365"
+            ($desktopGraph.Edges | Where-Object { $_.SourceId -eq "shared_office365" -and $_.TargetId -eq "flow99999999-9999-9999-9999-999999999999" }).Count | Should -BeGreaterThan 0
+        }
+
+        It "normalizes desktop manifest connection names to Mermaid-safe connector ids" {
+            $desktopGraph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:desktopSolutionPath -FlowId "99999999-9999-9999-9999-999999999999" -OutputFormat Graph
+
+            ($desktopGraph.Nodes | Where-Object { $_.ClassKind -eq "Connection" } | Select-Object -ExpandProperty Id) | Should -Not -Contain "7b435bb9579e4faeaaf922c261cee35d"
+            ($desktopGraph.Nodes | Where-Object { $_.ClassKind -eq "Connection" } | Select-Object -ExpandProperty Id) | Should -Contain "shared_office365"
+        }
+
+        It "renders desktop dependency environment variables as linked env var nodes" {
+            $desktopGraph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:desktopSolutionPath -FlowId "77777777-7777-7777-7777-777777777777" -OutputFormat Graph
+
+            ($desktopGraph.Nodes | Where-Object { $_.ClassKind -eq "EnvVar" } | Select-Object -ExpandProperty Id) | Should -Contain "ppc_desktop_baseurl"
+            ($desktopGraph.Edges | Where-Object { $_.SourceId -eq "ppc_desktop_baseurl" -and $_.TargetId -eq "flow77777777-7777-7777-7777-777777777777" }).Count | Should -BeGreaterThan 0
+        }
+
+        It "renders desktop input and output parameters as flow class members" {
+            $desktopGraph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:desktopSolutionPath -OutputFormat Graph
+
+            $desktopSampleFlow = $desktopGraph.Nodes | Where-Object { $_.Id -eq "flow77777777-7777-7777-7777-777777777777" } | Select-Object -First 1
+            $desktopQuotedMetadataFlow = $desktopGraph.Nodes | Where-Object { $_.Id -eq "flow88888888-8888-8888-8888-888888888888" } | Select-Object -First 1
+
+            $desktopSampleFlow.Members | Should -Contain "    [INPUT]runtimeInput"
+            $desktopSampleFlow.Members | Should -Contain "    [OUTPUT]result"
+            $desktopQuotedMetadataFlow.Members | Should -Contain "    [INPUT]account"
+        }
+
         It "returns the architecture graph contract" {
             $graph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -OutputFormat Graph
 
@@ -133,6 +178,58 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
             $graph.PSObject.Properties.Name | Should -Contain "Styles"
             $graph.PSObject.Properties.Name | Should -Contain "Metadata"
             $graph.Metadata.OutputFormat | Should -Be "Graph"
+        }
+
+        It "surfaces trigger mode on flow nodes in graph output" {
+            $graph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -OutputFormat Graph
+
+            $webhookFlow = $graph.Nodes | Where-Object { $_.Id -eq "flow11111111-1111-1111-1111-111111111111" } | Select-Object -First 1
+            $manualFlow = $graph.Nodes | Where-Object { $_.Id -eq "flow22222222-2222-2222-2222-222222222222" } | Select-Object -First 1
+
+            $webhookFlow.Properties.TriggerMode | Should -Be "Webhook"
+            $manualFlow.Properties.TriggerMode | Should -Be "ManualHttp"
+        }
+
+        It "surfaces interaction direction metadata on flow nodes in graph output" {
+            $graph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -OutputFormat Graph
+
+            $sampleFlow = $graph.Nodes | Where-Object { $_.Id -eq "flow11111111-1111-1111-1111-111111111111" } | Select-Object -First 1
+            $childFlow = $graph.Nodes | Where-Object { $_.Id -eq "flow22222222-2222-2222-2222-222222222222" } | Select-Object -First 1
+
+            $sampleFlow.Properties.InteractionDirection | Should -Be "Write"
+            $sampleFlow.Properties.DirectionConfidence | Should -Be "High"
+            $sampleFlow.Properties.SourceEvidence | Should -Be "OperationCatalog+Heuristic"
+
+            $childFlow.Properties.InteractionDirection | Should -Be "Write"
+            $childFlow.Properties.DirectionConfidence | Should -Be "High"
+            $childFlow.Properties.SourceEvidence | Should -Be "OperationCatalog+Heuristic"
+        }
+
+        It "surfaces destination metadata on flow nodes in graph output" {
+            $graph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -OutputFormat Graph
+
+            $sampleFlow = $graph.Nodes | Where-Object { $_.Id -eq "flow11111111-1111-1111-1111-111111111111" } | Select-Object -First 1
+            $childFlow = $graph.Nodes | Where-Object { $_.Id -eq "flow22222222-2222-2222-2222-222222222222" } | Select-Object -First 1
+
+            $sampleFlow.Properties.Destination | Should -Be "api.example.test"
+            $sampleFlow.Properties.DestinationType | Should -Be "Domain"
+            $sampleFlow.Properties.DestinationConfidence | Should -Be "High"
+            $sampleFlow.Properties.DestinationEvidence | Should -Be "FlowParameterDefault"
+
+            $childFlow.Properties.Destination | Should -Be "office365"
+            $childFlow.Properties.DestinationType | Should -Be "Service"
+            $childFlow.Properties.DestinationConfidence | Should -Be "Low"
+            $childFlow.Properties.DestinationEvidence | Should -Be "ConnectorGroup"
+        }
+
+        It "surfaces destination metadata on canvas app nodes in graph output" {
+            $graph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -OutputFormat Graph
+
+            $canvasNode = $graph.Nodes | Where-Object { $_.ClassKind -eq "CanvasApp" -and $_.Id -eq "ppc_canvas_sales_0001" } | Select-Object -First 1
+            $canvasNode.Properties.Destination | Should -Be "dataverse"
+            $canvasNode.Properties.DestinationType | Should -Be "Service"
+            $canvasNode.Properties.DestinationConfidence | Should -Be "Low"
+            $canvasNode.Properties.DestinationEvidence | Should -Be "ConnectionReference"
         }
 
         It "renders Mermaid from graph output equivalently" {
@@ -184,13 +281,32 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
         }
 
         It "sends telemetry with scope and output metadata" {
-            [void](Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -FlowId "11111111-1111-1111-1111-111111111111" -OutputFormat Graph)
-
-            Should -Invoke -CommandName Send-THEvent -ModuleName PowerPlatformChecker -Times 1 -Exactly -ParameterFilter {
-                $EventName -eq "Get-PowerPlatformCheckerArchitectureDiagram" -and
-                $PropertiesHash.ParameterSet -eq "FilterByFlow" -and
-                $PropertiesHash.OutputFormat -eq "Graph"
+            $telemetryCalls = [System.Collections.Generic.List[object]]::new()
+            Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {
+                param([string]$ModuleName, [string]$EventName, [hashtable]$PropertiesHash)
+                [void]$telemetryCalls.Add([pscustomobject]@{ ModuleName = $ModuleName; EventName = $EventName; PropertiesHash = $PropertiesHash })
             }
+
+            $secretFlowId = "secret-flow-id-telemetry"
+            try {
+                [void](Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -FlowId $secretFlowId -OutputFormat Graph -Direction TB -IncludeElements @("Flows") -StyleOverrides @{ Flow = "#123456" })
+            }
+            catch {
+            }
+
+            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerArchitectureDiagram" -ExpectedKeys @("ParameterSet", "HasFlowFilter", "HasCanvasFilter", "HasModelDrivenFilter", "Direction", "OutputFormat", "IncludeElements", "HasStyleOverrides") -ConfidentialValues @($script:solutionPath, $secretFlowId, "#123456")
+
+            $telemetryCalls.Clear()
+            [void](Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath)
+            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerArchitectureDiagram" -ExpectedKeys @("ParameterSet", "HasFlowFilter", "HasCanvasFilter", "HasModelDrivenFilter", "Direction", "OutputFormat", "IncludeElements", "HasStyleOverrides") -ConfidentialValues @($script:solutionPath)
+
+            $telemetryCalls.Clear()
+            [void](Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -CanvasAppName "secret-canvas-app")
+            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerArchitectureDiagram" -ExpectedKeys @("ParameterSet", "HasFlowFilter", "HasCanvasFilter", "HasModelDrivenFilter", "Direction", "OutputFormat", "IncludeElements", "HasStyleOverrides") -ConfidentialValues @("secret-canvas-app")
+
+            $telemetryCalls.Clear()
+            [void](Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -ModelDrivenAppName "secret-model-app")
+            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerArchitectureDiagram" -ExpectedKeys @("ParameterSet", "HasFlowFilter", "HasCanvasFilter", "HasModelDrivenFilter", "Direction", "OutputFormat", "IncludeElements", "HasStyleOverrides") -ConfidentialValues @("secret-model-app")
         }
 
         It "supports session-level style updates" {

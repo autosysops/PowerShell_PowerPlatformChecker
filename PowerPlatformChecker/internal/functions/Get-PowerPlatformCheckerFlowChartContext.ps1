@@ -155,6 +155,8 @@
         $isDecision = $action.Type -in @("If", "Switch")
         # Scope blocks always render as subgraphs regardless of edge topology.
         $isScope = $action.Type -eq "Scope"
+        # Desktop LOOP blocks should render as subgraphs to show loop body.
+        $isLoop = $action.Type -eq "Loop"
         $hasExternalIncoming = $false
 
         if ($null -ne $action.RunAfter -and $action.RunAfter -ne "") {
@@ -166,7 +168,7 @@
             }
         }
 
-        if ($isDecision -or $isSwitchBranch -or $isScope -or $hasExternalIncoming) {
+        if ($isDecision -or $isSwitchBranch -or $isScope -or $isLoop -or $hasExternalIncoming) {
             $wrappedByName[$action.Name] = [pscustomobject]@{
                 SubgraphId = "{0}_group" -f $nodeByName[$action.Name]
             }

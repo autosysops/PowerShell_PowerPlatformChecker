@@ -23,6 +23,9 @@
     .PARAMETER IncludeWebResources
         Indicates whether web resource rendering is enabled.
 
+    .PARAMETER IncludeExternalDomains
+        Indicates whether extracted external domain nodes/edges should be rendered.
+
     .EXAMPLE
         Build web resource class and dependency content.
 
@@ -47,7 +50,10 @@
         [switch] $HasModelDrivenFilter,
 
         [Parameter(Mandatory = $false)]
-        [switch] $IncludeWebResources
+        [switch] $IncludeWebResources,
+
+        [Parameter(Mandatory = $false)]
+        [switch] $IncludeExternalDomains
     )
 
     if (-not $IncludeWebResources.IsPresent) {
@@ -125,6 +131,20 @@
 
             $dependencyId = Convert-PowerPlatformCheckerMermaidId -InputString $dependency
             $nodes += [pscustomobject]@{ Id = $dependencyId; Type = "WebResource"; DisplayName = [string]$dependency; ClassKind = "WebResource"; Properties = @{}; Members = @(); HasExplicitDisplayName = $true }
+        }
+
+        foreach ($externalDomain in @($webResource.ExternalDomains)) {
+            if (-not $IncludeExternalDomains.IsPresent) {
+                continue
+            }
+
+            if ([string]::IsNullOrWhiteSpace([string]$externalDomain)) {
+                continue
+            }
+
+            $externalDomainId = "external_" + (Convert-PowerPlatformCheckerMermaidId -InputString ([string]$externalDomain))
+            $nodes += [pscustomobject]@{ Id = $externalDomainId; Type = "ExternalDomain"; DisplayName = [string]$externalDomain; ClassKind = "ExternalDomain"; Properties = @{}; Members = @(); HasExplicitDisplayName = $true }
+            $edges += [pscustomobject]@{ SourceId = [string]$webResource.MermaidId; TargetId = $externalDomainId; Label = "ExternalCall"; EdgeType = "Link"; Metadata = @{ Arrow = "-->" } }
         }
     }
 

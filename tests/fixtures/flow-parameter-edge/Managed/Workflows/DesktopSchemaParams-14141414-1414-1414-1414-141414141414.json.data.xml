@@ -1,0 +1,8 @@
+﻿<Workflow>
+  <WorkflowId>{14141414-1414-1414-1414-141414141414}</WorkflowId>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Inputs>{"schema":{"properties":{"folderPath":{"title":"folderPath","type":"string"},"retryCount":{"title":"retryCount","type":"number"}}}}</Inputs>
+  <Dependencies>{"environmentVariables":[]}</Dependencies>
+  <Definition>DISPLAY Message='x'</Definition>
+</Workflow>

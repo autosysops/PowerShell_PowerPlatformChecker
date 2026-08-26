@@ -57,5 +57,22 @@
             [pscustomobject]@{ Id = [string]$_.Name; Type = "EnvVar"; DisplayName = [string]$_.Name; ClassKind = "EnvVar"; Properties = @{}; Members = @("  EnvironmentalVariable"); HasExplicitDisplayName = $false }
         })
 
+    $knownNodeIds = @($nodes | ForEach-Object { [string]$_.Id } | Select-Object -Unique)
+    foreach ($connectedName in @($ConnectedNames | Where-Object { $_ } | Select-Object -Unique)) {
+        if ($connectedName -in $knownNodeIds) {
+            continue
+        }
+
+        $nodes += [pscustomobject]@{
+            Id = [string]$connectedName
+            Type = "EnvVar"
+            DisplayName = [string]$connectedName
+            ClassKind = "EnvVar"
+            Properties = @{}
+            Members = @("  EnvironmentalVariable")
+            HasExplicitDisplayName = $false
+        }
+    }
+
     return [pscustomobject]@{ Nodes = $nodes; Edges = @() }
 }

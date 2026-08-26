@@ -30,8 +30,15 @@
 
     foreach ($node in @($Graph.Nodes)) {
         $declaration = "class $($node.Id)"
+        $displayName = [string]$node.DisplayName
+        if ($node.ClassKind -eq "Flow" -and $null -ne $node.Properties -and $node.Properties.ContainsKey("FlowType")) {
+            $flowType = [string]$node.Properties["FlowType"]
+            if (-not [string]::IsNullOrWhiteSpace($flowType)) {
+                $displayName = "[{0}] {1}" -f $flowType.ToUpper(), $displayName
+            }
+        }
         if ($node.HasExplicitDisplayName) {
-            $declaration += "[`"$($node.DisplayName)`"]"
+            $declaration += "[`"$displayName`"]"
         }
         $declaration += ":::$($node.ClassKind)"
 

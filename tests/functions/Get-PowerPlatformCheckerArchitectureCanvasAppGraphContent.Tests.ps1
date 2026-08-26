@@ -25,6 +25,10 @@ Describe "Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent" {
             $result = Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent -SolutionObject $solutionObject -IncludeCanvasApps:$true -IncludeConnections:$true -IncludeEntities:$true -IncludeDefaultEntities:$true -EntitySetByReference @{ account = "accounts" } -KnownEntitySetNames @("accounts")
 
             @($result.Nodes | Where-Object { $_.Id -eq "app_internal" -and $_.DisplayName -eq "App Display" }).Count | Should -Be 1
+            ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.Destination | Should -Be "sql"
+            ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.DestinationType | Should -Be "Service"
+            ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.DestinationConfidence | Should -Be "Low"
+            ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.DestinationEvidence | Should -Be "ConnectionReference"
             @($result.Edges | Where-Object { $_.SourceId -eq "shared_sql" -and $_.TargetId -eq "app_internal" }).Count | Should -Be 1
             @($result.Edges | Where-Object { $_.SourceId -eq "app_internal" -and $_.TargetId -eq "accounts" }).Count | Should -Be 1
             @($result.Edges | Where-Object { $_.SourceId -eq "app_internal" -and $_.TargetId -eq "external_vendor" }).Count | Should -Be 1

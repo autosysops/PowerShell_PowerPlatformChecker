@@ -1,0 +1,6 @@
+﻿<Workflow WorkflowId="{23232323-2323-2323-2323-232323232323}" Name="Cloud HTTP profile flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/CloudHttpProfileFlow-23232323-2323-2323-2323-232323232323.json</JsonFileName>
+  <Category>5</Category>
+  <UIFlowType>0</UIFlowType>
+  <Description>Fixture flow for ActionList external profile resolution tests.</Description>
+</Workflow>

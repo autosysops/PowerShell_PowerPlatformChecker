@@ -1,10 +1,11 @@
 ﻿:::mermaid
 classDiagram
 direction LR
-class flow22222222-2222-2222-2222-222222222222["Child Flow"]:::Flow {
+class flow22222222-2222-2222-2222-222222222222["[CLOUD] Child Flow"]:::Flow {
     Notify(shared_office365)
 }
-class flow11111111-1111-1111-1111-111111111111["Sample Flow"]:::Flow {
+class flow23232323-2323-2323-2323-232323232323["[CLOUD] Cloud HTTP profile flow"]:::Flow
+class flow11111111-1111-1111-1111-111111111111["[CLOUD] Sample Flow"]:::Flow {
     When_a_row_is_added(shared_commondataserviceforapps)
     Send_an_email(shared_office365)
     Update_row(shared_commondataserviceforapps)

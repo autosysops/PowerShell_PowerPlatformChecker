@@ -1,0 +1,7 @@
+﻿<Workflow WorkflowId="{88888888-8888-8888-8888-888888888888}" Name="Desktop Quoted Metadata Flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/DesktopFlow-88888888-8888-8888-8888-888888888888.json</JsonFileName>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Description>An anonymized desktop flow fixture that includes quoted metadata directives.</Description>
+  <Definition>"@@ConnectionString: ''\r\n@@Type: 'Local'\r\n@INPUT account : { 'Type': 'String', 'DefaultValue': 'sample' }\r\nDISPLAY Message='Start desktop flow'\r\nWRITE Text='Done'"</Definition>
+</Workflow>

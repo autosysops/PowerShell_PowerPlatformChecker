@@ -52,8 +52,9 @@
     $appFiles = Get-ChildItem -Path $appModuleRoot -Recurse -File -Filter "AppModule*.xml"
 
     $results = foreach ($appFile in $appFiles) {
+        try {
         # Parse top-level app metadata first so we can skip quickly on filter mismatches.
-        $xml = Select-Xml -Path $appFile.FullName -XPath "*"
+        $xml = Select-Xml -Path $appFile.FullName -XPath "*" -ErrorAction Stop
         $uniqueName = [string] $xml.Node.UniqueName
 
         if (-not $uniqueName -or $uniqueName -notlike $AppName) {
@@ -108,8 +109,14 @@
         if (Test-Path -Path $siteMapFolder) {
             $siteMapFile = Get-ChildItem -Path $siteMapFolder -File -Filter "AppModuleSiteMap*.xml" | Select-Object -First 1
             if ($siteMapFile) {
-                $siteMapXml = Select-Xml -Path $siteMapFile.FullName -XPath "*"
-                $siteMapEntities = @($siteMapXml.Node.SiteMap.Area.Group.SubArea | Where-Object { $_.Entity } | ForEach-Object { [string] $_.Entity })
+                try {
+                    $siteMapXml = Select-Xml -Path $siteMapFile.FullName -XPath "*" -ErrorAction Stop
+                    $siteMapEntities = @($siteMapXml.Node.SiteMap.Area.Group.SubArea | Where-Object { $_.Entity } | ForEach-Object { [string] $_.Entity })
+                }
+                catch {
+                    Write-Warning "Invalid model-driven app sitemap metadata skipped."
+                    $siteMapEntities = @()
+                }
             }
         }
 
@@ -126,6 +133,7 @@
         )
 
         [PSCustomObject]@{
+            AppType = Get-PowerPlatformCheckerAppType -Path $appFile.FullName
             UniqueName = $uniqueName
             DisplayName = $displayName
             Entities = @($componentEntities + $siteMapEntities | Sort-Object -Unique)
@@ -136,6 +144,11 @@
             EntityWebResources = $entityWebResources
             Components = $typedComponents
             MermaidId = Convert-PowerPlatformCheckerMermaidId -InputString $uniqueName
+        }
+        }
+        catch {
+            Write-Warning "Invalid model-driven app metadata file skipped."
+            continue
         }
     }
 

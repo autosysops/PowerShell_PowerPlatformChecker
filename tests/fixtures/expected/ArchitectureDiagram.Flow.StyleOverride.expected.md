@@ -1,7 +1,7 @@
 ﻿:::mermaid
 classDiagram
 direction LR
-class flow22222222-2222-2222-2222-222222222222["Child Flow"]:::Flow {
+class flow22222222-2222-2222-2222-222222222222["[CLOUD] Child Flow"]:::Flow {
     Notify(shared_office365)
 }
 class shared_office365:::Connection {

@@ -20,5 +20,16 @@ Describe "Get-PowerPlatformCheckerSolutionRelation" {
         { Get-PowerPlatformCheckerSolutionRelation -SolutionPath $testRoot -ErrorAction Stop } | Should -Not -Throw
         @(Get-PowerPlatformCheckerSolutionRelation -SolutionPath $testRoot).Count | Should -Be 0
     }
+
+    It "sends invocation telemetry without solution paths or result counts" {
+        $telemetryCalls = [System.Collections.Generic.List[object]]::new()
+        Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {
+            param([string]$ModuleName, [string]$EventName, [hashtable]$PropertiesHash)
+            [void]$telemetryCalls.Add([pscustomobject]@{ ModuleName = $ModuleName; EventName = $EventName; PropertiesHash = $PropertiesHash })
+        }
+
+        [void](Get-PowerPlatformCheckerSolutionRelation -SolutionPath $script:solutionPath)
+        Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerSolutionRelation" -ExpectedKeys @() -ConfidentialValues @($script:solutionPath)
+    }
 }
 
