@@ -8,16 +8,7 @@ class shared_office365:::Connection {
   ConnectionReference
   Office 365 Outlook - Test()
 }
-class ppc_script_OrderForm_js["Order Form Script"]:::WebResource {
-  [Script]JavaScript
-  [Script]onLoad
-}
-class ppc_script_Shared_js["Shared Script"]:::WebResource {
-  [Script]JavaScript
-  [Script]setTabVisibility
-}
 shared_office365 --> flow22222222-2222-2222-2222-222222222222:shared_office365
-ppc_script_OrderForm_js --> ppc_script_Shared_js:Dependency
 classDef default fill:red,stroke:#010203
 classDef EnvVar fill:#DF9A57,stroke:#010203
 classDef Connection fill:#FCD757,stroke:#010203

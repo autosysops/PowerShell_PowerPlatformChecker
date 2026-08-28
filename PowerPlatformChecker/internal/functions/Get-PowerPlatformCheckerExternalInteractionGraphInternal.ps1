@@ -218,7 +218,7 @@
                                 HasExplicitDisplayName = $true
                             }
 
-                            $responseLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $flowNode -FlowAction $flowAction -InteractionLabel 'OUTBOUND' -FlowAlias $flowAlias -ConnectorCode $connectorCode -IsResponse
+                            $responseLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $flowNode -FlowAction $flowAction -InteractionLabel 'OUTBOUND' -FlowAlias $flowAlias -ConnectorCode $connectorCode
                             $responseEvidence = [string]$flowAction.Name
                             Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId 'externaldomain_internet' -InteractionLabel 'OUTBOUND' -TargetNode $internetNode -SourceNode $flowNode -Evidence $responseEvidence -SourceLabelOverride $responseLabel
                             [void]$targetIdsAddedForFlow.Add('externaldomain_internet')
@@ -371,9 +371,21 @@
                     if ([string]::IsNullOrWhiteSpace($triggerConnectorDisplayName)) {
                         $triggerConnectorDisplayName = $triggerConnectorKey
                     }
+
+                    $triggerExternalTarget = [string]$triggerAction.ExternalEndpoint
+                    if ([string]::IsNullOrWhiteSpace($triggerExternalTarget) -or $triggerExternalTarget -eq 'Unknown') {
+                        $triggerExternalTarget = [string]$triggerAction.ExternalDomain
+                    }
+
+                    $isManualInbound = [string]$triggerAction.Type -eq 'Request' -or [string]$triggerAction.TriggerKind -eq 'Http'
+                    $hasExternalTriggerTarget = Test-PowerPlatformCheckerExternalDomainToken -DomainValue $triggerExternalTarget
+                    if (-not $isManualInbound -and -not $hasExternalTriggerTarget) {
+                        continue
+                    }
+
                     $triggerConnectorProfile = Get-PowerPlatformCheckerExternalInteractionConnectorProfile -ConnectorKey $triggerConnectorKey -ConnectorDisplayName $triggerConnectorDisplayName -ConnectorByKey $connectorByKey -ConnectorLegend $connectorLegend
                     $triggerConnectorCode = if ($null -ne $triggerConnectorProfile) { [string]$triggerConnectorProfile.Code } else { '' }
-                    $triggerLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $inboundFlow -FlowAction $triggerAction -InteractionLabel 'INBOUND' -FlowAlias $inboundAlias -ConnectorCode $triggerConnectorCode -IsInbound
+                    $triggerLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $inboundFlow -FlowAction $triggerAction -InteractionLabel 'INBOUND' -FlowAlias $inboundAlias -ConnectorCode $triggerConnectorCode
                     $triggerEvidence = [string]$triggerAction.Name
                     $edgeKey = "{0}|{1}|{2}|-->" -f $internetNodeId, $solutionNodeId, $triggerLabel
                     $existingInbound = $combinedEdges | Where-Object {
@@ -480,10 +492,24 @@
         }
     }
 
+    $connectedNodeIds = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($edge in @($combinedEdges)) {
+        [void]$connectedNodeIds.Add([string]$edge.SourceId)
+        [void]$connectedNodeIds.Add([string]$edge.TargetId)
+    }
+
+    # Keep the primary solution node visible, but drop unreferenced external domain
+    # placeholders (for example internet when no qualifying inbound/outbound edge exists).
+    $combinedNodes = @(
+        $combinedNodes |
+            Where-Object {
+                $_.ClassKind -ne 'ExternalDomain' -or $connectedNodeIds.Contains([string]$_.Id)
+            }
+    )
+
     if ($hasUnresolvedConnectionFallback) {
         [void]$legendNotes.Add('Connection fallback edges are labeled DomainUnresolved when no concrete external domain could be derived for that connector.')
     }
-    [void]$legendNotes.Add('Azure DevOps Mermaid does not reliably support per-edge-label text colors; connector colors are provided in the legend and connector code labels.')
 
     return [pscustomobject]@{
         Metadata = [pscustomobject]@{

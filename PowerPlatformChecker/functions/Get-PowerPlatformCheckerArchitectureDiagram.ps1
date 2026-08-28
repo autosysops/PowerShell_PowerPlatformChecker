@@ -136,6 +136,9 @@
     $includeEntities = $includePolicy.IncludeEntities
     $includeDefaultEntities = $includePolicy.IncludeDefaultEntities
     $includeWebResources = $includePolicy.IncludeWebResources
+    if ($PSBoundParameters.ContainsKey("FlowId")) {
+        $includeWebResources = $false
+    }
     $includeExternalDomains = $includePolicy.IncludeExternalDomains
 
     # Keep style resolution centralized so all diagram producers honor the same defaults and overrides.

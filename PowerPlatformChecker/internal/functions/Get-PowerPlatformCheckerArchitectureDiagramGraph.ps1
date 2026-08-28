@@ -89,6 +89,19 @@
         if ($edgeKeys.Add($edgeKey)) { [void]$uniqueEdges.Add($edge) }
     }
 
+    $connectedNodeIds = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($edge in @($uniqueEdges)) {
+        [void]$connectedNodeIds.Add([string]$edge.SourceId)
+        [void]$connectedNodeIds.Add([string]$edge.TargetId)
+    }
+
+    $uniqueNodes = @(
+        $uniqueNodes |
+            Where-Object {
+                $_.ClassKind -ne 'ExternalDomain' -or $connectedNodeIds.Contains([string]$_.Id)
+            }
+    )
+
     $styles = [ordered]@{ default = "fill:$($Style.Default),stroke:$($Style.Stroke)" }
     if ($IncludePolicy.IncludeEnvironmentVariables) { $styles.EnvVar = "fill:$($Style.EnvVar),stroke:$($Style.Stroke)" }
     if ($IncludePolicy.IncludeConnections) { $styles.Connection = "fill:$($Style.Connection),stroke:$($Style.Stroke)" }

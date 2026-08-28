@@ -86,7 +86,10 @@
         "Destination": "dataverse",
         "DestinationConfidence": "Low",
         "DestinationEvidence": "ConnectionReference",
-        "DestinationType": "Service"
+        "DestinationType": "Service",
+        "InteractionDirection": "Unknown",
+        "InteractionEvidence": "NoMsAppSignal",
+        "SourceSignals": []
       },
       "Members": [],
       "HasExplicitDisplayName": true

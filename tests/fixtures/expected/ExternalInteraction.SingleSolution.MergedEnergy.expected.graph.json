@@ -1,4 +1,4 @@
-{
+﻿{
   "Metadata": {
     "Direction": "LR",
     "DiagramKind": "Flowchart",
@@ -22,6 +22,14 @@
     "SourceFilterValue": ""
   },
   "Nodes": [
+    {
+      "Id": "externaldomain_https_api_contoso_example",
+      "Type": "ExternalDomain",
+      "DisplayName": "https://api.contoso.example",
+      "ClassKind": "ExternalDomain",
+      "Members": [],
+      "HasExplicitDisplayName": true
+    },
     {
       "Id": "externaldomain_internet",
       "Type": "ExternalDomain",
@@ -65,7 +73,7 @@
     {
       "SourceId": "externaldomain_internet",
       "TargetId": "solution_Energy",
-      "Label": "Flow-01 INBOUND",
+      "Label": "Flow-01 INBOUND Manual",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
@@ -75,11 +83,21 @@
     {
       "SourceId": "externaldomain_internet",
       "TargetId": "solution_Energy",
-      "Label": "Flow-03 INBOUND C01",
+      "Label": "Flow-02 INBOUND manual",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
-        "Evidence": "When_a_row_is_added"
+        "Evidence": "manual"
+      }
+    },
+    {
+      "SourceId": "solution_Energy",
+      "TargetId": "externaldomain_https_api_contoso_example",
+      "Label": "Flow-02 GET CallApi_https",
+      "EdgeType": "Link",
+      "Metadata": {
+        "Arrow": "-->",
+        "Evidence": "CallApi"
       }
     },
     {

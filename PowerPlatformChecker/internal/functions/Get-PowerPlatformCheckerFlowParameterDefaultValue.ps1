@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerFlowParameterDefaultValue {
+﻿function Get-PowerPlatformCheckerFlowParameterDefaultValue {
     <#
     .SYNOPSIS
         Resolves a flow definition parameter default value.
@@ -14,6 +14,8 @@ function Get-PowerPlatformCheckerFlowParameterDefaultValue {
         Name of the parameter to resolve.
 
     .EXAMPLE
+        Read a named default value from flow definition parameters.
+
         PS> Get-PowerPlatformCheckerFlowParameterDefaultValue -DefinitionParameters $params -ParameterName 'baseUrl'
     #>
 

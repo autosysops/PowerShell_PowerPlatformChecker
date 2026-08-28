@@ -66,7 +66,19 @@
     }
 
     $nodes = @($nodes | Select-Object -Unique Id, Label, Shape)
-    $subgraphs = @($subgraphs | Sort-Object { [int]($_.Id -replace "\D", "") })
+
+    # Azure DevOps Mermaid can fail on truly empty subgraphs (for example empty
+    # switch-case wrappers with only a direction/end block). Keep only wrappers
+    # that own at least one node, edge, or nested subgraph.
+    $subgraphs = @(
+        $subgraphs |
+            Where-Object {
+                @($_.Nodes).Count -gt 0 -or
+                @($_.Edges).Count -gt 0 -or
+                @($_.Subgraphs).Count -gt 0
+            } |
+            Sort-Object { [int]($_.Id -replace "\D", "") }
+    )
     $wrapperId = if ($isWrapped) { $GraphContext.WrappedByName[$RootActionName].SubgraphId } else { $null }
 
     $directSubgraphIds = @($subgraphs | ForEach-Object { [string]$_.Id } | Select-Object -Unique)

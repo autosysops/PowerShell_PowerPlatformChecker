@@ -4,7 +4,7 @@
 RootModule = 'PowerPlatformChecker.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.6.3'
+ModuleVersion = '1.0.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -22,7 +22,7 @@ CompanyName = 'AutoSysOps'
 Copyright = '(c) AutoSysOps (Leo Visser). All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'PowerShell module to check and document Power Platform solutions. This module uses exported solution files so it can run in deployment pipelines without a live tenant connection. It can analyze flows, connectors, actions, entities, relations, canvas apps, model-driven apps, JavaScript web resources, and generate Mermaid architecture and flowchart diagrams.'
+Description = 'PowerShell module to analyze and document exported Power Platform solutions without requiring a live tenant connection. It can analyze flows, connectors, actions, entities, relations, canvas apps, model-driven apps, and JavaScript web resources, and generate Mermaid architecture diagrams, flowcharts, and external interaction views. The module also supports graph/object outputs and is designed for repeatable CI/CD and deployment-pipeline usage.'
 
 # Minimum version of the PowerShell engine required by this module
 # PowerShellVersion = ''
@@ -115,7 +115,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('Power', 'Platform', 'PowerPlatform', 'PowerAutomate', 'PowerApps', 'Automate', 'Apps', 'CanvasApp', 'ModelDrivenApp', 'WebResource', 'Entity', 'Relations', 'CloudFlow', 'ModernFlow', 'Flow', 'Solution', 'Documentation', 'Mermaid', 'Linter', 'Checker', 'JSON', 'Export', 'BestPractices')
+        Tags = @('Power', 'Platform', 'PowerPlatform', 'PowerAutomate', 'PowerApps', 'Automate', 'Apps', 'CanvasApp', 'ModelDrivenApp', 'WebResource', 'Entity', 'Relations', 'CloudFlow', 'ModernFlow', 'Flow', 'FlowChart', 'ArchitectureDiagram', 'ExternalInteraction', 'Dataverse', 'Solution', 'Documentation', 'Mermaid', 'Linter', 'Checker', 'JSON', 'Export', 'BestPractices', 'CI', 'CD', 'DevOps', 'Telemetry')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/autosysops/PowerShell_PowerPlatformChecker/blob/main/LICENSE'

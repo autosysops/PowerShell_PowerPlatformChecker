@@ -1,4 +1,4 @@
-function Add-PowerPlatformCheckerFlowConnectorCandidate {
+﻿function Add-PowerPlatformCheckerFlowConnectorCandidate {
     <#
     .SYNOPSIS
         Adds one desktop connector candidate entry when it matches the filter.
@@ -23,6 +23,8 @@ function Add-PowerPlatformCheckerFlowConnectorCandidate {
         Wildcard filter value from Get-PowerPlatformCheckerFlowConnectorTier.
 
     .EXAMPLE
+        Add a connector candidate when its normalized name matches the wildcard filter.
+
         PS> Add-PowerPlatformCheckerFlowConnectorCandidate -CandidateList $list -Name 'shared_office365' -ConnectorFilter '*'
     #>
 

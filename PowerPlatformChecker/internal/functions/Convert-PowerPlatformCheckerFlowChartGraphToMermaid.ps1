@@ -109,7 +109,12 @@
             $graphId = [string]$currentGraph.Id
             $graphTitle = [string]$currentGraph.Title
             $graphDirection = if ($currentGraph.Direction) { [string]$currentGraph.Direction } else { "TB" }
-            $lines += "subgraph $graphId[`"$graphTitle`"]"
+            if ([string]::IsNullOrWhiteSpace($graphTitle)) {
+                $lines += "subgraph $graphId"
+            }
+            else {
+                $lines += "subgraph $graphId[`"$graphTitle`"]"
+            }
             $lines += "direction $graphDirection"
         }
 

@@ -1,4 +1,4 @@
-function Add-PowerPlatformCheckerFlowConnectorCandidatesFromReferences {
+﻿function Add-PowerPlatformCheckerFlowConnectorCandidatesFromReferences {
     <#
     .SYNOPSIS
         Adds desktop connector candidates from connection reference payloads.
@@ -17,8 +17,12 @@ function Add-PowerPlatformCheckerFlowConnectorCandidatesFromReferences {
         Wildcard filter value from Get-PowerPlatformCheckerFlowConnectorTier.
 
     .EXAMPLE
+        Expand connection-reference metadata into candidate connector rows.
+
         PS> Add-PowerPlatformCheckerFlowConnectorCandidatesFromReferences -CandidateList $list -ConnectionReferences $refs -ConnectorFilter '*'
     #>
+
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '', Justification = 'Internal helper name kept for backward-compatible module internals.')]
 
     [CmdletBinding()]
     param(

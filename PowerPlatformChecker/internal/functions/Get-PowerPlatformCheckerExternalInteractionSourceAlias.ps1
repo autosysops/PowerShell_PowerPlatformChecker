@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerExternalInteractionSourceAlias {
+﻿function Get-PowerPlatformCheckerExternalInteractionSourceAlias {
     <#
     .SYNOPSIS
         Returns a stable short alias for a source node in external interaction diagrams.
@@ -23,6 +23,8 @@ function Get-PowerPlatformCheckerExternalInteractionSourceAlias {
         Optional solution name to include in legend rows.
 
     .EXAMPLE
+        Get or create a stable short alias for a source node.
+
         PS> Get-PowerPlatformCheckerExternalInteractionSourceAlias -Node $flowNode -AliasByNodeId $map -AliasCounters $counters
     #>
 

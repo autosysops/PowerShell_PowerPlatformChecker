@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerExternalInteractionSourceLabel {
+﻿function Get-PowerPlatformCheckerExternalInteractionSourceLabel {
     <#
     .SYNOPSIS
         Builds a condensed source label for aggregated external interaction edges.
@@ -12,6 +12,15 @@ function Get-PowerPlatformCheckerExternalInteractionSourceLabel {
 
     .PARAMETER InteractionLabel
         Condensed interaction label such as GET or SET.
+
+    .PARAMETER SourceAlias
+        Optional short alias (for example App-01) to use instead of type and display name.
+
+    .PARAMETER ConnectorCode
+        Optional compact connector code appended to unresolved-connection labels.
+
+    .PARAMETER DomainUnresolved
+        Marks labels that still target unresolved connection references.
 
     .EXAMPLE
         Build a source label for a canvas app read interaction.
@@ -61,7 +70,8 @@ function Get-PowerPlatformCheckerExternalInteractionSourceLabel {
         if (@($firstSignal).Count -gt 0 -and $null -ne $firstSignal[0]) {
             $screen = [string]$firstSignal[0].Screen
             $element = [string]$firstSignal[0].Element
-            if (-not [string]::IsNullOrWhiteSpace($screen)) {
+            $hasMeaningfulScreen = -not [string]::IsNullOrWhiteSpace($screen) -and $screen -ne 'App'
+            if ($hasMeaningfulScreen) {
                 [void]$detailParts.Add($screen.Replace(':', ' '))
             }
             if (-not [string]::IsNullOrWhiteSpace($element)) {

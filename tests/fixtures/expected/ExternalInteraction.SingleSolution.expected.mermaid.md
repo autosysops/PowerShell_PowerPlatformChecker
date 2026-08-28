@@ -1,11 +1,13 @@
-:::mermaid
+﻿:::mermaid
 graph LR;
 solution_anonymized_solution["anonymized-solution"]:::Solution
 externaldomain_internet["internet"]:::ExternalDomain
+externaldomain_https_api_contoso_example["https://api.contoso.example"]:::ExternalDomain
 shared_commondataserviceforapps["shared_commondataserviceforapps"]:::Connection
 shared_office365["shared_office365"]:::Connection
-externaldomain_internet -->|Flow-01 INBOUND| solution_anonymized_solution
-externaldomain_internet -->|Flow-03 INBOUND C01| solution_anonymized_solution
+externaldomain_internet -->|Flow-01 INBOUND Manual| solution_anonymized_solution
+externaldomain_internet -->|Flow-02 INBOUND manual| solution_anonymized_solution
+solution_anonymized_solution -->|Flow-02 GET CallApi_https| externaldomain_https_api_contoso_example
 solution_anonymized_solution -->|App-01 Unknown C01 DomainUnresolved| shared_commondataserviceforapps
 solution_anonymized_solution -->|App-01 Unknown C02 DomainUnresolved| shared_office365
 classDef default fill:red,stroke:#5E5B52

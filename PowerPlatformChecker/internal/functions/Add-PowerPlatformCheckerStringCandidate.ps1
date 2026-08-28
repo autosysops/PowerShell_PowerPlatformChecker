@@ -1,4 +1,4 @@
-function Add-PowerPlatformCheckerStringCandidate {
+﻿function Add-PowerPlatformCheckerStringCandidate {
     <#
     .SYNOPSIS
         Adds a non-empty string candidate to a mutable string list.
@@ -14,6 +14,8 @@ function Add-PowerPlatformCheckerStringCandidate {
         Value to evaluate and append.
 
     .EXAMPLE
+        Append a candidate value only when it resolves to a non-empty string.
+
         PS> Add-PowerPlatformCheckerStringCandidate -Values $values -Candidate $action.inputs.url
     #>
 

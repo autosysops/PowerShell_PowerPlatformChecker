@@ -1,4 +1,4 @@
-:::mermaid
+﻿:::mermaid
 flowchart TB
 action0(["Manual"])
 action4["Compose"]
@@ -7,7 +7,7 @@ action6["Parse_Input_A"]
 action7["Parse_Input_B"]
 action8["Parse_Input_C"]
 action13["Update_a_row"]
-subgraph action3_group[" "]
+subgraph action3_group
 direction TB
 action1["Maintain_status"]
 action2["Set_status_to_Ready_for_approval"]
@@ -18,7 +18,7 @@ end
 subgraph action12_group["Try_Supplier_check"]
 direction TB
 action11["List_Supplier"]
-subgraph action10_group[" "]
+subgraph action10_group
 direction TB
 action9["Add_a_new_supplier"]
 action10{"Check_if_Supplier_exists_in_dataverse"}

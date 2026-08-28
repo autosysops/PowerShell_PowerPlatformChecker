@@ -202,6 +202,26 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
         ($graph.Nodes | Where-Object { $_.Type -eq 'Connection' -and $_.DisplayName -eq 'shared_commondataserviceforapps' }).Count | Should -BeGreaterThan 0
     }
 
+    It "does not expose internal Dataverse webhook triggers as internet inbound edges" {
+        $graph = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @($script:solutionPath) -OutputFormat Graph
+        $solutionNode = $graph.Nodes | Where-Object Type -eq 'Solution' | Select-Object -First 1
+
+        ($graph.Edges | Where-Object {
+                $_.SourceId -eq 'externaldomain_internet' -and
+                $_.TargetId -eq $solutionNode.Id -and
+                [string]$_.Label -match 'Microsoft Dataverse'
+            }).Count | Should -Be 0
+    }
+
+    It "does not keep orphan internet nodes when no inbound or outbound internet edge exists" {
+        $graph = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @($script:solutionPath) -OutputFormat Graph
+
+        $internetNodes = @($graph.Nodes | Where-Object { $_.Id -eq 'externaldomain_internet' })
+        foreach ($internetNode in $internetNodes) {
+            @($graph.Edges | Where-Object { $_.SourceId -eq $internetNode.Id -or $_.TargetId -eq $internetNode.Id }).Count | Should -BeGreaterThan 0
+        }
+    }
+
     It "uses packaged canvas app fixture data for external domain read and write edges" {
         $graph = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @($script:canvasExternalSolutionPath) -OutputFormat Graph
         $solutionNode = $graph.Nodes | Where-Object Type -eq 'Solution' | Select-Object -First 1
@@ -509,8 +529,8 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
             $solutionNode = $_.Nodes | Where-Object { $_.Type -eq 'Solution' } | Select-Object -First 1
             $solutionNode | Should -Not -BeNullOrEmpty
 
-            $inboundEdge = $_.Edges | Where-Object { $_.SourceId -eq 'externaldomain_internet' -and $_.TargetId -eq $solutionNode.Id -and [string]$_.Label -match 'INBOUND$' } | Select-Object -First 1
-            $responseEdge = $_.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_internet' -and [string]$_.Label -match 'OUTBOUND$' } | Select-Object -First 1
+            $inboundEdge = $_.Edges | Where-Object { $_.SourceId -eq 'externaldomain_internet' -and $_.TargetId -eq $solutionNode.Id -and [string]$_.Label -match 'INBOUND' } | Select-Object -First 1
+            $responseEdge = $_.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_internet' -and [string]$_.Label -match 'OUTBOUND' } | Select-Object -First 1
 
             $inboundEdge | Should -Not -BeNullOrEmpty
             $inboundEdge.Label | Should -Match '^Flow-[0-9]{2} INBOUND'

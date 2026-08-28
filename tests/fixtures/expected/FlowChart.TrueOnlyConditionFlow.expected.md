@@ -1,14 +1,14 @@
-:::mermaid
+﻿:::mermaid
 flowchart TB
 action0(["Manual"])
 action1["After_conditions"]
-subgraph action3_group[" "]
+subgraph action3_group
 direction TB
 action2["First_true_action"]
 action3{"First_condition"}
 action3 -- True --> action2
 end
-subgraph action5_group[" "]
+subgraph action5_group
 direction TB
 action4["Second_true_action"]
 action5{"Second_condition"}

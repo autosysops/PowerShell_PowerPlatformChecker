@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerExternalInteractionConnectorColor {
+﻿function Get-PowerPlatformCheckerExternalInteractionConnectorColor {
     <#
     .SYNOPSIS
         Creates a deterministic connector color from a connector key.
@@ -11,6 +11,8 @@ function Get-PowerPlatformCheckerExternalInteractionConnectorColor {
         Connector identifier or display name.
 
     .EXAMPLE
+        Generate a stable legend color for a connector key.
+
         PS> Get-PowerPlatformCheckerExternalInteractionConnectorColor -ConnectorKey 'shared_sharepointonline'
     #>
 

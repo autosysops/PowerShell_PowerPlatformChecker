@@ -1,4 +1,4 @@
-{
+﻿{
   "GraphType": "FlowchartGraph",
   "Id": null,
   "ActionName": null,
@@ -79,11 +79,6 @@
               "From": "action8",
               "Label": "Case_-_Option_C",
               "To": "action7_group"
-            },
-            {
-              "From": "action8",
-              "Label": "Default",
-              "To": "action11_group"
             }
           ],
           "Subgraphs": [
@@ -135,17 +130,6 @@
                   "Shape": "Action"
                 }
               ],
-              "Edges": [],
-              "Subgraphs": []
-            },
-            {
-              "GraphType": "FlowchartGraph",
-              "Id": "action11_group",
-              "ActionName": "Default",
-              "Title": "Default",
-              "Direction": "TB",
-              "IsEmpty": false,
-              "Nodes": [],
               "Edges": [],
               "Subgraphs": []
             }

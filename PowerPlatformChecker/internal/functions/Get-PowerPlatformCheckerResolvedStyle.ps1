@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerResolvedStyle {
+﻿function Get-PowerPlatformCheckerResolvedStyle {
     <#
     .SYNOPSIS
         Resolves a cloned style map with optional per-call overrides applied.

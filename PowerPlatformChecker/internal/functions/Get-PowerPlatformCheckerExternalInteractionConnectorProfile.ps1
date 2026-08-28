@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerExternalInteractionConnectorProfile {
+﻿function Get-PowerPlatformCheckerExternalInteractionConnectorProfile {
     <#
     .SYNOPSIS
         Registers or retrieves a connector legend profile.
@@ -20,6 +20,8 @@ function Get-PowerPlatformCheckerExternalInteractionConnectorProfile {
         Optional mutable list to receive connector legend rows.
 
     .EXAMPLE
+        Register connector metadata used by the external-interaction legend.
+
         PS> Get-PowerPlatformCheckerExternalInteractionConnectorProfile -ConnectorKey 'shared_sharepointonline' -ConnectorByKey $map
     #>
 
@@ -57,17 +59,17 @@ function Get-PowerPlatformCheckerExternalInteractionConnectorProfile {
     $connectorCode = 'C{0:d2}' -f (@($ConnectorByKey.Keys).Count + 1)
     $connectorColor = Get-PowerPlatformCheckerExternalInteractionConnectorColor -ConnectorKey $normalizedKey
 
-    $profile = [pscustomobject]@{
+    $connectorProfile = [pscustomobject]@{
         ConnectorKey = $normalizedKey
         DisplayName = $displayName
         Code = $connectorCode
         Color = $connectorColor
     }
 
-    $ConnectorByKey[$normalizedKey] = $profile
+    $ConnectorByKey[$normalizedKey] = $connectorProfile
     if ($null -ne $ConnectorLegend) {
-        [void]$ConnectorLegend.Add($profile)
+        [void]$ConnectorLegend.Add($connectorProfile)
     }
 
-    return $profile
+    return $connectorProfile
 }

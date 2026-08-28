@@ -45,6 +45,7 @@
     #>
 
     [CmdLetBinding(defaultParameterSetName = "ByName")]
+    [OutputType([string[]])]
     Param (
         [Parameter(Mandatory = $true, ParameterSetName = "ByName", Position = 1)]
         [Parameter(Mandatory = $true, ParameterSetName = "ById", Position = 1)]
@@ -66,7 +67,7 @@
     # Return an empty set so higher-level commands can continue composing results.
     $workflowRoot = Join-Path $SolutionPath "Workflows"
     if (-not (Test-Path -Path $workflowRoot)) {
-        return @()
+        return [string[]]@()
     }
 
     # Get the childitems
@@ -94,5 +95,5 @@
     $files = $files | Where-Object { $_.Name -like $filter }
 
     # Return the file or files
-    $files | Select-Object -ExpandProperty FullName
+    return [string[]]@($files | Select-Object -ExpandProperty FullName)
 }

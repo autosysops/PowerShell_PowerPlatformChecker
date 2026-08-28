@@ -82,30 +82,6 @@
       "HasExplicitDisplayName": true
     },
     {
-      "Id": "ppc_script_OrderForm_js",
-      "Type": "WebResource",
-      "DisplayName": "Order Form Script",
-      "ClassKind": "WebResource",
-      "Properties": {},
-      "Members": [
-        "  [Script]JavaScript",
-        "  [Script]onLoad"
-      ],
-      "HasExplicitDisplayName": true
-    },
-    {
-      "Id": "ppc_script_Shared_js",
-      "Type": "WebResource",
-      "DisplayName": "Shared Script",
-      "ClassKind": "WebResource",
-      "Properties": {},
-      "Members": [
-        "  [Script]JavaScript",
-        "  [Script]setTabVisibility"
-      ],
-      "HasExplicitDisplayName": true
-    },
-    {
       "Id": "ppc_suppliers",
       "Type": "Entity",
       "DisplayName": "ppc_Supplier",
@@ -211,15 +187,6 @@
     },
     {
       "SourceId": "ppc_orders",
-      "TargetId": "ppc_script_OrderForm_js",
-      "Label": "Script",
-      "EdgeType": "Link",
-      "Metadata": {
-        "Arrow": "-->"
-      }
-    },
-    {
-      "SourceId": "ppc_orders",
       "TargetId": "ppc_suppliers",
       "Label": "ppc_Order-OneToMany",
       "EdgeType": "Link",
@@ -240,15 +207,6 @@
       "SourceId": "ppc_orders",
       "TargetId": "systemuser",
       "Label": "ManyToOne",
-      "EdgeType": "Link",
-      "Metadata": {
-        "Arrow": "-->"
-      }
-    },
-    {
-      "SourceId": "ppc_script_OrderForm_js",
-      "TargetId": "ppc_script_Shared_js",
-      "Label": "Dependency",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->"

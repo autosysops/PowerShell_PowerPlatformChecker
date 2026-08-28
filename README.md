@@ -221,7 +221,7 @@ $actions = Get-PowerPlatformCheckerFlowActionList `
 Get-PowerPlatformCheckerFlowChart -Actions $actions
 ```
 
-Flowchart output groups Scope and If blocks with explicit post-branch continuation into Mermaid subgraphs. Switch blocks include a titled subgraph for each case and the default branch, including empty branches, keeping branch internals separate from downstream "Succeeded" continuation actions.
+Flowchart output groups Scope and If blocks with explicit post-branch continuation into Mermaid subgraphs. Switch blocks include titled case/default subgraphs when they contain actions, keeping branch internals separate from downstream "Succeeded" continuation actions while avoiding empty Mermaid wrappers.
 
 When generating per-flow documentation, `Get-PowerPlatformCheckerFlowType` is used to show the flow type and the flowchart section is generated from the same flow-specific metadata.
 

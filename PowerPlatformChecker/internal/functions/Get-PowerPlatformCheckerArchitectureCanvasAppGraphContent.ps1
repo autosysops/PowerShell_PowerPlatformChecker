@@ -25,6 +25,9 @@
     .PARAMETER IncludeDefaultEntities
         Include unresolved data source references as default entity nodes.
 
+    .PARAMETER IncludeExternalDomains
+        Include external-domain target nodes and edges inferred from canvas app datasource profiles.
+
     .PARAMETER IncludeCanvasApps
         Include canvas apps in the architecture projection.
 

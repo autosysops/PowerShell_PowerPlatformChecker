@@ -39,14 +39,6 @@ class ppc_techspecs["ppc_TechSpec"]:::Entity {
     [nvarchar]ppc_description
 }
 class systemuser:::DefaultEntity
-class ppc_script_OrderForm_js["Order Form Script"]:::WebResource {
-  [Script]JavaScript
-  [Script]onLoad
-}
-class ppc_script_Shared_js["Shared Script"]:::WebResource {
-  [Script]JavaScript
-  [Script]setTabVisibility
-}
 ppc_ApiBaseUrl ..> flow11111111-1111-1111-1111-111111111111:ppc_ApiBaseUrl
 shared_commondataserviceforapps --> flow11111111-1111-1111-1111-111111111111:shared_commondataserviceforapps
 flow11111111-1111-1111-1111-111111111111 --> ppc_orders:ppc_order
@@ -56,9 +48,7 @@ flow11111111-1111-1111-1111-111111111111 --> ppc_orderlines:ppc_orderlines
 ppc_orders --> systemuser:ManyToOne
 ppc_orders --> ppc_suppliers:ppc_Order-OneToMany
 ppc_orders --> ppc_techspecs:ppc_Order-OneToMany
-ppc_orders --> ppc_script_OrderForm_js:Script
 ppc_orderlines --> ppc_orders:ppc_OrderLine-OneToMany
-ppc_script_OrderForm_js --> ppc_script_Shared_js:Dependency
 classDef default fill:red,stroke:#5E5B52
 classDef EnvVar fill:#DF9A57,stroke:#5E5B52
 classDef Connection fill:#FCD757,stroke:#5E5B52

@@ -1,4 +1,4 @@
-function Test-PowerPlatformCheckerExternalDomainToken {
+﻿function Test-PowerPlatformCheckerExternalDomainToken {
     <#
     .SYNOPSIS
         Determines whether a value is valid for an external-domain target node.

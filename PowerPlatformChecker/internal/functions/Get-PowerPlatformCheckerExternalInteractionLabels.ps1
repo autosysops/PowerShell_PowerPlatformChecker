@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerExternalInteractionLabels {
+﻿function Get-PowerPlatformCheckerExternalInteractionLabels {
     <#
     .SYNOPSIS
         Expands an interaction direction into one or more condensed edge labels.
@@ -16,6 +16,8 @@ function Get-PowerPlatformCheckerExternalInteractionLabels {
         PS> Get-PowerPlatformCheckerExternalInteractionLabels -Direction Mixed
     #>
 
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '', Justification = 'Internal helper name kept for backward-compatible module internals.')]
+
     [CmdletBinding()]
     [OutputType([string[]])]
     param(
@@ -24,9 +26,9 @@ function Get-PowerPlatformCheckerExternalInteractionLabels {
     )
 
     switch ([string]$Direction) {
-        'Read' { return @('GET') }
-        'Write' { return @('SET') }
-        'Mixed' { return @('GET', 'SET') }
-        default { return @('Unknown') }
+        'Read' { return [string[]]@('GET') }
+        'Write' { return [string[]]@('SET') }
+        'Mixed' { return [string[]]@('GET', 'SET') }
+        default { return [string[]]@('Unknown') }
     }
 }

@@ -48,6 +48,50 @@ Describe "Get-PowerPlatformCheckerCanvasApp" {
         } -Parameters @{ SolutionPath = $script:invalidAppPath }
     }
 
+    It "renders unresolved connection references in canvas app documentation output" {
+        $solutionPath = Join-Path $TestDrive "CanvasDocFallback"
+        $canvasPath = Join-Path $solutionPath "CanvasApps"
+                $otherPath = Join-Path $solutionPath "Other"
+        New-Item -Path $canvasPath -ItemType Directory -Force | Out-Null
+                New-Item -Path $otherPath -ItemType Directory -Force | Out-Null
+
+                # The documentation script calls Get-PowerPlatformCheckerSolutionObject,
+                # which expects a valid solution root that includes Other/Customizations.xml.
+                $customizationsXml = @'
+<ImportExportXml>
+    <SolutionManifest>
+        <UniqueName>CanvasDocFallback</UniqueName>
+        <LocalizedNames>
+            <LocalizedName description="CanvasDocFallback" languagecode="1033" />
+        </LocalizedNames>
+    </SolutionManifest>
+</ImportExportXml>
+'@
+                Set-Content -Path (Join-Path $otherPath "Customizations.xml") -Value $customizationsXml -Encoding utf8BOM
+
+        $metaXml = @'
+<CanvasApp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Name>app_one</Name>
+    <DisplayName>App1</DisplayName>
+    <Description>Fixture for unresolved connection reference documentation</Description>
+    <Publisher>Test Publisher</Publisher>
+    <ConnectionReferences>{"refNotification":{"id":"/providers/microsoft.powerapps/apis/shared_powerappsnotificationv2","xrmConnectionReferenceLogicalName":"test_sharedpowerappsnotificationv2","displayName":"Power Apps Notification V2"}}</ConnectionReferences>
+    <DatabaseReferences>{}</DatabaseReferences>
+</CanvasApp>
+'@
+        Set-Content -Path (Join-Path $canvasPath "app_one.meta.xml") -Value $metaXml -Encoding utf8BOM
+
+        InModuleScope PowerPlatformChecker {
+            param($SolutionPath)
+            $scriptPath = 'c:\Temp\Power%20Platform\Scripts\Documentation\Create-CanvasAppData.ps1'
+            $markdown = & $scriptPath -SolutionPath $SolutionPath
+
+            $markdown | Should -Match 'DomainUnresolved'
+            $markdown | Should -Match 'ConnectionReference: Power Apps Notification V2'
+            $markdown | Should -Match 'shared_powerappsnotificationv2'
+        } -Parameters @{ SolutionPath = $solutionPath }
+    }
+
         It "enriches canvas app metadata with msapp datasource and interaction signals when available" {
                 $solutionPath = Join-Path $TestDrive "CanvasMsApp"
                 $canvasPath = Join-Path $solutionPath "CanvasApps"

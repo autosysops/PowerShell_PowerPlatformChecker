@@ -1,4 +1,4 @@
-:::mermaid
+﻿:::mermaid
 graph LR;
 solution_canvas_external_solution["canvas-external-solution"]:::Solution
 externaldomain_https_contoso_sharepoint_com["https://contoso.sharepoint.com"]:::ExternalDomain

@@ -28,6 +28,19 @@ Describe "Get-PowerPlatformCheckerDiagramLegend" {
         $legend | Should -Match "C[0-9]{2}"
     }
 
+    It "shows only relevant external diagram classes and omits the Azure DevOps note" {
+        $graph = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @($script:solutionPath) -OutputFormat Graph
+        $legend = Get-PowerPlatformCheckerDiagramLegend -DiagramType ExternalInteraction -Graph $graph
+
+        $legend | Should -Match '<span style="color:#FCD757">Connection</span>'
+        $legend | Should -Match '<span style="color:#f5f5f5">Solution</span>'
+        $legend | Should -Match '<span style="color:#E6D3A3">ExternalDomain</span>'
+        $legend | Should -Not -Match '<span style="color:[^"]+">CanvasApp</span>'
+        $legend | Should -Not -Match '<span style="color:[^"]+">ModelDrivenApp</span>'
+        $legend | Should -Not -Match '<span style="color:[^"]+">Entity</span>'
+        $legend | Should -Not -Match 'Azure DevOps Mermaid does not reliably support per-edge-label text colors'
+    }
+
     It "returns structured legend object" {
         $graph = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @($script:solutionPath) -OutputFormat Graph
         $legendObject = Get-PowerPlatformCheckerDiagramLegend -DiagramType ExternalInteraction -Graph $graph -OutputFormat Object

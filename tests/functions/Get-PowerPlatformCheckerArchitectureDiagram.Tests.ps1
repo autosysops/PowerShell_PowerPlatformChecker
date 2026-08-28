@@ -159,6 +159,12 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
             ($desktopGraph.Edges | Where-Object { $_.SourceId -eq "ppc_desktop_baseurl" -and $_.TargetId -eq "flow77777777-7777-7777-7777-777777777777" }).Count | Should -BeGreaterThan 0
         }
 
+        It "does not include unrelated web resources in flow-scoped diagrams" {
+            $flowGraph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -FlowId "11111111-1111-1111-1111-111111111111" -OutputFormat Graph
+
+            ($flowGraph.Nodes | Where-Object { $_.ClassKind -eq 'WebResource' }).Count | Should -Be 0
+        }
+
         It "renders desktop input and output parameters as flow class members" {
             $desktopGraph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:desktopSolutionPath -OutputFormat Graph
 
@@ -254,6 +260,14 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
             foreach ($edge in @($graph.Edges)) {
                 [string]$edge.SourceId | Should -BeIn $nodeIds
                 [string]$edge.TargetId | Should -BeIn $nodeIds
+            }
+        }
+
+        It "does not emit orphan external domain nodes" {
+            $graph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -OutputFormat Graph
+
+            foreach ($externalDomainNode in @($graph.Nodes | Where-Object { $_.ClassKind -eq 'ExternalDomain' })) {
+                ($graph.Edges | Where-Object { $_.SourceId -eq $externalDomainNode.Id -or $_.TargetId -eq $externalDomainNode.Id }).Count | Should -BeGreaterThan 0
             }
         }
 

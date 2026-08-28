@@ -1,4 +1,4 @@
-function Test-PowerPlatformCheckerConnectorDomainMatch {
+﻿function Test-PowerPlatformCheckerConnectorDomainMatch {
     <#
     .SYNOPSIS
         Tests whether a resolved domain likely belongs to a connector category.
@@ -14,6 +14,8 @@ function Test-PowerPlatformCheckerConnectorDomainMatch {
         Candidate resolved domain value.
 
     .EXAMPLE
+        Verify whether a resolved domain matches the connector family heuristic.
+
         PS> Test-PowerPlatformCheckerConnectorDomainMatch -ConnectorKey 'shared_sharepointonline' -DomainValue 'contoso.sharepoint.com'
     #>
 

@@ -1,4 +1,4 @@
-function Add-PowerPlatformCheckerExternalInteractionEvidence {
+﻿function Add-PowerPlatformCheckerExternalInteractionEvidence {
     <#
     .SYNOPSIS
         Adds evidence for a condensed external interaction target.

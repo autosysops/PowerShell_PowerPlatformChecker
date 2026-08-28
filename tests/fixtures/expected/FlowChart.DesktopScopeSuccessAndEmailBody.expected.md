@@ -1,4 +1,4 @@
-:::mermaid
+﻿:::mermaid
 flowchart TB
 action1["CALL Subflow_SendErrorEmail"]
 action2["THROW"]

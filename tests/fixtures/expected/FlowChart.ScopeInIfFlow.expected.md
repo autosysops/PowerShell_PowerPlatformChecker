@@ -3,7 +3,7 @@ flowchart TB
 action0(["Manual"])
 action1["Final_Update"]
 action2["Initialize_materieelnummer"]
-subgraph action6_group[" "]
+subgraph action6_group
 direction TB
 action6{"Is_Material"}
 subgraph action5_group["Try_Adding_or_Updating_Material"]

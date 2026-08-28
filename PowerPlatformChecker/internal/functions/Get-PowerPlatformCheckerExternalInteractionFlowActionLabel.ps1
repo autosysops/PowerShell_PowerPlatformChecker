@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerExternalInteractionFlowActionLabel {
+﻿function Get-PowerPlatformCheckerExternalInteractionFlowActionLabel {
     <#
     .SYNOPSIS
         Builds a condensed flow-action label for external interaction diagrams.
@@ -16,11 +16,14 @@ function Get-PowerPlatformCheckerExternalInteractionFlowActionLabel {
     .PARAMETER InteractionLabel
         Condensed interaction label such as GET, SET, INBOUND, or OUTBOUND.
 
-    .PARAMETER IsInbound
-        Format the label as an inbound trigger edge.
+    .PARAMETER FlowAlias
+        Optional short source alias (for example Flow-01) used in edge labels.
 
-    .PARAMETER IsResponse
-        Format the label as an outbound HTTP response edge.
+    .PARAMETER ConnectorCode
+        Optional compact connector code (for example C01) appended for unresolved references.
+
+    .PARAMETER DomainUnresolved
+        Marks labels that still point to connection references instead of resolved domains.
 
     .EXAMPLE
         Build a label for a flow HTTP action.
@@ -47,13 +50,7 @@ function Get-PowerPlatformCheckerExternalInteractionFlowActionLabel {
         [string] $ConnectorCode,
 
         [Parameter(Mandatory = $false)]
-        [switch] $DomainUnresolved,
-
-        [Parameter(Mandatory = $false)]
-        [switch] $IsInbound,
-
-        [Parameter(Mandatory = $false)]
-        [switch] $IsResponse
+        [switch] $DomainUnresolved
     )
 
     $safeFlowName = [string]$FlowAlias

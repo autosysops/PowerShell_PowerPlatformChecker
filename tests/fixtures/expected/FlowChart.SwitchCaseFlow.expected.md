@@ -1,4 +1,4 @@
-:::mermaid
+﻿:::mermaid
 flowchart TB
 action0(["Manual"])
 action1["Finish"]
@@ -20,13 +20,9 @@ subgraph action7_group["Case_-_Option_C"]
 direction TB
 action6["Handle_option_C"]
 end
-subgraph action11_group["Default"]
-direction TB
-end
 action8 -- Case_-_Option_A --> action3_group
 action8 -- Case_-_Option_B --> action5_group
 action8 -- Case_-_Option_C --> action7_group
-action8 -- Default --> action11_group
 end
 end
 action0 --> action10

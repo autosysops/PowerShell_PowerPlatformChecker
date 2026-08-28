@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerSolutionDisplayName {
+﻿function Get-PowerPlatformCheckerSolutionDisplayName {
     <#
     .SYNOPSIS
         Resolves a human-readable solution name from a solution folder path.

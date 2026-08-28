@@ -239,6 +239,22 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
             ($graph.Nodes | Select-Object -ExpandProperty Label) | Should -Not -Contain "Unieke"
         }
 
+        It "renders blank-title subgraphs without Mermaid label text" {
+            $markdown = Get-PowerPlatformCheckerFlowChart -Actions $script:scopeInIfActions -Direction TB
+
+            $markdown | Should -Not -Match '(?m)^subgraph\s+action\d+_group\[" "\]$'
+        }
+
+        It "does not render empty subgraph blocks" -TestCases $snapshotCases {
+            param($Name, $ActionsRef, $Direction, $Snapshot)
+
+            $actions = $script:actionsByRef[$ActionsRef]
+            if ($null -eq $actions) { throw "Unknown actions reference: $ActionsRef" }
+
+            $markdown = Get-PowerPlatformCheckerFlowChart -Actions $actions -Direction $Direction
+            $markdown | Should -Not -Match '(?ms)^subgraph\s+[^\r\n]+\r?\ndirection\s+[^\r\n]+\r?\nend\s*$'
+        }
+
         It "throws for unsupported direction values" {
             { Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction "INVALID" } | Should -Throw
         }
@@ -310,7 +326,7 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
                 Select-Object -Unique)
 
             $subgraphIds = @($lines |
-                Where-Object { $_ -match '^subgraph (action\d+_group)\[' } |
+                Where-Object { $_ -match '^subgraph (action\d+_group)(?:\[|$)' } |
                 ForEach-Object { $matches[1] } |
                 Select-Object -Unique)
 

@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerCanvasMsAppInteractionProfile {
+﻿function Get-PowerPlatformCheckerCanvasMsAppInteractionProfile {
     <#
     .SYNOPSIS
         Extracts best-effort datasource and interaction metadata from a canvas .msapp package.
@@ -12,6 +12,8 @@ function Get-PowerPlatformCheckerCanvasMsAppInteractionProfile {
         Absolute path to the canvas app .msapp package.
 
     .EXAMPLE
+        Read a canvas app package and derive datasource/domain interaction metadata.
+
         PS> Get-PowerPlatformCheckerCanvasMsAppInteractionProfile -MsAppPath "C:\\solution\\CanvasApps\\app_DocumentUri.msapp"
     #>
 

@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerDiagramLegend {
+﻿function Get-PowerPlatformCheckerDiagramLegend {
     <#
     .SYNOPSIS
         Generates a wiki-ready legend for PowerPlatformChecker diagram outputs.
@@ -21,9 +21,13 @@ function Get-PowerPlatformCheckerDiagramLegend {
         Optional per-call style overrides used when Graph is not supplied.
 
     .EXAMPLE
+        Return the architecture-diagram legend using resolved default styles.
+
         PS> Get-PowerPlatformCheckerDiagramLegend -DiagramType ArchitectureDiagram
 
     .EXAMPLE
+        Build an external-interaction legend from a graph payload, including aliases.
+
         PS> $graph = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths $path -OutputFormat Graph
         PS> Get-PowerPlatformCheckerDiagramLegend -DiagramType ExternalInteraction -Graph $graph
     #>
@@ -59,11 +63,13 @@ function Get-PowerPlatformCheckerDiagramLegend {
     $sourceAliases = @()
     $connectorLegend = @()
     $legendNotes = @()
+    $allowedStyleNames = @()
 
     $styleMap = @{}
     $styleNames = @()
 
     if ($PSBoundParameters.ContainsKey('Graph') -and $null -ne $Graph) {
+        $allowedStyleNames = @($Graph.Nodes | ForEach-Object { [string]$_.ClassKind } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -Unique)
         if ($Graph.Styles -is [System.Collections.IDictionary]) {
             foreach ($styleKey in @($Graph.Styles.Keys)) {
                 $styleMap[[string]$styleKey] = [string]$Graph.Styles[[string]$styleKey]
@@ -107,6 +113,16 @@ function Get-PowerPlatformCheckerDiagramLegend {
     }
 
     foreach ($styleName in @($styleNames)) {
+        if ($DiagramType -eq 'ExternalInteraction' -and @($allowedStyleNames).Count -gt 0) {
+            if ([string]$styleName -eq 'default') {
+                continue
+            }
+
+            if (@($allowedStyleNames) -notcontains [string]$styleName) {
+                continue
+            }
+        }
+
         if (-not $styleMap.ContainsKey([string]$styleName)) {
             continue
         }
