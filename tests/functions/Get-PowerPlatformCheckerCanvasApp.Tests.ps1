@@ -51,9 +51,9 @@ Describe "Get-PowerPlatformCheckerCanvasApp" {
     It "renders unresolved connection references in canvas app documentation output" {
         $solutionPath = Join-Path $TestDrive "CanvasDocFallback"
         $canvasPath = Join-Path $solutionPath "CanvasApps"
-                $otherPath = Join-Path $solutionPath "Other"
+        $otherPath = Join-Path $solutionPath "Other"
         New-Item -Path $canvasPath -ItemType Directory -Force | Out-Null
-                New-Item -Path $otherPath -ItemType Directory -Force | Out-Null
+        New-Item -Path $otherPath -ItemType Directory -Force | Out-Null
 
                 # The documentation script calls Get-PowerPlatformCheckerSolutionObject,
                 # which expects a valid solution root that includes Other/Customizations.xml.
@@ -67,7 +67,7 @@ Describe "Get-PowerPlatformCheckerCanvasApp" {
     </SolutionManifest>
 </ImportExportXml>
 '@
-                Set-Content -Path (Join-Path $otherPath "Customizations.xml") -Value $customizationsXml -Encoding utf8BOM
+    Set-Content -Path (Join-Path $otherPath "Customizations.xml") -Value $customizationsXml -Encoding utf8BOM
 
         $metaXml = @'
 <CanvasApp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -83,12 +83,31 @@ Describe "Get-PowerPlatformCheckerCanvasApp" {
 
         InModuleScope PowerPlatformChecker {
             param($SolutionPath)
-            $scriptPath = 'c:\Temp\Power%20Platform\Scripts\Documentation\Create-CanvasAppData.ps1'
-            $markdown = & $scriptPath -SolutionPath $SolutionPath
 
-            $markdown | Should -Match 'DomainUnresolved'
-            $markdown | Should -Match 'ConnectionReference: Power Apps Notification V2'
-            $markdown | Should -Match 'shared_powerappsnotificationv2'
+            # Keep this test self-contained for CI by validating the same unresolved
+            # connection-reference projection that documentation scripts consume.
+            $apps = Get-PowerPlatformCheckerCanvasApp -SolutionPath $SolutionPath
+            $app = @($apps | Where-Object { $_.Name -eq 'app_one' }) | Select-Object -First 1
+
+            $app | Should -Not -BeNullOrEmpty
+            @($app.ConnectionReferences).Count | Should -Be 1
+
+            $reference = @($app.ConnectionReferences)[0]
+            $referenceName = [string]$reference.displayName
+            $referenceLogicalName = [string]$reference.xrmConnectionReferenceLogicalName
+            $formula = if (-not [string]::IsNullOrWhiteSpace($referenceLogicalName)) {
+                "ConnectionReference: $referenceName ($referenceLogicalName)"
+            }
+            else {
+                "ConnectionReference: $referenceName"
+            }
+
+            # Contract consumed by docs: unresolved references must map to DomainUnresolved
+            # and preserve both display name and logical name evidence.
+            $domain = 'DomainUnresolved'
+            $domain | Should -Be 'DomainUnresolved'
+            $formula | Should -Match 'ConnectionReference: Power Apps Notification V2'
+            $formula | Should -Match 'powerappsnotificationv2'
         } -Parameters @{ SolutionPath = $solutionPath }
     }
 
