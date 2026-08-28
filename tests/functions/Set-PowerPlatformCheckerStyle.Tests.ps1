@@ -33,6 +33,21 @@ Describe "Set-PowerPlatformCheckerStyle" {
         }
     }
 
+    It "updates external interaction style keys through the shared style contract" {
+        try {
+            $result = Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Solution "#ededed" -ExternalDomain "#aabbcc"
+            $result.Solution | Should -Be "#ededed"
+            $result.ExternalDomain | Should -Be "#aabbcc"
+
+            $markdown = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @((Get-PowerPlatformCheckerFixtureSolutionPath)) -OutputFormat Mermaid
+            $markdown | Should -Match 'classDef Solution fill:#ededed,stroke:#111111,stroke-width:2px;'
+            $markdown | Should -Match 'classDef ExternalDomain fill:#aabbcc,stroke:#5E5B52'
+        }
+        finally {
+            Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Solution "#f5f5f5" -ExternalDomain "#E6D3A3" | Out-Null
+        }
+    }
+
     It "throws when no updates are provided" {
         { Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram } | Should -Throw
     }

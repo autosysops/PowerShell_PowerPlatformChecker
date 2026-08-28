@@ -508,6 +508,53 @@ Exit criteria:
 - Service-only fallback is still deterministic for non-URI datasource types.
 - Snapshot and contract tests cover at least one SharePoint datasource case with concrete destination extraction.
 
+#### Phase E4a - Public app/flow API consolidation and naming normalization
+
+Objective:
+
+- Introduce documentation-oriented unified retrieval commands for apps and flows, and normalize public parameter naming so the module surface is easier to learn and use.
+
+Tasks:
+
+1. Add failing tests for unified `Get-PowerPlatformCheckerApp` and `Get-PowerPlatformCheckerFlow` commands.
+2. Implement `Get-PowerPlatformCheckerApp` so it returns both canvas and model-driven app metadata through one command and type-detects results without requiring the caller to choose a specialized function.
+3. Implement `Get-PowerPlatformCheckerFlow` as a documentation-oriented flow metadata command that can return summary information plus optional properties such as parameters, actions, and connector tiers.
+4. Normalize public app filter parameter naming to `-Name` where practical.
+5. Keep old public parameter names as aliases for now and emit a deprecation warning when the legacy parameter name is used.
+6. Update exports, tests, and README usage examples for the unified retrieval surface.
+7. Record naming conventions and deprecation guidance in RESEARCH.MD and execution details in LOG.MD.
+
+Exit criteria:
+
+- A caller can retrieve app metadata through one public app command and flow metadata through one public flow command.
+- Public app retrieval uses a consistent `-Name` filter while preserving legacy aliases with warnings.
+- Unified getters are validated with focused tests before later external-interaction enrichment phases resume.
+
+#### Phase E4b - Property model refinement and app-entity semantic restructuring
+
+Objective:
+
+- Add trigger-specific flow metadata, make app/flow getters default to full-property output with `-Properties` as a narrowing filter, and make solution-object sections selectable.
+- Restructure app dependency semantics so entities/flows are represented as related dependencies rather than implied top-level ownership.
+- Validate whether current entity extraction already supports a dedicated richer entity-details surface (including columns) and record remaining gaps.
+
+Tasks:
+
+1. Add failing tests for `Get-PowerPlatformCheckerFlow` trigger-property output and default-all property behavior.
+2. Implement `Trigger` as a selectable property in `Get-PowerPlatformCheckerFlow`.
+3. Change `Get-PowerPlatformCheckerFlow` and `Get-PowerPlatformCheckerApp` so when `-Properties` is omitted they include the full default property set; when `-Properties` is provided it narrows output.
+4. Add app dependency-level output structure so related entities/flows/web resources are grouped under a dedicated dependency property while preserving backward-compatible optional legacy fields.
+5. Extend `Get-PowerPlatformCheckerSolutionObject` with selectable `-Properties` sections and keep default behavior equivalent to selecting all sections.
+6. Research current entity metadata retrieval depth (tables, columns/attributes, relations, script usage) and capture whether new external sources are required for a richer entity-details command.
+7. Update RESEARCH.MD and LOG.MD with findings, implementation details, and validation results.
+
+Exit criteria:
+
+- Flow output can include a dedicated `Trigger` property.
+- App/flow getters default to full properties and support property-filter narrowing.
+- Solution-object section output is selectable with no default-regression.
+- Entity capability research is documented with clear gaps and proposed follow-up path.
+
 #### Phase E5 - Flow connector-parameter destination extraction and action-level endpoint fidelity
 
 Objective:
@@ -604,3 +651,11 @@ Exit criteria:
 ### 9.6 Stop condition
 
 As requested, execution stops at planning after this revision until user review/approval is provided.
+
+### 9.7 Execution status update (2026-08-26)
+
+- Phases `E5`, `E6`, `E7`, and `F` have now been executed and validated.
+- Current status:
+  - external interaction enrichment complete,
+  - full validation green,
+  - documentation hash gate green (`CHANGED=False`).

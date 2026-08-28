@@ -60,15 +60,19 @@ Describe "Get-PowerPlatformCheckerDesktopCommandPresentation" {
         }
     )
 
-    It "formats desktop command labels for all supported cases" {
-        foreach ($case in $cases) {
-            $presentation = & (Get-Module PowerPlatformChecker) {
-                param($commandName, $segment)
-                Get-PowerPlatformCheckerDesktopCommandPresentation -CommandName $commandName -Segment $segment
-            } $case.CommandName $case.Segment
+    It "formats desktop command labels for <Name>" -TestCases $cases {
+        param($Name, $CommandName, $Segment, $ExpectedType, $ExpectedDisplay)
 
-            $presentation.ActionType | Should -Be $case.ExpectedType -Because $case.Name
-            $presentation.DisplayName | Should -Be $case.ExpectedDisplay -Because $case.Name
+        $presentation = InModuleScope PowerPlatformChecker {
+            param($InnerCommandName, $InnerSegment)
+
+            Get-PowerPlatformCheckerDesktopCommandPresentation -CommandName $InnerCommandName -Segment $InnerSegment
+        } -Parameters @{
+            InnerCommandName = $CommandName
+            InnerSegment = $Segment
         }
+
+        $presentation.ActionType | Should -Be $ExpectedType -Because $Name
+        $presentation.DisplayName | Should -Be $ExpectedDisplay -Because $Name
     }
 }

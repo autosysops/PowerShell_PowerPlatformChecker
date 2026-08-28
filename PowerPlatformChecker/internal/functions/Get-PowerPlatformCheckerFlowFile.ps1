@@ -62,8 +62,15 @@
         [String] $Type = "json"
     )
 
+    # Canvas-only or app-only solutions do not include a Workflows folder.
+    # Return an empty set so higher-level commands can continue composing results.
+    $workflowRoot = Join-Path $SolutionPath "Workflows"
+    if (-not (Test-Path -Path $workflowRoot)) {
+        return @()
+    }
+
     # Get the childitems
-    $files = Get-ChildItem -Path (Join-Path $SolutionPath "Workflows")
+    $files = Get-ChildItem -Path $workflowRoot
 
     # If the name is given filter it
     if ($FlowName -or $FlowId) {

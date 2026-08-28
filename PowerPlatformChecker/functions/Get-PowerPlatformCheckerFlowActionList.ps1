@@ -73,7 +73,7 @@
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 5)]
         [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 5)]
-        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile")]
+        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile", "TriggerProfile", "OperationProfile", "ResponseProfile")]
         [String[]] $Properties = @()
     )
 

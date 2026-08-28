@@ -81,6 +81,8 @@
                 'CanvasApp',
                 'ModelDrivenApp',
                 'WebResource',
+                'Solution',
+                'ExternalDomain',
                 'Stroke'
             )
         }
@@ -124,6 +126,8 @@
                 'CanvasApp',
                 'ModelDrivenApp',
                 'WebResource',
+                'Solution',
+                'ExternalDomain',
                 'Stroke'
             )
         }

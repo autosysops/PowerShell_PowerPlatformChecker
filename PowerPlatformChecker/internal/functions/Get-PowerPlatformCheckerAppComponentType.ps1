@@ -1,4 +1,4 @@
-﻿function Get-PowerPlatformCheckerModelDrivenAppComponentType {
+﻿function Get-PowerPlatformCheckerAppComponentType {
     <#
     .SYNOPSIS
         Resolves AppModule component type numbers to friendly labels.
@@ -13,7 +13,7 @@
     .EXAMPLE
         Resolve a component type number.
 
-        PS> Get-PowerPlatformCheckerModelDrivenAppComponentType -Type 29
+        PS> Get-PowerPlatformCheckerAppComponentType -Type 29
     #>
 
     [CmdletBinding()]
@@ -22,10 +22,6 @@
         [Parameter(Mandatory = $true, Position = 1)]
         [int] $Type
     )
-
-    # The function only supports one invocation shape and the type code itself is
-    # not needed for usage analytics, so emit a simple invocation metric.
-    Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerModelDrivenAppComponentType" -PropertiesHash @{}
 
     switch ($Type) {
         1 { return "Entities" }

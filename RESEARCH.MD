@@ -218,6 +218,47 @@ Recommended sequence when implementing changes:
 Testing obligations derived from this research:
 
 - Direction classifier tests must be data-driven.
+
+## 12. Canvas msapp enrichment notes (2026-08-26)
+
+- Canvas `*_DocumentUri.msapp` packages are ZIP archives that can be parsed safely offline.
+- In observed solutions, archive entries used backslash separators (for example `References\DataSources.json` and `Src\Course Screen.pa.yaml`), so parsing must support both slash styles.
+- `References/DataSources.json` provides reliable external target hints (`DatasetName`) and connector identity (`ApiId`) for connected sources.
+- `Src/*.pa.yaml` provides formula-level interaction evidence that can infer read/write tendencies per datasource (best effort).
+- For conservative behavior:
+  - prefer explicit connected datasource domains as destination evidence,
+  - keep interaction direction `Unknown` when formula evidence is absent,
+  - avoid over-asserting verb certainty beyond normalized `Read/Write/Mixed/Unknown`.
+- External interaction projection should prefer edge-level direction metadata when available, instead of only node-level direction, to preserve datasource-specific granularity.
+- Narrow formula classification is safer than broad line-window scanning. A +/-1 line fallback works for multiline datasource references without contaminating read/write inference with adjacent properties.
+- Canvas-only fixtures should include a packaged `.msapp` and be covered by external-interaction snapshots, not only by TestDrive-generated helper tests.
+
+## 13. Mermaid image support and connector icons (2026-08-27)
+
+- Mermaid flowcharts in modern syntax support image nodes via object syntax such as:
+  - `A@{ img: "https://example.com/image.png", label: "SharePoint", pos: "t", h: 60, constraint: "on" }`
+- Mermaid also supports icon-based nodes via registered icon packs:
+  - `A@{ icon: "fa:user", form: "square", label: "User" }`
+- Practical limitation for this repository:
+  - the downstream wiki/doc renderers used in this workflow were already sensitive to Mermaid syntax changes,
+  - and this image/object-node syntax is newer than the baseline syntax already validated in this repo.
+- Because the environment does not permit safe external validation of internal diagrams, image-node rendering should be treated as compatibility-risky until verified in the target renderer.
+- Real canvas app metadata can contain connector icon URLs directly in `ConnectionReferences` payloads (`iconUri` was confirmed in the E-Learning canvas app metadata).
+- The local connector catalog used by this module does not expose an obvious stable icon-url field for all connector groups, so canvas metadata is currently the strongest confirmed icon source.
+- Recommended implementation posture:
+  - keep image-node support documented in research,
+  - preserve parser-safe text-only Mermaid output by default,
+  - if image rendering is attempted later, gate it behind explicit testing in the actual target renderer.
+
+## 14. Module review findings after scriptblock-helper cleanup (2026-08-27)
+
+- Remaining local scriptblock pseudo-function patterns still exist and should be refactored into real top-level helpers:
+  - `PowerPlatformChecker/functions/Get-PowerPlatformCheckerFlowConnectorTier.ps1`
+  - `PowerPlatformChecker/internal/functions/Get-PowerPlatformCheckerFlowActionInteractionProfile.ps1`
+  - `PowerPlatformChecker/internal/functions/Get-PowerPlatformCheckerFlowDestinationMetadata.ps1`
+  - `PowerPlatformChecker/internal/functions/Get-PowerPlatformCheckerWebResourceExternalDomain.ps1`
+  - `PowerPlatformChecker/internal/functions/Resolve-PowerPlatformCheckerFlowExpressionValue.ps1`
+- These are maintainability issues, not currently failing-behavior issues, but they violate the clarified instruction standard and are the next obvious cleanup targets.
 - Trigger mode inference tests must include webhook/polling/manual fixtures.
 - Destination extraction tests must include connector-specific and generic URL/domain cases.
 - Mermaid and Graph output for the new command must have snapshot coverage.
@@ -487,6 +528,66 @@ Implementation guidance derived from these findings:
 - For condensed graph output, preserve multiple destinations and representative action evidence per target.
 - For webhook triggers, add explicit inbound external source modeling.
 
+### 12.7 Public API consolidation guidance (2026-08-26)
+
+Requested public-surface direction:
+
+- Prefer a unified `Get-PowerPlatformCheckerApp` command over forcing callers to choose `Get-PowerPlatformCheckerCanvasApp` vs `Get-PowerPlatformCheckerModelDrivenApp` up front.
+- Provide a comparable `Get-PowerPlatformCheckerFlow` command for documentation-oriented flow retrieval.
+- Normalize public filter parameters toward `-Name` where practical.
+
+Deprecation policy for renamed public parameters:
+
+- Keep the old public parameter name as an alias during the transition period.
+- Emit a warning when a deprecated parameter name is used.
+- Prefer implementing the warning in the public function that owns the alias rather than in shared infrastructure.
+
+Documentation-focused retrieval guidance:
+
+- Unified getters should return summary metadata by default.
+- Larger nested payloads such as actions, parameters, components, entity web resources, and connector tiers should be opt-in through a `-Properties` switch so documentation generation can request only what it needs.
+
+Naming decision update:
+
+- When a public command serves the same documentation-oriented contract across app families, avoid app-family terms in the public command name.
+- Keep family-specific parsing functions internal when they remain implementation details.
+- Apply the same principle to file names where practical so exported command names and filenames stay aligned.
+
+### 12.8 Entity metadata depth assessment for dedicated entity-details function (2026-08-26)
+
+Goal assessed:
+
+- Determine whether existing module capabilities already provide enough signal to build a dedicated entity/table details command that includes column-level information.
+
+Verified current capability:
+
+- `Get-PowerPlatformCheckerEntity` already parses entity metadata from `Entities/*/Entity.xml` and returns:
+  - table logical name,
+  - `EntitySetName`,
+  - icon references,
+  - `Attributes` (column-like metadata with `Name`, `DisplayName`, `Description`, `Type`),
+  - optional `Relations` when `-Relations` is used.
+- `Get-PowerPlatformCheckerEntityFormXmlWebResource` already adds per-entity form script dependency metadata.
+
+Conclusion:
+
+- The module already has enough local unpacked-solution data to provide a dedicated entity-details command with columns and relationship context without requiring new external APIs.
+
+Remaining gaps for a richer entity-details surface:
+
+- Current attribute payload is intentionally lightweight; it does not yet include deeper column metadata such as:
+  - required level,
+  - max length/precision/scale,
+  - option-set members,
+  - key/index flags,
+  - audit/searchability flags.
+- These deeper fields may exist in entity XML depending on export shape, but they are not currently mapped in output contracts.
+
+Recommended follow-up implementation posture:
+
+- Keep app commands focused on app dependencies (connections/datasources/related references).
+- Introduce a dedicated entity-details function as a separate phase, reusing current entity parsing and expanding attribute mapping incrementally with fixture-backed tests.
+
 Mitigation:
 
 - Version-aware parser layers with graceful fallback.
@@ -557,6 +658,18 @@ for solution path:
 - c:/Temp/Power%20Platform/Solutions/Telecom/PDFWPlanDataFiberWorkz/Managed
 
 ### 13.3 Current validation status (executed in this session)
+
+- Final post-implementation validation completed after E5-E7:
+  - `build/vsts-validate.ps1` passed,
+  - coverage remained above target at `95.04%`,
+  - the PDFW documentation regression guard passed with `CHANGED=False` when re-executed through the repository documentation scripts.
+
+- Verified implementation outcomes:
+  - connector-backed flow actions can now resolve endpoint metadata from parameter fields such as `dataset`, `source`, and `baseUrl`,
+  - condensed external interaction output now preserves distinct outbound targets instead of collapsing to one destination,
+  - webhook/manual HTTP flows now render inbound internet edges,
+  - condensed graph solution labels now use the logical solution name instead of generic managed/unmanaged leaf folders,
+  - representative action evidence is available on condensed graph edges through `Metadata.Evidence`.
 
 Validation was executed with the current local PowerPlatformChecker module by generating to temp files and comparing hashes:
 

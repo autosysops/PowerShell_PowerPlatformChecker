@@ -1,0 +1,130 @@
+{
+  "Metadata": {
+    "Direction": "LR",
+    "DiagramKind": "Flowchart",
+    "IncludeElements": [
+      "CanvasApps",
+      "Connections",
+      "DefaultEntities",
+      "Entities",
+      "ExternalDomains",
+      "Flows",
+      "ModelDrivenApps",
+      "WebResources"
+    ],
+    "OutputFormat": "Graph",
+    "SourceSolutions": [
+      "C:\\PowerShellModules\\PowerShell_PowerPlatformChecker\\tests\\fixtures\\anonymized-solution\\Managed"
+    ],
+    "SourceSolutionCount": 1,
+    "IsScopedDiagram": false,
+    "SourceFilterType": "None",
+    "SourceFilterValue": ""
+  },
+  "Nodes": [
+    {
+      "Id": "externaldomain_internet",
+      "Type": "ExternalDomain",
+      "DisplayName": "internet",
+      "ClassKind": "ExternalDomain",
+      "Members": [],
+      "HasExplicitDisplayName": true
+    },
+    {
+      "Id": "shared_commondataserviceforapps",
+      "Type": "Connection",
+      "DisplayName": "shared_commondataserviceforapps",
+      "ClassKind": "Connection",
+      "Members": [
+        "  ConnectionReference",
+        "  Dataverse - Test()"
+      ],
+      "HasExplicitDisplayName": false
+    },
+    {
+      "Id": "shared_office365",
+      "Type": "Connection",
+      "DisplayName": "shared_office365",
+      "ClassKind": "Connection",
+      "Members": [
+        "  ConnectionReference",
+        "  Office 365 Outlook - Test()"
+      ],
+      "HasExplicitDisplayName": false
+    },
+    {
+      "Id": "solution_Energy",
+      "Type": "Solution",
+      "DisplayName": "Energy",
+      "ClassKind": "Solution",
+      "Members": [],
+      "HasExplicitDisplayName": true
+    }
+  ],
+  "Edges": [
+    {
+      "SourceId": "externaldomain_internet",
+      "TargetId": "solution_Energy",
+      "Label": "Flow-01 INBOUND",
+      "EdgeType": "Link",
+      "Metadata": {
+        "Arrow": "-->",
+        "Evidence": "Manual"
+      }
+    },
+    {
+      "SourceId": "externaldomain_internet",
+      "TargetId": "solution_Energy",
+      "Label": "Flow-03 INBOUND C01",
+      "EdgeType": "Link",
+      "Metadata": {
+        "Arrow": "-->",
+        "Evidence": "When_a_row_is_added"
+      }
+    },
+    {
+      "SourceId": "solution_Energy",
+      "TargetId": "shared_commondataserviceforapps",
+      "Label": "App-01 Unknown C01 DomainUnresolved",
+      "EdgeType": "Link",
+      "Metadata": {
+        "Arrow": "-->",
+        "Evidence": "shared_commondataserviceforapps"
+      }
+    },
+    {
+      "SourceId": "solution_Energy",
+      "TargetId": "shared_office365",
+      "Label": "App-01 Unknown C02 DomainUnresolved",
+      "EdgeType": "Link",
+      "Metadata": {
+        "Arrow": "-->",
+        "Evidence": "shared_office365"
+      }
+    }
+  ],
+  "Styles": {
+    "CanvasApp": "fill:#8BC34A,stroke:#5E5B52",
+    "Connection": "fill:#FCD757,stroke:#5E5B52",
+    "default": "fill:red,stroke:#5E5B52",
+    "DefaultEntity": "fill:#71374D,stroke:#5E5B52",
+    "Entity": "fill:#B56784,stroke:#5E5B52",
+    "ExternalDomain": "fill:#E6D3A3,stroke:#5E5B52",
+    "Flow": "fill:#DBE4EE,stroke:#5E5B52",
+    "ModelDrivenApp": "fill:#7BAFD4,stroke:#5E5B52",
+    "Solution": "fill:#f5f5f5,stroke:#111111,stroke-width:2px;",
+    "WebResource": "fill:#D7C8F3,stroke:#5E5B52"
+  },
+  "StyleOrder": [
+    "default",
+    "Connection",
+    "Entity",
+    "DefaultEntity",
+    "Flow",
+    "CanvasApp",
+    "ModelDrivenApp",
+    "WebResource",
+    "Solution",
+    "ExternalDomain"
+  ]
+}

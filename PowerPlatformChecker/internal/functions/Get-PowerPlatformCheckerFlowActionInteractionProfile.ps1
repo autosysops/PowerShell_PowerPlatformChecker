@@ -71,29 +71,77 @@
         }
     }
 
-    $rawUrl = ''
+    $candidateUrlValues = [System.Collections.Generic.List[string]]::new()
+
     if ($Action.PSObject.Properties.Name -contains 'inputs' -and $null -ne $Action.inputs) {
         if ($Action.inputs.PSObject.Properties.Name -contains 'uri') {
-            $rawUrl = [string]$Action.inputs.uri
+            Add-PowerPlatformCheckerStringCandidate -Values $candidateUrlValues -Candidate $Action.inputs.uri
         }
-        elseif ($Action.inputs.PSObject.Properties.Name -contains 'parameters' -and $null -ne $Action.inputs.parameters) {
-            if ($Action.inputs.parameters.PSObject.Properties.Name -contains 'request/url') {
-                $rawUrl = [string]$Action.inputs.parameters.'request/url'
+
+        if ($Action.inputs.PSObject.Properties.Name -contains 'url') {
+            Add-PowerPlatformCheckerStringCandidate -Values $candidateUrlValues -Candidate $Action.inputs.url
+        }
+
+        if ($Action.inputs.PSObject.Properties.Name -contains 'parameters' -and $null -ne $Action.inputs.parameters) {
+            $parameters = $Action.inputs.parameters
+
+            $preferredKeys = @(
+                'request/url',
+                'uri',
+                'url',
+                'dataset',
+                'source',
+                'siteAddress',
+                'baseUrl',
+                'host',
+                'authority',
+                'resourceUrl',
+                'parameters/source',
+                'parameters/dataset',
+                'parameters/siteAddress',
+                'parameters/baseUrl',
+                'destinationDataset'
+            )
+
+            foreach ($preferredKey in $preferredKeys) {
+                if ($parameters.PSObject.Properties.Name -contains $preferredKey) {
+                    Add-PowerPlatformCheckerStringCandidate -Values $candidateUrlValues -Candidate $parameters.$preferredKey
+                }
             }
-            elseif ($Action.inputs.parameters.PSObject.Properties.Name -contains 'uri') {
-                $rawUrl = [string]$Action.inputs.parameters.uri
+
+            foreach ($parameterProperty in @($parameters.PSObject.Properties)) {
+                $propertyName = [string]$parameterProperty.Name
+                if ([string]::IsNullOrWhiteSpace($propertyName)) {
+                    continue
+                }
+
+                if ($propertyName -match '(?i)(^|/)(dataset|source|siteaddress|baseurl|request/url|uri|url|authority|host)$') {
+                    Add-PowerPlatformCheckerStringCandidate -Values $candidateUrlValues -Candidate $parameterProperty.Value
+                }
             }
         }
     }
 
-    $resolvedUrl = Resolve-PowerPlatformCheckerFlowExpressionValue -Value $rawUrl -DefinitionParameters $DefinitionParameters
-    $urlProfile = ConvertTo-PowerPlatformCheckerUrlProfile -Value $resolvedUrl
+    $urlProfile = $null
+    foreach ($candidateValue in @($candidateUrlValues)) {
+        $resolvedUrl = Resolve-PowerPlatformCheckerFlowExpressionValue -Value $candidateValue -DefinitionParameters $DefinitionParameters
+        $urlCandidateProfile = ConvertTo-PowerPlatformCheckerUrlProfile -Value $resolvedUrl
+        if ([string]$urlCandidateProfile.ResolutionState -eq 'Resolved') {
+            $urlProfile = $urlCandidateProfile
+            break
+        }
+    }
+
+    if ($null -eq $urlProfile) {
+        $urlProfile = ConvertTo-PowerPlatformCheckerUrlProfile -Value ''
+    }
 
     return [pscustomobject]@{
         Method = $method
         GetSetAction = $getSetAction
         InteractionDirection = $interactionDirection
         ExternalUrl = [string]$urlProfile.FullUrl
+        ExternalEndpoint = [string]$urlProfile.Endpoint
         ExternalProtocol = [string]$urlProfile.Protocol
         ExternalDomain = [string]$urlProfile.Domain
         ExternalMainDomain = [string]$urlProfile.MainDomain

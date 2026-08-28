@@ -9,8 +9,8 @@
     .PARAMETER SolutionPath
         The file path to the Power Platform solution.
 
-    .PARAMETER CanvasAppDisplayName
-        The display name of the canvas app to retrieve. If not specified, information for all canvas apps will be returned.
+    .PARAMETER Name
+        Optional wildcard filter for canvas app display name.
 
     .EXAMPLE
         Get the canvas app information for all canvas apps in a Power Platform solution.
@@ -20,7 +20,7 @@
     .EXAMPLE
         Get the canvas app information for a specific canvas app in a Power Platform solution.
 
-        PS> Get-PowerPlatformCheckerCanvasApp -SolutionPath "C:\Solutions\MySolution" -CanvasAppDisplayName "My Canvas App"
+        PS> Get-PowerPlatformCheckerCanvasApp -SolutionPath "C:\Solutions\MySolution" -Name "My Canvas App"
     #>
 
     [CmdLetBinding()]
@@ -30,12 +30,17 @@
         [String] $SolutionPath,
 
         [Parameter(Mandatory = $false, Position = 2)]
-        [String] $CanvasAppDisplayName
+        [Alias('CanvasAppDisplayName')]
+        [String] $Name = '*'
     )
+
+    if ($MyInvocation.Line -match '(?i)-CanvasAppDisplayName\b') {
+        Write-Warning 'Parameter CanvasAppDisplayName is deprecated. Use -Name instead.'
+    }
 
     # Send telemetry data (captures whether filtering was used, not actual names).
     $telemetryProperties = @{
-        CanvasAppFilterUsed = (-not [string]::IsNullOrWhiteSpace($CanvasAppDisplayName))
+        CanvasAppFilterUsed = ($Name -ne '*')
     }
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerCanvasApp" -PropertiesHash $telemetryProperties
 
@@ -58,11 +63,11 @@
             continue
         }
 
-        if($xmlfile.Node.DisplayName -like $CanvasAppDisplayName -or $CanvasAppDisplayName -eq "") {
-
             $fallbackName = [System.IO.Path]::GetFileNameWithoutExtension($file)
             $appName = if ([string]::IsNullOrWhiteSpace([string]$xmlfile.Node.Name)) { $fallbackName } else { [string]$xmlfile.Node.Name }
             $appDisplayName = if ([string]::IsNullOrWhiteSpace([string]$xmlfile.Node.DisplayName)) { $appName } else { [string]$xmlfile.Node.DisplayName }
+
+        if($appName -like $Name -or $appDisplayName -like $Name -or $Name -eq '*') {
 
             # Get all the data sources
             $dataSources = @()
@@ -99,6 +104,10 @@
                 $connectionReferencesJson.$connectionReferenceName | Select-Object id, xrmConnectionReferenceLogicalName, displayName
             }
 
+            $canvasFileBase = [System.IO.Path]::GetFileNameWithoutExtension([System.IO.Path]::GetFileNameWithoutExtension($file))
+            $msAppPath = Join-Path $canvasAppRoot ($canvasFileBase + '_DocumentUri.msapp')
+            $msAppProfile = Get-PowerPlatformCheckerCanvasMsAppInteractionProfile -MsAppPath $msAppPath
+
             $returnObject += [PSCustomObject]@{
                 AppType = Get-PowerPlatformCheckerAppType -Path $file
                 Name = $appName
@@ -107,6 +116,12 @@
                 Publisher = $xmlfile.Node.Publisher
                 ConnectionReferences = $connectionReferences
                 DataSources = $dataSources
+                ConnectedDataSources = @($msAppProfile.ConnectedDataSources)
+                ExternalDomains = @($msAppProfile.ExternalDomains)
+                DomainInteractions = @($msAppProfile.DomainInteractions)
+                SourceSignals = @($msAppProfile.SourceSignals)
+                InteractionDirection = [string]$msAppProfile.InteractionDirection
+                InteractionEvidence = [string]$msAppProfile.InteractionEvidence
             }
         }
     }

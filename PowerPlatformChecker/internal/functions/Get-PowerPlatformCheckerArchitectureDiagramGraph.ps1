@@ -99,9 +99,12 @@
     if ($IncludePolicy.IncludeModelDrivenApps) { $styles.ModelDrivenApp = "fill:$($Style.ModelDrivenApp),stroke:$($Style.Stroke)" }
     if ($IncludePolicy.IncludeWebResources) {
         $styles.WebResource = "fill:$($Style.WebResource),stroke:$($Style.Stroke)"
-        if (@($uniqueNodes | Where-Object { $_.ClassKind -eq 'ExternalDomain' }).Count -gt 0) {
-            $styles.ExternalDomain = "fill:$($Style.ExternalDomain),stroke:$($Style.Stroke)"
-        }
+    }
+    if (@($uniqueNodes | Where-Object { $_.ClassKind -eq 'Solution' }).Count -gt 0) {
+        $styles.Solution = "fill:$($Style.Solution),stroke:#111111,stroke-width:2px;"
+    }
+    if (@($uniqueNodes | Where-Object { $_.ClassKind -eq 'ExternalDomain' }).Count -gt 0) {
+        $styles.ExternalDomain = "fill:$($Style.ExternalDomain),stroke:$($Style.Stroke)"
     }
 
     return [pscustomobject]@{

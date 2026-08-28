@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml>
+  <connectionreferences>
+    <connectionreference connectionreferencelogicalname="ppc_sharedsharepointonline">
+      <connectionreferencedisplayname>SharePoint Test</connectionreferencedisplayname>
+      <connectorid>/providers/Microsoft.PowerApps/apis/shared_sharepointonline</connectorid>
+    </connectionreference>
+  </connectionreferences>
+</ImportExportXml>

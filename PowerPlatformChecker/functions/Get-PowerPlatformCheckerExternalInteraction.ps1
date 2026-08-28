@@ -26,6 +26,13 @@
     .PARAMETER OutputFormat
         Mermaid markdown (default) or Graph object.
 
+    .PARAMETER StyleOverrides
+        Optional hashtable that overrides recognized diagram color keys for this call only.
+
+    .PARAMETER Merge
+        Optional merged solution block name. When provided, all selected solutions are
+        aggregated under one solution node with this display name.
+
     .EXAMPLE
         Build one combined external interaction view from multiple solution roots.
 
@@ -53,7 +60,13 @@
 
         [Parameter(Mandatory = $false)]
         [ValidateSet('Mermaid', 'Graph')]
-        [string] $OutputFormat = 'Mermaid'
+        [string] $OutputFormat = 'Mermaid',
+
+        [Parameter(Mandatory = $false)]
+        [hashtable] $StyleOverrides,
+
+        [Parameter(Mandatory = $false)]
+        [string] $Merge
     )
 
     $telemetryProperties = @{
@@ -63,6 +76,8 @@
         ExcludeFilterCount = @($ExcludeSolutionFolders).Count
         Direction = $Direction
         OutputFormat = $OutputFormat
+        HasStyleOverrides = $PSBoundParameters.ContainsKey('StyleOverrides')
+        HasMerge = $PSBoundParameters.ContainsKey('Merge')
     }
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerExternalInteraction" -PropertiesHash $telemetryProperties
 
@@ -116,7 +131,20 @@
             return $true
         })
 
-    $combinedGraph = Get-PowerPlatformCheckerExternalInteractionGraphInternal -FilteredSolutionPaths $filteredSolutionPaths -Direction $Direction
+    $internalGraphParameters = @{
+        FilteredSolutionPaths = $filteredSolutionPaths
+        Direction = $Direction
+    }
+
+    if ($PSBoundParameters.ContainsKey('StyleOverrides')) {
+        $internalGraphParameters.StyleOverrides = $StyleOverrides
+    }
+
+    if ($PSBoundParameters.ContainsKey('Merge') -and -not [string]::IsNullOrWhiteSpace([string]$Merge)) {
+        $internalGraphParameters.MergeName = [string]$Merge
+    }
+
+    $combinedGraph = Get-PowerPlatformCheckerExternalInteractionGraphInternal @internalGraphParameters
 
     if ($OutputFormat -eq 'Graph') {
         return $combinedGraph

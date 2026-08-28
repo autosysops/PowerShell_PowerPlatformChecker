@@ -38,16 +38,8 @@
     $rows = [System.Collections.Generic.List[object]]::new()
     $workflowFiles = @(Get-ChildItem -Path (Join-Path $SolutionPath 'Workflows') -Filter '*.json' -File -ErrorAction SilentlyContinue)
 
-    foreach ($canvasApp in @(Get-PowerPlatformCheckerCanvasApp -SolutionPath $SolutionPath)) {
+    foreach ($canvasApp in @(Get-PowerPlatformCheckerApp -SolutionPath $SolutionPath -Name $Name -AppType CanvasApp -Properties ConnectionReferences)) {
         if ($null -eq $canvasApp) {
-            continue
-        }
-
-        if (([string]$canvasApp.Name -notlike $Name) -and ([string]$canvasApp.DisplayName -notlike $Name)) {
-            continue
-        }
-
-        if ([string]$canvasApp.AppType -ne 'CanvasApp') {
             continue
         }
 
@@ -78,16 +70,8 @@
             }
         }
 
-    foreach ($modelApp in @(Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $SolutionPath)) {
+    foreach ($modelApp in @(Get-PowerPlatformCheckerApp -SolutionPath $SolutionPath -Name $Name -AppType ModelDrivenApp -Properties FlowIds)) {
         if ($null -eq $modelApp) {
-            continue
-        }
-
-        if (([string]$modelApp.UniqueName -notlike $Name) -and ([string]$modelApp.DisplayName -notlike $Name)) {
-            continue
-        }
-
-        if ([string]$modelApp.AppType -ne 'ModelDrivenApp') {
             continue
         }
 
@@ -105,7 +89,7 @@
                 foreach ($connector in @(Get-PowerPlatformCheckerFlowConnectorTier -Path $flowFile.FullName)) {
                     [void]$rows.Add([pscustomobject]@{
                             AppType = 'ModelDrivenApp'
-                            AppName = [string]$modelApp.UniqueName
+                            AppName = [string]$modelApp.Name
                             AppDisplayName = [string]$modelApp.DisplayName
                             ConnectorName = [string]$connector.Name
                             ConnectorDisplayName = [string]$connector.DisplayName
@@ -114,7 +98,7 @@
                         })
                 }
             }
-        }
+    }
 
     return @($rows | Sort-Object AppType, AppName, ConnectorName -Unique)
 }

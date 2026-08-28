@@ -152,7 +152,7 @@
 
         # Flow action metadata drives flow-to-flow, flow-to-connector, and flow-to-entity links.
         try {
-            $actions = Get-PowerPlatformCheckerFlowActionList -Path $flowPath -Recurse -IncludeTrigger -Properties References,Entities
+            $actions = Get-PowerPlatformCheckerFlowActionList -Path $flowPath -Recurse -IncludeTrigger -Properties References,Entities,ExternalProfile -WarningAction SilentlyContinue
             $triggerMode = Get-PowerPlatformCheckerFlowTriggerMode -Actions $actions
             $directionMetadata = Get-PowerPlatformCheckerFlowDirectionProfile -Actions $actions
             $interactionDirection = [string]$directionMetadata.InteractionDirection
@@ -193,7 +193,12 @@
             }
         }
         catch {
-            Write-Warning "Error in reading the actions of flow $($flow.Name)"
+            if ($flowType -eq "Desktop") {
+                Write-Verbose "Skipped cloud action extraction for desktop flow $($flow.Name)."
+            }
+            else {
+                Write-Warning "Error in reading the actions of flow $($flow.Name)"
+            }
         }
 
         if ($IncludeConnections.IsPresent -and $flowType -eq "Desktop") {

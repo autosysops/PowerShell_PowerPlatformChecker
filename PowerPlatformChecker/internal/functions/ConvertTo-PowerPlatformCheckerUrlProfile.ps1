@@ -27,6 +27,7 @@
     if ([string]::IsNullOrWhiteSpace($Value)) {
         return [pscustomobject]@{
             FullUrl = ""
+            Endpoint = ""
             Protocol = "Unknown"
             Domain = "Unknown"
             MainDomain = "Unknown"
@@ -50,8 +51,16 @@
                 $mainDomain = ($domainParts[($lastIndex - 1)..$lastIndex] -join '.')
             }
 
+            $endpointPath = [string]$uri.AbsolutePath
+            if ([string]::IsNullOrWhiteSpace($endpointPath) -or $endpointPath -eq '/') {
+                $endpointPath = ''
+            }
+
+            $endpoint = "{0}://{1}{2}" -f [string]$uri.Scheme, $domain, $endpointPath
+
             return [pscustomobject]@{
                 FullUrl = $uri.AbsoluteUri
+                Endpoint = $endpoint
                 Protocol = $uri.Scheme
                 Domain = $domain
                 MainDomain = $mainDomain
@@ -65,6 +74,7 @@
 
     return [pscustomobject]@{
         FullUrl = ""
+        Endpoint = ""
         Protocol = "Unknown"
         Domain = "Unknown"
         MainDomain = "Unknown"

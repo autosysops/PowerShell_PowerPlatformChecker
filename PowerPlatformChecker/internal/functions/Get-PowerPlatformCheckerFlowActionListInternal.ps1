@@ -118,7 +118,7 @@
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 5)]
         [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 5)]
-        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile")]
+        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile", "TriggerProfile", "OperationProfile", "ResponseProfile")]
         [String[]] $Properties = @(),
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 6)]
@@ -146,7 +146,7 @@
     $actionsList = @()
 
     # If the trigger is included call this recursivly to add the trigger as well
-    if ($IncludeTrigger -and $null -eq $ParentAction) {
+    if ($IncludeTrigger -and $null -eq $ParentAction -and $Path) {
         $actionsList += Get-PowerPlatformCheckerFlowActionListInternal -Actions $flowdata.properties.definition.triggers -ParentAction "Trigger" -Recurse:$Recurse -Properties $Properties -IncludeTrigger -IsTrigger -Depth $Depth -DefinitionParameters $DefinitionParameters
     }
 
@@ -181,11 +181,72 @@
             }
         }
         # Store the data from the action
-        $type = $actions.$($_.Name).type
+        $rawAction = $actions.$($_.Name)
+        $type = $rawAction.type
         $group = "*"
         if ($type -eq "OpenApiConnection" -or $type -eq "OpenApiConnectionWebhook") {
-            $type = $actions.$($_.Name).inputs.host.operationId
-            $group = $actions.$($_.Name).inputs.host.apiId.split("/")[-1]
+            $type = $rawAction.inputs.host.operationId
+            $group = $rawAction.inputs.host.apiId.split("/")[-1]
+        }
+        elseif ($rawAction.inputs -and $rawAction.inputs.host -and $rawAction.inputs.host.apiId) {
+            $group = [string]$rawAction.inputs.host.apiId.split("/")[-1]
+        }
+        elseif ($rawAction.inputs -and $rawAction.inputs.host -and $rawAction.inputs.host.connectionName) {
+            $group = [string]$rawAction.inputs.host.connectionName
+        }
+        elseif ($rawAction.inputs -and $rawAction.inputs.host -and $rawAction.inputs.host.connection -and $rawAction.inputs.host.connection.name) {
+            $connectionExpression = [string]$rawAction.inputs.host.connection.name
+            $connectionMatch = [regex]::Match($connectionExpression, "\['(?<name>shared_[^']+)'\]\['connectionId'\]")
+            if ($connectionMatch.Success) {
+                $group = [string]$connectionMatch.Groups['name'].Value
+            }
+        }
+
+        $triggerOperationId = ''
+        if ($IsTrigger.IsPresent -and $rawAction.inputs) {
+            if ($rawAction.inputs.operationId) {
+                $triggerOperationId = [string]$rawAction.inputs.operationId
+            }
+            elseif ($rawAction.inputs.host -and $rawAction.inputs.host.operationId) {
+                $triggerOperationId = [string]$rawAction.inputs.host.operationId
+            }
+        }
+
+        $operationDisplayName = ''
+        if (-not [string]::IsNullOrWhiteSpace([string]$type)) {
+            $operationLookup = @()
+            if (-not [string]::IsNullOrWhiteSpace([string]$group) -and [string]$group -ne '*') {
+                $operationLookup = @(Get-PowerPlatformCheckerOperationData -OperationType ([string]$type) -Group ([string]$group))
+            }
+            else {
+                $operationLookup = @(Get-PowerPlatformCheckerOperationData -OperationType ([string]$type))
+            }
+
+            if (@($operationLookup).Count -gt 0) {
+                $operationDisplayName = [string]$operationLookup[0].name
+            }
+        }
+
+        if ($IsTrigger.IsPresent -and [string]::IsNullOrWhiteSpace($operationDisplayName) -and -not [string]::IsNullOrWhiteSpace([string]$triggerOperationId)) {
+            $triggerOperationLookup = @()
+            if (-not [string]::IsNullOrWhiteSpace([string]$group) -and [string]$group -ne '*') {
+                $triggerOperationLookup = @(Get-PowerPlatformCheckerOperationData -OperationType ([string]$triggerOperationId) -Group ([string]$group))
+            }
+            else {
+                $triggerOperationLookup = @(Get-PowerPlatformCheckerOperationData -OperationType ([string]$triggerOperationId))
+            }
+
+            if (@($triggerOperationLookup).Count -gt 0) {
+                $operationDisplayName = [string]$triggerOperationLookup[0].name
+            }
+        }
+
+        $connectorDisplayName = ''
+        if (-not [string]::IsNullOrWhiteSpace([string]$group) -and [string]$group -ne '*') {
+            $connectorLookup = @(Get-PowerPlatformCheckerConnectorData -Name ([string]$group))
+            if (@($connectorLookup).Count -gt 0) {
+                $connectorDisplayName = [string]$connectorLookup[0].displayname
+            }
         }
 
         $actionObject = [pscustomobject]@{
@@ -242,6 +303,54 @@
             $actionObject | Add-Member -MemberType NoteProperty -Name "IsTrigger" -Value $IsTrigger.IsPresent
         }
 
+        if ($Properties -contains "OperationProfile") {
+            $actionObject | Add-Member -MemberType NoteProperty -Name "OperationDisplayName" -Value ([string]$operationDisplayName)
+            $actionObject | Add-Member -MemberType NoteProperty -Name "ConnectorDisplayName" -Value ([string]$connectorDisplayName)
+        }
+
+        if ($Properties -contains "TriggerProfile") {
+            $triggerAuthenticationType = ''
+            $triggerKind = ''
+            if ($rawAction.inputs -and $rawAction.inputs.triggerAuthenticationType) {
+                $triggerAuthenticationType = [string]$rawAction.inputs.triggerAuthenticationType
+            }
+            if ($rawAction.kind) {
+                $triggerKind = [string]$rawAction.kind
+            }
+
+            $triggerAuthenticationDescription = Get-PowerPlatformCheckerTriggerAuthenticationDescription -AuthenticationType $triggerAuthenticationType
+            $actionObject | Add-Member -MemberType NoteProperty -Name "TriggerKind" -Value ([string]$triggerKind)
+            $actionObject | Add-Member -MemberType NoteProperty -Name "TriggerOperationId" -Value ([string]$triggerOperationId)
+            $actionObject | Add-Member -MemberType NoteProperty -Name "TriggerAuthenticationType" -Value ([string]$triggerAuthenticationType)
+            $actionObject | Add-Member -MemberType NoteProperty -Name "TriggerAuthenticationDescription" -Value ([string]$triggerAuthenticationDescription)
+        }
+
+        if ($Properties -contains "ResponseProfile") {
+            $responseStatusCode = ''
+            $responseHasBody = $false
+            $responseBodyDescription = ''
+            if ([string]$rawAction.type -eq 'Response' -and $rawAction.inputs) {
+                if ($rawAction.inputs.PSObject.Properties.Name -contains 'statusCode') {
+                    $responseStatusCode = [string]$rawAction.inputs.statusCode
+                }
+
+                if ($rawAction.inputs.PSObject.Properties.Name -contains 'body' -and $null -ne $rawAction.inputs.body) {
+                    $bodyValue = [string]$rawAction.inputs.body
+                    if (-not [string]::IsNullOrWhiteSpace($bodyValue)) {
+                        $responseHasBody = $true
+                    }
+                }
+            }
+
+            if ([string]$rawAction.type -eq 'Response') {
+                $responseBodyDescription = if ($responseHasBody) { 'Returns status code and body' } else { 'Returns status code only' }
+            }
+
+            $actionObject | Add-Member -MemberType NoteProperty -Name 'ResponseStatusCode' -Value ([string]$responseStatusCode)
+            $actionObject | Add-Member -MemberType NoteProperty -Name 'ResponseHasBody' -Value ([bool]$responseHasBody)
+            $actionObject | Add-Member -MemberType NoteProperty -Name 'ResponseDescription' -Value ([string]$responseBodyDescription)
+        }
+
         if ($Properties -contains "Entities") {
             $entities = @()
 
@@ -269,6 +378,7 @@
 
             if ($Properties -contains "ExternalProfile") {
                 $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalUrl" -Value ([string]$interactionProfile.ExternalUrl)
+                $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalEndpoint" -Value ([string]$interactionProfile.ExternalEndpoint)
                 $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalProtocol" -Value ([string]$interactionProfile.ExternalProtocol)
                 $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalDomain" -Value ([string]$interactionProfile.ExternalDomain)
                 $actionObject | Add-Member -MemberType NoteProperty -Name "ExternalMainDomain" -Value ([string]$interactionProfile.ExternalMainDomain)

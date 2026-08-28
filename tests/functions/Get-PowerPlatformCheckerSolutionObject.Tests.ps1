@@ -19,6 +19,18 @@ Describe "Get-PowerPlatformCheckerSolutionObject" {
         $solution.WebResources.Count | Should -Be 2
     }
 
+    It "supports property filtering while defaulting to all sections" {
+        $filtered = Get-PowerPlatformCheckerSolutionObject -SolutionPath $script:solutionPath -Properties Workflows,Entities
+
+        $filtered.PSObject.Properties.Name | Should -Contain 'Workflows'
+        $filtered.PSObject.Properties.Name | Should -Contain 'Entities'
+        $filtered.PSObject.Properties.Name | Should -Not -Contain 'EnvironmentVariables'
+        $filtered.PSObject.Properties.Name | Should -Not -Contain 'ConnectionReferences'
+        $filtered.PSObject.Properties.Name | Should -Not -Contain 'CanvasApps'
+        $filtered.PSObject.Properties.Name | Should -Not -Contain 'ModelDrivenApps'
+        $filtered.PSObject.Properties.Name | Should -Not -Contain 'WebResources'
+    }
+
     It "sends invocation telemetry without solution paths or result counts" {
         $telemetryCalls = [System.Collections.Generic.List[object]]::new()
         Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {

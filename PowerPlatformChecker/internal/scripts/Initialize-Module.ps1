@@ -20,6 +20,7 @@ if (-not $script:PowerPlatformCheckerStyles) {
 			CanvasApp = "#8BC34A"
 			ModelDrivenApp = "#7BAFD4"
 			WebResource = "#D7C8F3"
+			Solution = "#f5f5f5"
 			ExternalDomain = "#E6D3A3"
 			Stroke = "#5E5B52"
 		}

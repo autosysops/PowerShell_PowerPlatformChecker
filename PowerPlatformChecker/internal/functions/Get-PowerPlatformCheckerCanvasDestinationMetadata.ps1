@@ -21,6 +21,16 @@
         [object] $CanvasApp
     )
 
+    $externalDomainCandidates = @($CanvasApp.ExternalDomains | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) } | Select-Object -Unique)
+    if ($externalDomainCandidates.Count -gt 0) {
+        return [pscustomobject]@{
+            Destination = [string]$externalDomainCandidates[0]
+            DestinationType = 'Domain'
+            DestinationConfidence = 'Medium'
+            DestinationEvidence = 'MsAppConnectedDataSource'
+        }
+    }
+
     $connectorNames = @($CanvasApp.ConnectionReferences | ForEach-Object {
             if ($_ -and $_.id) {
                 [string]($_.id).Split('/')[-1]

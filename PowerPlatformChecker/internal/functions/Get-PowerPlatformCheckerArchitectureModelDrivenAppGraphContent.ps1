@@ -76,6 +76,12 @@
     }
 
     $nodes = @([pscustomobject]@{ Id = [string]$ModelApp.MermaidId; Type = "ModelDrivenApp"; DisplayName = [string]$ModelApp.DisplayName; ClassKind = "ModelDrivenApp"; Properties = @{}; Members = @($modelAppMembers | Select-Object -Unique); HasExplicitDisplayName = $true })
+    $nodes[0].Properties = @{
+        Components = @($ModelApp.Components)
+        EntityWebResources = @($ModelApp.EntityWebResources)
+        FlowIds = @($ModelApp.FlowIds)
+        WebResources = @($ModelApp.WebResources)
+    }
     $edges = @()
     $connectedEntities = @()
     $connectedDefaultEntities = @()

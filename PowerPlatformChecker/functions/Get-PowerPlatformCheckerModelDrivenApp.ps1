@@ -12,7 +12,7 @@
     .PARAMETER SolutionPath
         The root path of the unpacked solution.
 
-    .PARAMETER AppName
+    .PARAMETER Name
         Optional wildcard filter on app unique name.
 
     .EXAMPLE
@@ -25,7 +25,7 @@
     .EXAMPLE
         Return model-driven apps filtered by app unique name.
 
-        PS> Get-PowerPlatformCheckerModelDrivenApp -SolutionPath "C:\Solutions\MySolution" -AppName "contoso_*"
+        PS> Get-PowerPlatformCheckerModelDrivenApp -SolutionPath "C:\Solutions\MySolution" -Name "contoso_*"
     #>
 
     [CmdletBinding()]
@@ -35,11 +35,16 @@
         [string] $SolutionPath,
 
         [Parameter(Mandatory = $false, Position = 2)]
-        [string] $AppName = "*"
+        [Alias('AppName')]
+        [string] $Name = "*"
     )
 
+    if ($MyInvocation.Line -match '(?i)-AppName\b') {
+        Write-Warning 'Parameter AppName is deprecated. Use -Name instead.'
+    }
+
     $telemetryProperties = @{
-        AppNameFilterUsed = ($AppName -ne "*")
+        AppNameFilterUsed = ($Name -ne "*")
     }
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerModelDrivenApp" -PropertiesHash $telemetryProperties
 
@@ -57,7 +62,7 @@
         $xml = Select-Xml -Path $appFile.FullName -XPath "*" -ErrorAction Stop
         $uniqueName = [string] $xml.Node.UniqueName
 
-        if (-not $uniqueName -or $uniqueName -notlike $AppName) {
+        if (-not $uniqueName -or $uniqueName -notlike $Name) {
             continue
         }
 
@@ -75,7 +80,7 @@
 
                 [PSCustomObject]@{
                     ComponentType = $componentTypeCode
-                    ComponentTypeName = Get-PowerPlatformCheckerModelDrivenAppComponentType -Type $componentTypeCode
+                    ComponentTypeName = Get-PowerPlatformCheckerAppComponentType -Type $componentTypeCode
                     SchemaName = [string]$component.schemaName
                     Id = [string]$component.id
                 }

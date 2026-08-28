@@ -50,14 +50,8 @@ Describe "Get-PowerPlatformCheckerAppConnectorTier" {
             @([pscustomobject]@{ BaseName = 'Flow-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'; FullName = 'C:\mock\Flow-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.json' })
         }
 
-        Mock -CommandName Get-PowerPlatformCheckerCanvasApp -ModuleName PowerPlatformChecker -MockWith {
-            @([pscustomobject]@{ AppType = 'Unknown'; Name = 'ignored'; DisplayName = 'ignored'; ConnectionReferences = @() })
-        }
-        Mock -CommandName Get-PowerPlatformCheckerModelDrivenApp -ModuleName PowerPlatformChecker -MockWith {
-            @(
-                [pscustomobject]@{ AppType = 'ModelDrivenApp'; UniqueName = 'model_app_1'; DisplayName = 'Model App 1'; FlowIds = @('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') },
-                [pscustomobject]@{ AppType = 'Unknown'; UniqueName = 'ignored'; DisplayName = 'ignored'; FlowIds = @('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') }
-            )
+        Mock -CommandName Get-PowerPlatformCheckerApp -ModuleName PowerPlatformChecker -MockWith {
+            @([pscustomobject]@{ AppType = 'ModelDrivenApp'; Name = 'model_app_1'; DisplayName = 'Model App 1'; FlowIds = @('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') })
         }
         Mock -CommandName Get-PowerPlatformCheckerFlowConnectorTier -ModuleName PowerPlatformChecker -MockWith {
             @([pscustomobject]@{ Name = 'shared_office365'; DisplayName = 'Office 365 Outlook'; Tier = 'Standard' })
@@ -72,7 +66,7 @@ Describe "Get-PowerPlatformCheckerAppConnectorTier" {
     }
 
     It "falls back from shared_ api name when direct connector lookup misses" {
-        Mock -CommandName Get-PowerPlatformCheckerCanvasApp -ModuleName PowerPlatformChecker -MockWith {
+        Mock -CommandName Get-PowerPlatformCheckerApp -ModuleName PowerPlatformChecker -MockWith {
             @([pscustomobject]@{
                     AppType = 'CanvasApp'
                     Name = 'canvas_1'
@@ -80,7 +74,6 @@ Describe "Get-PowerPlatformCheckerAppConnectorTier" {
                     ConnectionReferences = @([pscustomobject]@{ id = 'shared_customapi'; displayName = 'Custom API' })
                 })
         }
-        Mock -CommandName Get-PowerPlatformCheckerModelDrivenApp -ModuleName PowerPlatformChecker -MockWith { @() }
         Mock -CommandName Get-PowerPlatformCheckerConnectorData -ModuleName PowerPlatformChecker -ParameterFilter { $Name -eq 'shared_customapi' } { $null }
         Mock -CommandName Get-PowerPlatformCheckerConnectorData -ModuleName PowerPlatformChecker -ParameterFilter { $Name -eq 'customapi' } {
             [pscustomobject]@{ displayname = 'Custom API'; tier = 'Premium' }
@@ -94,18 +87,9 @@ Describe "Get-PowerPlatformCheckerAppConnectorTier" {
 
     It "ignores null and non-matching app entries gracefully" {
         Mock -CommandName Get-ChildItem -ModuleName PowerPlatformChecker -MockWith { @() }
-        Mock -CommandName Get-PowerPlatformCheckerCanvasApp -ModuleName PowerPlatformChecker -MockWith {
+        Mock -CommandName Get-PowerPlatformCheckerApp -ModuleName PowerPlatformChecker -MockWith {
             @(
-                $null,
-                [pscustomobject]@{ AppType = 'Unknown'; Name = 'ignored'; DisplayName = 'ignored'; ConnectionReferences = @() },
                 [pscustomobject]@{ AppType = 'CanvasApp'; Name = 'nonmatch'; DisplayName = 'nonmatch'; ConnectionReferences = @([pscustomobject]@{ id = ''; displayName = 'Empty' }) }
-            )
-        }
-        Mock -CommandName Get-PowerPlatformCheckerModelDrivenApp -ModuleName PowerPlatformChecker -MockWith {
-            @(
-                $null,
-                [pscustomobject]@{ AppType = 'Unknown'; UniqueName = 'ignored'; DisplayName = 'ignored'; FlowIds = @() },
-                [pscustomobject]@{ AppType = 'ModelDrivenApp'; UniqueName = 'nonmatch'; DisplayName = 'nonmatch'; FlowIds = @('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') }
             )
         }
 
@@ -116,7 +100,7 @@ Describe "Get-PowerPlatformCheckerAppConnectorTier" {
 
     It "normalizes /apis/ connector ids and falls back to reference display names" {
         Mock -CommandName Get-ChildItem -ModuleName PowerPlatformChecker -MockWith { @() }
-        Mock -CommandName Get-PowerPlatformCheckerCanvasApp -ModuleName PowerPlatformChecker -MockWith {
+        Mock -CommandName Get-PowerPlatformCheckerApp -ModuleName PowerPlatformChecker -MockWith {
             @([pscustomobject]@{
                     AppType = 'CanvasApp'
                     Name = 'expected_canvas'
@@ -124,7 +108,6 @@ Describe "Get-PowerPlatformCheckerAppConnectorTier" {
                     ConnectionReferences = @([pscustomobject]@{ id = '/providers/Microsoft.PowerApps/apis/shared_customapi2'; displayName = 'Custom API 2' })
                 })
         }
-        Mock -CommandName Get-PowerPlatformCheckerModelDrivenApp -ModuleName PowerPlatformChecker -MockWith { @() }
         Mock -CommandName Get-PowerPlatformCheckerConnectorData -ModuleName PowerPlatformChecker -MockWith { $null }
 
         $rows = Get-PowerPlatformCheckerAppConnectorTier -SolutionPath $script:solutionPath -Name 'expected_*'

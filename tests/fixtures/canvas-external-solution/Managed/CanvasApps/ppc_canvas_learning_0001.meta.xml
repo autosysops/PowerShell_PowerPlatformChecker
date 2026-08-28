@@ -1,0 +1,8 @@
+<CanvasApp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ppc_canvas_learning_0001</Name>
+  <DisplayName>Learning Canvas App</DisplayName>
+  <Description>Minimal anonymized canvas app fixture for external dependency diagrams.</Description>
+  <Publisher>Fabrikam Test Publisher</Publisher>
+  <ConnectionReferences>{"refSharePoint":{"id":"/providers/microsoft.powerapps/apis/shared_sharepointonline","xrmConnectionReferenceLogicalName":"ppc_sharedsharepointonline","displayName":"SharePoint Test","iconUri":"https://example.invalid/sharepoint/icon.png"}}</ConnectionReferences>
+  <DatabaseReferences>{}</DatabaseReferences>
+</CanvasApp>

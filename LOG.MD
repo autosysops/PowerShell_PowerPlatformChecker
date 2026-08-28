@@ -419,6 +419,86 @@ Current execution impact:
 - Active work remains in pre-F hardening and validation.
 - Phase F remains blocked until E/E2 implementation and tests are green.
 
+## Continuation - Canvas msapp deep parsing enrichment (2026-08-26)
+
+### Implemented
+- Added internal helper:
+	- PowerPlatformChecker/internal/functions/Get-PowerPlatformCheckerCanvasMsAppInteractionProfile.ps1
+	- Reads `References/DataSources.json` and `Src/*.pa.yaml` from `*_DocumentUri.msapp` archives.
+	- Supports both slash styles in ZIP entry paths (`/` and `\`).
+	- Emits connected datasources, external domains, domain interactions (Read/Write/Mixed/Unknown), and formula-level source signals.
+- Extended canvas metadata output:
+	- PowerPlatformChecker/functions/Get-PowerPlatformCheckerCanvasApp.ps1 now enriches each app with:
+		- ConnectedDataSources
+		- ExternalDomains
+		- DomainInteractions
+		- SourceSignals
+		- InteractionDirection
+		- InteractionEvidence
+- Updated destination inference:
+	- PowerPlatformChecker/internal/functions/Get-PowerPlatformCheckerCanvasDestinationMetadata.ps1 now prefers msapp-derived external domain targets (Domain/Medium confidence) before connector fallback.
+- Extended architecture graph canvas projection:
+	- PowerPlatformChecker/internal/functions/Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent.ps1 now emits canvas->ExternalDomain edges from datasource interactions and includes interaction metadata on nodes/edges.
+	- PowerPlatformChecker/functions/Get-PowerPlatformCheckerArchitectureDiagram.ps1 now passes IncludeExternalDomains to canvas graph content.
+- External interaction aggregation improvement:
+	- PowerPlatformChecker/internal/functions/Get-PowerPlatformCheckerExternalInteractionGraphInternal.ps1 now prefers edge metadata InteractionDirection when available.
+- Style stability:
+	- PowerPlatformChecker/internal/functions/Get-PowerPlatformCheckerArchitectureDiagramGraph.ps1 now includes ExternalDomain class style whenever external-domain nodes exist (not only when web resources are included).
+
+### Tests added/updated
+- Added:
+	- tests/functions/Get-PowerPlatformCheckerCanvasMsAppInteractionProfile.Tests.ps1
+- Updated:
+	- tests/functions/Get-PowerPlatformCheckerCanvasApp.Tests.ps1
+	- tests/functions/Get-PowerPlatformCheckerCanvasDestinationMetadata.Tests.ps1
+	- tests/functions/Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent.Tests.ps1
+
+### Focused validation
+- `tests/pester.ps1 -EnableCoverage:$false -TestGeneral:$false -Include 'Get-PowerPlatformCheckerCanvas*Tests.ps1'`
+	- Result: 9/9 passed.
+- `tests/pester.ps1 -EnableCoverage:$false -TestGeneral:$false -Include 'Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent.Tests.ps1'`
+	- Result: 1/1 passed.
+- `tests/pester.ps1 -EnableCoverage:$false -TestGeneral:$false -Include 'Get-PowerPlatformCheckerExternalInteraction.Tests.ps1'`
+	- Result: 17/17 passed.
+
+### Output verification
+- Regenerated `c:\Temp\Power%20Platform\Docs\ExternalInteraction.E-LearningApp.md`.
+- Verified new explicit external domain target for canvas app interactions:
+	- `https://autosysops.sharepoint.com`
+- Verified both read and write interaction visibility for `OGD-E-Learning`.
+
+## Continuation - Stripped canvas external fixture and canvas-only cleanup (2026-08-27)
+
+### Implemented
+- Added a stripped anonymized solution fixture dedicated to canvas external dependency diagrams:
+	- `tests/fixtures/canvas-external-solution/Managed/Other/Customizations.xml`
+	- `tests/fixtures/canvas-external-solution/Managed/CanvasApps/ppc_canvas_learning_0001.meta.xml`
+	- `tests/fixtures/canvas-external-solution/Managed/CanvasApps/ppc_canvas_learning_0001_DocumentUri.msapp`
+- Fixture contents were intentionally minimized to:
+	- one SharePoint connection reference,
+	- two connected datasources pointing at `https://contoso.sharepoint.com/sites/training`,
+	- one read formula and one write formula.
+- Added snapshot coverage for this fixture:
+	- `tests/fixtures/expected/ExternalInteraction.CanvasExternal.expected.graph.json`
+	- `tests/fixtures/expected/ExternalInteraction.CanvasExternal.expected.mermaid.md`
+- Updated `Get-PowerPlatformCheckerExternalInteraction.Tests.ps1` to use the dedicated fixture in snapshot tests.
+- Tightened datasource function classification in `Get-PowerPlatformCheckerCanvasMsAppInteractionProfile.ps1` so nearby YAML properties do not over-classify read operations as mixed.
+- Fixed canvas-only solution noise:
+	- `Get-PowerPlatformCheckerFlowFile.ps1` now returns an empty set when `Workflows` is absent instead of surfacing a path error.
+
+### Focused validation
+- `tests/pester.ps1 -EnableCoverage:$false -TestGeneral:$false -Include 'Get-PowerPlatformCheckerFlowFile.Tests.ps1'`
+	- Result: 2/2 passed.
+- `tests/pester.ps1 -EnableCoverage:$false -TestGeneral:$false -Include 'Get-PowerPlatformCheckerCanvasApp.Tests.ps1'`
+	- Result: 5/5 passed.
+- `tests/pester.ps1 -EnableCoverage:$false -TestGeneral:$false -Include 'Get-PowerPlatformCheckerExternalInteraction.Tests.ps1'`
+	- Result: 20/20 passed.
+
+### Research/decision notes
+- Mermaid image-node support was confirmed in upstream syntax docs.
+- Real canvas metadata was confirmed to contain `iconUri` values.
+- Image rendering was not enabled in generated docs because target-renderer compatibility could not be verified safely in this environment.
+
 ## Continuation - Fixture-first compliance follow-up (2026-08-26)
 
 User steering addressed:
@@ -556,3 +636,306 @@ Execution note:
 ### Execution status
 - Stage F remains paused and should not be treated as complete for the external interaction goal.
 - Remaining blocker is no longer only canvas destination precision; the verified E5/E6/E7 gaps must also be completed before final stabilization.
+
+## Continuation - Public app/flow API consolidation (2026-08-26)
+
+### User steering applied
+- Add a new pre-E5 consolidation phase for public API consistency.
+- Introduce easier public retrieval names centered around `app` and `flow`.
+- Normalize public app filter parameter names toward `-Name`.
+- Preserve legacy public parameter names as aliases and warn when they are used.
+
+### Plan/research updates completed
+- Added Phase E4a before E5 in PLAN.MD for unified app/flow retrieval and parameter normalization.
+- Added API consolidation and deprecation guidance in RESEARCH.MD.
+
+### Execution target for this phase
+- Implement `Get-PowerPlatformCheckerApp` and `Get-PowerPlatformCheckerFlow` as documentation-oriented public commands.
+- Update `Get-PowerPlatformCheckerCanvasApp` and `Get-PowerPlatformCheckerModelDrivenApp` to standardize on `-Name` while preserving deprecated aliases.
+
+### Phase E4a implementation completed
+- Added new public unified retrieval commands:
+	- `Get-PowerPlatformCheckerApp`
+	- `Get-PowerPlatformCheckerFlow`
+- Unified app retrieval behavior:
+	- returns both canvas and model-driven app metadata through one command,
+	- supports `-AppType` filtering,
+	- supports opt-in `-Properties` expansion for documentation-oriented sections.
+- Unified flow retrieval behavior:
+	- returns summary metadata for cloud and desktop flows,
+	- supports name or id selection,
+	- supports opt-in `-Properties` expansion for `Parameters`, `Actions`, and `ConnectorTiers`.
+- Public parameter normalization implemented for app retrieval:
+	- `Get-PowerPlatformCheckerCanvasApp` now standardizes on `-Name` with deprecated alias `-CanvasAppDisplayName`.
+	- `Get-PowerPlatformCheckerModelDrivenApp` now standardizes on `-Name` with deprecated alias `-AppName`.
+	- Deprecated alias usage emits a warning instructing callers to use `-Name`.
+- Module exports and README updated to include the new unified retrieval commands.
+
+### Focused validation completed
+- `Get-PowerPlatformCheckerApp.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerFlow.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerCanvasApp.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerModelDrivenApp.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerAppConnectorTier.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerSolutionObject.Tests.ps1` -> passed.
+
+### Phase status
+- Phase E4a is implemented and focused-validation green.
+- Waiting for user review before continuing with E5 and later external-interaction enrichment phases.
+
+### Naming consolidation follow-up completed
+- Public app-family specific command names removed from the exported surface:
+	- `Get-PowerPlatformCheckerCanvasApp`
+	- `Get-PowerPlatformCheckerModelDrivenApp`
+	- `Get-PowerPlatformCheckerModelDrivenAppComponentType`
+- Public surface now stays centered on:
+	- `Get-PowerPlatformCheckerApp`
+	- `Get-PowerPlatformCheckerFlow`
+- Specialized app parsers were internalized and renamed to match implementation-only status:
+	- `Get-PowerPlatformCheckerAppCanvas`
+	- `Get-PowerPlatformCheckerAppModelDriven`
+	- `Get-PowerPlatformCheckerAppComponentType`
+- Corresponding files and test files were renamed to keep filenames aligned with the new names.
+
+### Follow-up validation completed
+- `Get-PowerPlatformCheckerApp.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerAppCanvas.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerAppModelDriven.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerAppComponentType.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerAppConnectorTier.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerSolutionObject.Tests.ps1` -> passed.
+- `Get-PowerPlatformCheckerArchitectureDiagram.Tests.ps1` -> passed.
+
+## Continuation - Pre-E5 property model refinement and entity semantics (2026-08-26)
+
+### User steering applied
+- Add `Trigger` as a selectable property on `Get-PowerPlatformCheckerFlow`.
+- Make `Get-PowerPlatformCheckerFlow` and `Get-PowerPlatformCheckerApp` default to full property output; treat `-Properties` as a narrowing filter.
+- Add property pickability to `Get-PowerPlatformCheckerSolutionObject` similar to app/flow.
+- Reassess app/entity semantics so entities and flows can be represented as dependency-level references rather than implied app ownership.
+- Research whether existing implementation already has enough signal for a dedicated entity-details command with columns.
+
+### Plan/research synchronization completed
+- PLAN.MD updated with new pre-E5 phase:
+	- `Phase E4b - Property model refinement and app-entity semantic restructuring`.
+- RESEARCH.MD updated with entity metadata depth assessment and follow-up recommendations.
+
+### Implementation completed
+- `Get-PowerPlatformCheckerFlow`:
+	- Added `Trigger` to supported `-Properties` values.
+	- Added default-all property behavior when `-Properties` is omitted.
+	- Added narrowing behavior when `-Properties` is provided.
+	- Added explicit trigger extraction (`IsTrigger = true`) as `Trigger` property output.
+- `Get-PowerPlatformCheckerApp`:
+	- Added default-all property behavior when `-Properties` is omitted.
+	- Added narrowing behavior when `-Properties` is provided.
+	- Added `Dependencies` output section to group related app references:
+		- Canvas: `Connections`, `DataSources`
+		- Model-driven: `Entities`, `Flows`, `WebResources`, `EntityWebResources`
+- `Get-PowerPlatformCheckerSolutionObject`:
+	- Added selectable `-Properties` sections with default-all behavior equivalent to legacy output.
+
+### Test updates completed
+- `Get-PowerPlatformCheckerFlow.Tests.ps1` updated for:
+	- default-all property expectations,
+	- `Trigger` property expectations,
+	- property narrowing assertions.
+- `Get-PowerPlatformCheckerApp.Tests.ps1` updated for:
+	- default-all property expectations,
+	- dependency-level semantics,
+	- property narrowing assertions.
+- `Get-PowerPlatformCheckerSolutionObject.Tests.ps1` updated for:
+	- section filtering assertions through `-Properties`.
+
+### Validation status
+- Focused and full regression validation are executed after this implementation block; see subsequent log entries for final pass/fail details.
+
+### Regression pass/fail loop and final status
+- First full-suite regression run after E4b changes surfaced three issues:
+	- UTF-8 BOM integrity failure on:
+		- `Get-PowerPlatformCheckerFlow.ps1`
+		- `Get-PowerPlatformCheckerApp.ps1`
+	- Missing parameter help for `Properties` on `Get-PowerPlatformCheckerSolutionObject`.
+- Fixes applied:
+	- Re-saved edited files with UTF-8 BOM.
+	- Added `.PARAMETER Properties` and additional `.EXAMPLE` in `Get-PowerPlatformCheckerSolutionObject` help.
+- Second full-suite run surfaced one ScriptAnalyzer warning (`PSUseSingularNouns`) for internal `Get-PowerPlatformCheckerAppCanvas`.
+- Initial suppression attempt used an invalid attribute placement and was reverted by redesign.
+- Final fix applied:
+	- Renamed internal function to singular noun `Get-PowerPlatformCheckerCanvasApp`.
+	- Updated call sites in:
+		- `Get-PowerPlatformCheckerApp`
+		- `Get-PowerPlatformCheckerSolutionObject`
+		- `Get-PowerPlatformCheckerCanvasDestinationProfile` help text
+	- Renamed and updated test file:
+		- `Get-PowerPlatformCheckerAppCanvas.Tests.ps1` -> `Get-PowerPlatformCheckerCanvasApp.Tests.ps1`
+- Final full-suite result:
+	- `tests/pester.ps1 -Output Normal`
+	- `7771` tests passed, `0` failed.
+	- Coverage: `95.1%` (`776/816` lines), threshold satisfied.
+
+### E5 execution status
+- E5 remains paused intentionally pending user validation of E4b changes.
+
+## Continuation - External interaction completion and final stabilization (2026-08-26)
+
+### User steering applied
+- Removed redundant local property-default normalization in public app/flow getters and kept default behavior in parameter declarations.
+- Continued directly through phases E5, E6, E7, and F after targeted revalidation.
+
+### Phase E5 completed
+- Extended cloud flow external-profile resolution to inspect connector endpoint-bearing parameter keys including:
+	- `dataset`
+	- `source`
+	- `siteAddress`
+	- `baseUrl`
+	- `request/url`
+	- `uri`
+- Expanded expression resolution to handle:
+	- direct `@parameters('name')` references,
+	- `@{parameters('name')}` interpolation,
+	- multi-parameter inline URL composition.
+- Flow destination aggregation now preserves multiple discovered targets instead of collapsing to a single representative destination.
+
+### Phase E6 completed
+- Added inbound `internet` edges for webhook/manual-HTTP triggered flows in condensed external interaction output.
+- Condensed graph enrichment now consumes flow action external-domain evidence so desktop/browser discovered targets can propagate into external interaction output when action parsing resolves them.
+
+### Phase E7 completed
+- Condensed solution nodes now derive the real solution name when the analyzed root is a `Managed` or `Unmanaged` subfolder.
+- Condensed external interaction output now preserves multiple outbound targets per solution.
+- Condensed graph edges now carry representative action evidence in `Metadata.Evidence`.
+
+### Additional stabilization completed during phase F
+- Fixed public app/flow getter regression caused by stale `$effectiveProperties` references after user edits.
+- Corrected exported canvas-app wildcard filtering so `-Name` matches both internal app name and display name.
+- Restored model-driven public export and aligned model-driven component-type resolution to `Get-PowerPlatformCheckerAppComponentType`.
+- Removed duplicate internal canvas-app function files that collided with the public exported command name.
+- Updated focused tests and graph snapshots for the expanded external interaction contract.
+
+### Final validation completed
+- Focused validation passed for:
+	- `Get-PowerPlatformCheckerApp.Tests.ps1`
+	- `Get-PowerPlatformCheckerFlow.Tests.ps1`
+	- `Get-PowerPlatformCheckerFlowActionList.Tests.ps1`
+	- `Get-PowerPlatformCheckerFlowDestinationMetadata.Tests.ps1`
+	- `Get-PowerPlatformCheckerExternalInteraction.Tests.ps1`
+- Full validation passed:
+	- `build/vsts-validate.ps1`
+	- `7892` tests passed, `0` failed
+	- coverage `95.04%` (`882/928` lines)
+- Documentation regression gate re-run with repository scripts passed:
+	- `PDFWPlanDataFiberWorkz.md`
+	- `CHANGED=False`
+
+## Continuation - External interaction site-target fanout + merge name coverage (2026-08-26)
+
+### User steering applied
+- Route connector interactions to resolved site/domain targets where available.
+- Support multiple site targets for a single connection path.
+- Emit explicit unknown fallback external node when site cannot be resolved.
+- Replace boolean merge behavior with a named merge mode parameter.
+- Add fixture/snapshot coverage for merge scenario and regenerate requested document combinations.
+
+### Implementation completed
+- Public command enhancement:
+	- `Get-PowerPlatformCheckerExternalInteraction` now supports `-Merge <name>`.
+	- Telemetry now includes `HasMerge`.
+- Internal graph behavior enhancement:
+	- `Get-PowerPlatformCheckerExternalInteractionGraphInternal` accepts `MergeName` and aggregates all selected solutions under one named solution block.
+	- Flow connection fallback edges are suppressed when action-level domain/site targets were resolved.
+	- Action-level targets now fan out to multiple resolved domains/sites and create explicit unknown fallback targets per connector group (`unknown (<group>)`).
+	- Existing managed/unmanaged solution-name normalization remains active for node identity.
+- Tests and snapshots:
+	- `Get-PowerPlatformCheckerExternalInteraction.Tests.ps1` expanded for:
+		- merge-name behavior,
+		- telemetry `HasMerge` schema,
+		- site-target fanout and unknown fallback assertions,
+		- merged snapshot scenario.
+	- Added expected snapshots:
+		- `ExternalInteraction.SingleSolution.MergedEnergy.expected.mermaid.md`
+		- `ExternalInteraction.SingleSolution.MergedEnergy.expected.graph.json`
+	- Refreshed base single-solution external interaction snapshots for intentional unknown-node behavior.
+
+### Validation completed
+- Focused repository runner validation:
+	- `tests/pester.ps1 -Include 'Get-PowerPlatformCheckerExternalInteraction.Tests.ps1' -EnableCoverage:$false`
+	- Result: `16` passed, `0` failed.
+
+### Companion docs generation completed
+- Regenerated external interaction docs in companion workspace for requested combinations:
+	- `4PSDSPassignmentdocument` (single)
+	- all Energy solutions merged as `Energy`
+	- `FiberworkzInterfaceKPN` + `LBAApp` together (not merged)
+
+## Continuation - DSP-first trigger/action evidence and response modeling (2026-08-26)
+
+### User steering applied
+- DSP-first quality pass for external interaction output.
+- Edge labels must include the concrete flow action, not only the flow name.
+- Trigger inbound edge must expose trigger operation/auth context in human-readable form.
+- Response actions must emit outbound edges back to internet with status/body visibility.
+- Trigger details must be available from flow retrieval (`Get-PowerPlatformCheckerFlow` trigger data).
+- Regenerate the three external interaction example docs.
+
+### Implementation completed
+- Action metadata enrichment in flow parser:
+	- `Get-PowerPlatformCheckerFlowActionListInternal` now supports additional profile properties:
+		- `TriggerProfile`
+		- `OperationProfile`
+		- `ResponseProfile`
+	- Added trigger metadata extraction fields:
+		- `TriggerKind`
+		- `TriggerOperationId`
+		- `TriggerAuthenticationType`
+		- `TriggerAuthenticationDescription`
+	- Added operation/connector friendly metadata fields:
+		- `OperationDisplayName`
+		- `ConnectorDisplayName`
+	- Added response metadata fields:
+		- `ResponseStatusCode`
+		- `ResponseHasBody`
+		- `ResponseDescription`
+	- Improved connector-group inference for non-OpenApi shapes by reading `host.apiId`, `host.connectionName`, and connection-expression patterns.
+- Human-readable trigger auth mapping:
+	- New helper `Get-PowerPlatformCheckerTriggerAuthenticationDescription` with mappings such as:
+		- `Tenant` -> `Any user in my tenant`
+		- `Anyone` -> `Anyone`
+		- `SpecificAccounts` -> `Specific users in my tenant`
+- Public flow retrieval trigger enrichment:
+	- `Get-PowerPlatformCheckerFlow` now requests trigger/operation/response/interaction/external profiles when loading trigger/actions for flow documentation output.
+- External interaction graph enrichment:
+	- `Get-PowerPlatformCheckerExternalInteractionGraphInternal` now builds per-action labels on outbound edges, including operation/connector/protocol context when available.
+	- Replaced generic internet inbound label with trigger-aware labels per flow trigger.
+	- Added outbound response-action edges from solution to `internet` with status/body context.
+	- Kept Mermaid parser safety constraints by maintaining colon-safe labels.
+
+### Test coverage updates
+- Added/updated focused tests:
+	- `Get-PowerPlatformCheckerTriggerAuthenticationDescription.Tests.ps1` (new)
+	- `Get-PowerPlatformCheckerFlowActionList.Tests.ps1` for trigger and response profile behavior
+	- `Get-PowerPlatformCheckerFlow.Tests.ps1` trigger profile contract checks
+	- `Get-PowerPlatformCheckerExternalInteraction.Tests.ps1` action-enriched labels and response-edge assertions
+- Refreshed deterministic external interaction snapshots for:
+	- `ExternalInteraction.SingleSolution.expected.*`
+	- `ExternalInteraction.SingleSolution.MergedEnergy.expected.*`
+
+### Validation completed
+- Focused runs passed for:
+	- `Get-PowerPlatformCheckerTriggerAuthenticationDescription.Tests.ps1`
+	- `Get-PowerPlatformCheckerFlowActionList.Tests.ps1`
+	- `Get-PowerPlatformCheckerFlow.Tests.ps1`
+	- `Get-PowerPlatformCheckerExternalInteraction.Tests.ps1`
+- Full validation passed:
+	- `build/vsts-validate.ps1`
+	- `8018` tests passed, `0` failed
+	- coverage `95.09%` (`891/937` lines)
+- Documentation regression gate passed:
+	- `verify-doc-regen-module-source`
+	- `CHANGED=False`
+
+### Companion docs regeneration completed
+- Regenerated external interaction examples:
+	- `ExternalInteraction.4PSDSPassignmentdocument.md`
+	- `ExternalInteraction.EnergySolutions.md`
+	- `ExternalInteraction.FiberworkzInterfaceKPN.LBAApp.md`

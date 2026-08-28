@@ -17,6 +17,7 @@ Describe "Get-PowerPlatformCheckerFlowDestinationProfile" {
             Get-PowerPlatformCheckerFlowDestinationProfile -Path $Path -Actions $InnerActions
         } -Parameters @{ Path = $script:sampleFlowPath; InnerActions = $actions } | ForEach-Object {
             $_.Destination | Should -Be "api.example.test"
+            $_.DestinationTargets | Should -Contain "api.example.test"
             $_.DestinationType | Should -Be "Domain"
             $_.DestinationConfidence | Should -Be "High"
             $_.DestinationEvidence | Should -Be "FlowParameterDefault"
@@ -33,6 +34,7 @@ Describe "Get-PowerPlatformCheckerFlowDestinationProfile" {
             Get-PowerPlatformCheckerFlowDestinationProfile -Actions $InnerActions
         } -Parameters @{ InnerActions = $actions } | ForEach-Object {
             $_.Destination | Should -Be "ppc_orderlines"
+            $_.DestinationTargets | Should -Contain "ppc_orderlines"
             $_.DestinationType | Should -Be "DataverseEntity"
             $_.DestinationConfidence | Should -Be "Medium"
             $_.DestinationEvidence | Should -Be "ActionEntity"
@@ -49,9 +51,27 @@ Describe "Get-PowerPlatformCheckerFlowDestinationProfile" {
             Get-PowerPlatformCheckerFlowDestinationProfile -Actions $InnerActions
         } -Parameters @{ InnerActions = $actions } | ForEach-Object {
             $_.Destination | Should -Be "office365"
+            $_.DestinationTargets | Should -Contain "office365"
             $_.DestinationType | Should -Be "Service"
             $_.DestinationConfidence | Should -Be "Low"
             $_.DestinationEvidence | Should -Be "ConnectorGroup"
+        }
+    }
+
+    It "preserves multiple domain targets from action external profiles" {
+        $actions = @(
+            [pscustomobject]@{ Name = "CallApi"; ExternalDomain = "api.contoso.example"; ExternalUrl = "https://api.contoso.example/v1"; Group = "shared_http"; Entities = @() },
+            [pscustomobject]@{ Name = "CreateFile"; ExternalDomain = "contoso.sharepoint.com"; ExternalUrl = "https://contoso.sharepoint.com/sites/team"; Group = "shared_sharepointonline"; Entities = @() }
+        )
+
+        InModuleScope PowerPlatformChecker {
+            param($InnerActions)
+            Get-PowerPlatformCheckerFlowDestinationProfile -Actions $InnerActions
+        } -Parameters @{ InnerActions = $actions } | ForEach-Object {
+            $_.DestinationType | Should -Be "Domain"
+            $_.DestinationTargets | Should -Contain "api.contoso.example"
+            $_.DestinationTargets | Should -Contain "contoso.sharepoint.com"
+            $_.DestinationEvidence | Should -Be "ActionExternalProfile"
         }
     }
 }

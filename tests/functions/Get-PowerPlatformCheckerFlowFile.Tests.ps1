@@ -4,6 +4,7 @@ Describe "Get-PowerPlatformCheckerFlowFile" {
     BeforeAll {
         Initialize-PowerPlatformCheckerTestData
         $script:solutionPath = Get-PowerPlatformCheckerFixtureSolutionPath
+        $script:canvasExternalSolutionPath = Get-PowerPlatformCheckerCanvasExternalFixtureSolutionPath
     }
     BeforeEach { Mock -CommandName Send-THEvent -ModuleName PowerPlatformChecker {} }
 
@@ -13,6 +14,12 @@ Describe "Get-PowerPlatformCheckerFlowFile" {
 
         ($json | Select-Object -First 1) | Should -Match "SampleFlow-11111111-1111-1111-1111-111111111111.json"
         ($xml | Select-Object -First 1) | Should -Match "SampleFlow-11111111-1111-1111-1111-111111111111.json.data.xml"
+    }
+
+    It "returns an empty set when the solution has no Workflows folder" {
+        $result = @(Get-PowerPlatformCheckerFlowFile -SolutionPath $script:canvasExternalSolutionPath -Type json)
+
+        $result.Count | Should -Be 0
     }
 }
 

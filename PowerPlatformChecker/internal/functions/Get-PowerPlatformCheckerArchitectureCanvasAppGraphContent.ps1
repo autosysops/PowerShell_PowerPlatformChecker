@@ -67,6 +67,9 @@
         [switch] $IncludeDefaultEntities,
 
         [Parameter(Mandatory = $false)]
+        [switch] $IncludeExternalDomains,
+
+        [Parameter(Mandatory = $false)]
         [switch] $IncludeCanvasApps,
 
         [Parameter(Mandatory = $false)]
@@ -113,6 +116,9 @@
                 DestinationType = [string]$destinationMetadata.DestinationType
                 DestinationConfidence = [string]$destinationMetadata.DestinationConfidence
                 DestinationEvidence = [string]$destinationMetadata.DestinationEvidence
+                InteractionDirection = if ([string]::IsNullOrWhiteSpace([string]$canvasApp.InteractionDirection)) { 'Unknown' } else { [string]$canvasApp.InteractionDirection }
+                InteractionEvidence = if ([string]::IsNullOrWhiteSpace([string]$canvasApp.InteractionEvidence)) { 'NoInteractionSignal' } else { [string]$canvasApp.InteractionEvidence }
+                SourceSignals = @($canvasApp.SourceSignals)
             }
             Members = @()
             HasExplicitDisplayName = $true
@@ -125,6 +131,51 @@
             $connectorName = $connection.id.Split("/")[-1]
             $edges += [pscustomobject]@{ SourceId = $connectorName; TargetId = $canvasId; Label = $connectorName; EdgeType = "Link"; Metadata = @{ Arrow = "-->" } }
             $connectedConnections += $connectorName
+        }
+
+        if ($IncludeExternalDomains.IsPresent) {
+            foreach ($domainInteraction in @($canvasApp.DomainInteractions)) {
+                $externalDomain = [string]$domainInteraction.Domain
+                if ([string]::IsNullOrWhiteSpace($externalDomain)) {
+                    continue
+                }
+
+                $domainNodeId = "externaldomain_{0}" -f (Convert-PowerPlatformCheckerMermaidId -InputString ([string]$externalDomain.ToLowerInvariant()))
+                if (-not ($nodes | Where-Object { $_.Id -eq $domainNodeId })) {
+                    $nodes += [pscustomobject]@{
+                        Id = $domainNodeId
+                        Type = 'ExternalDomain'
+                        DisplayName = $externalDomain
+                        ClassKind = 'ExternalDomain'
+                        Properties = @{}
+                        Members = @()
+                        HasExplicitDisplayName = $true
+                    }
+                }
+
+                $interactionDirection = if ([string]::IsNullOrWhiteSpace([string]$domainInteraction.Direction)) { 'Unknown' } else { [string]$domainInteraction.Direction }
+                $interactionLabel = switch ($interactionDirection) {
+                    'Read' { 'GET' }
+                    'Write' { 'SET' }
+                    'Mixed' { 'GET/SET' }
+                    default { 'Unknown' }
+                }
+
+                $dataSourceName = [string]$domainInteraction.DataSourceName
+                $safeDataSourceName = if ([string]::IsNullOrWhiteSpace($dataSourceName)) { 'datasource' } else { $dataSourceName.Replace(':', ' ') }
+                $edgeLabel = "{0} {1}" -f $safeDataSourceName, $interactionLabel
+                $edges += [pscustomobject]@{
+                    SourceId = $canvasId
+                    TargetId = $domainNodeId
+                    Label = [string]$edgeLabel
+                    EdgeType = 'ExternalCall'
+                    Metadata = @{
+                        Arrow = '-->'
+                        InteractionDirection = $interactionDirection
+                        Evidence = [string]$domainInteraction.Evidence
+                    }
+                }
+            }
         }
 
         # Data source metadata maps app usage to in-solution entities or unresolved defaults.

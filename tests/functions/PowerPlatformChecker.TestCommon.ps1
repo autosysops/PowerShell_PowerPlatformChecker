@@ -6,6 +6,10 @@ function Get-PowerPlatformCheckerDesktopFixtureSolutionPath {
     return (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\anonymized-desktop-solution\Managed")).Path
 }
 
+function Get-PowerPlatformCheckerCanvasExternalFixtureSolutionPath {
+    return (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\canvas-external-solution\Managed")).Path
+}
+
 function Get-PowerPlatformCheckerExpectedSnapshot {
     param(
         [Parameter(Mandatory = $true)]

@@ -25,7 +25,7 @@ Describe "Get-PowerPlatformCheckerModelDrivenApp" {
 
     It "handles invalid model-driven metadata fixtures gracefully" {
         $warnings = @()
-        $apps = Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:invalidAppPath -AppName "invalid-model-app" -WarningVariable warnings -WarningAction SilentlyContinue
+        $apps = Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:invalidAppPath -Name "invalid-model-app" -WarningVariable warnings -WarningAction SilentlyContinue
 
         @($apps).Count | Should -Be 0
         (@($warnings) -join " `n") | Should -Match "Invalid model-driven app"
@@ -33,15 +33,24 @@ Describe "Get-PowerPlatformCheckerModelDrivenApp" {
 
     It "keeps app output when sitemap metadata is invalid" {
         $warnings = @()
-        $apps = Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:invalidAppPath -AppName "invalid-sitemap-app" -WarningVariable warnings -WarningAction SilentlyContinue
+        $apps = Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:invalidAppPath -Name "invalid-sitemap-app" -WarningVariable warnings -WarningAction SilentlyContinue
 
         @($apps).Count | Should -Be 1
         $apps[0].UniqueName | Should -Be "invalid-sitemap-app"
         (@($warnings) -join " `n") | Should -Match "Invalid model-driven app sitemap metadata"
     }
 
+    It "warns when deprecated AppName is used" {
+        $warnings = @()
+
+        [void](Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:solutionPath -AppName 'ppc_ModelApp' -WarningVariable warnings -WarningAction SilentlyContinue)
+
+        (@($warnings) -join " `n") | Should -Match 'deprecated'
+        (@($warnings) -join " `n") | Should -Match 'Use -Name instead'
+    }
+
     It "discovers fixture web resources from entity form xml without appmodule js components" {
-        $app = Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:solutionPath -AppName "ppc_ModelApp" | Select-Object -First 1
+        $app = Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:solutionPath -Name "ppc_ModelApp" | Select-Object -First 1
 
         @($app.WebResources).Count | Should -Be 0
 
@@ -179,7 +188,7 @@ Describe "Get-PowerPlatformCheckerModelDrivenApp" {
                     }
 
                     $secretAppName = "secret_model_app"
-                    [void](Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:solutionPath -AppName $secretAppName)
+                    [void](Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $script:solutionPath -Name $secretAppName)
                     Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerModelDrivenApp" -ExpectedKeys @("AppNameFilterUsed") -ConfidentialValues @($script:solutionPath, $secretAppName)
 
                     $telemetryCalls.Clear()

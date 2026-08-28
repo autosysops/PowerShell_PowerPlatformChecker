@@ -41,28 +41,43 @@
         return $textValue
     }
 
-    $match = [regex]::Match($textValue, 'parameters\(''(?<name>[^'']+)''\)')
-    if (-not $match.Success) {
-        return $textValue
-    }
-
-    $parameterName = [string]$match.Groups['name'].Value
-    if ([string]::IsNullOrWhiteSpace($parameterName)) {
-        return $textValue
-    }
-
-    try {
-        $parameterObject = $DefinitionParameters.$parameterName
-        if ($null -ne $parameterObject -and $parameterObject.PSObject.Properties.Name -contains 'defaultValue') {
-            $defaultValue = [string]$parameterObject.defaultValue
-            if (-not [string]::IsNullOrWhiteSpace($defaultValue)) {
-                return $defaultValue
+    # Handle exact expression forms first so values resolve cleanly for
+    # connector parameters that store bare parameter references.
+    $exactPatterns = @(
+        '^\s*@?parameters\(''(?<name>[^'']+)''\)\s*$',
+        '^\s*@\{\s*parameters\(''(?<name>[^'']+)''\)\s*\}\s*$'
+    )
+    foreach ($pattern in $exactPatterns) {
+        $exactMatch = [regex]::Match($textValue, $pattern)
+        if ($exactMatch.Success) {
+            $resolved = Get-PowerPlatformCheckerFlowParameterDefaultValue -DefinitionParameters $DefinitionParameters -ParameterName ([string]$exactMatch.Groups['name'].Value)
+            if (-not [string]::IsNullOrWhiteSpace([string]$resolved)) {
+                return [string]$resolved
             }
+            return $textValue
         }
     }
-    catch {
-        return $textValue
+
+    # Resolve inline interpolation in strings such as:
+    # https://@{parameters('host')}/api/@{parameters('version')}
+    $resolvedText = $textValue
+    $inlineMatches = [regex]::Matches($textValue, '@\{\s*parameters\(''(?<name>[^'']+)''\)\s*\}')
+    foreach ($inlineMatch in @($inlineMatches)) {
+        $parameterName = [string]$inlineMatch.Groups['name'].Value
+        $replacement = Get-PowerPlatformCheckerFlowParameterDefaultValue -DefinitionParameters $DefinitionParameters -ParameterName $parameterName
+        if (-not [string]::IsNullOrWhiteSpace([string]$replacement)) {
+            $resolvedText = $resolvedText.Replace([string]$inlineMatch.Value, [string]$replacement)
+        }
     }
 
-    return $textValue
+    $directMatches = [regex]::Matches($resolvedText, '@?parameters\(''(?<name>[^'']+)''\)')
+    foreach ($directMatch in @($directMatches)) {
+        $parameterName = [string]$directMatch.Groups['name'].Value
+        $replacement = Get-PowerPlatformCheckerFlowParameterDefaultValue -DefinitionParameters $DefinitionParameters -ParameterName $parameterName
+        if (-not [string]::IsNullOrWhiteSpace([string]$replacement)) {
+            $resolvedText = $resolvedText.Replace([string]$directMatch.Value, [string]$replacement)
+        }
+    }
+
+    return $resolvedText
 }

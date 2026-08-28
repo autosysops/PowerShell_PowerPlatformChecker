@@ -95,10 +95,138 @@ Describe "Get-PowerPlatformCheckerFlowActionList" {
         $callApi.Method | Should -Be "GET"
         $callApi.GetSetAction | Should -Be "Get"
         $callApi.InteractionDirection | Should -Be "Read"
+        $callApi.ExternalEndpoint | Should -Be "https://api.contoso.example"
         $callApi.ExternalDomain | Should -Be "api.contoso.example"
         $callApi.ExternalProtocol | Should -Be "https"
         $callApi.ExternalMainDomain | Should -Be "contoso.example"
         $callApi.ExternalResolutionState | Should -Be "Resolved"
+    }
+
+    It "extracts connector endpoint URLs from dataset and source parameters" {
+        InModuleScope PowerPlatformChecker {
+            $actions = [pscustomobject]@{
+                GetItems = [pscustomobject]@{
+                    type = 'OpenApiConnection'
+                    inputs = [pscustomobject]@{
+                        host = [pscustomobject]@{
+                            operationId = 'GetItems'
+                            apiId = '/providers/Microsoft.PowerApps/apis/shared_sharepointonline'
+                        }
+                        parameters = [pscustomobject]@{
+                            dataset = "@parameters('sharepointSite')"
+                            source = 'sites/demo-site'
+                        }
+                    }
+                }
+            }
+
+            $definitionParameters = [pscustomobject]@{
+                sharepointSite = [pscustomobject]@{ defaultValue = 'https://contoso.sharepoint.com/sites/operations' }
+            }
+
+            Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions -Properties ExternalProfile -DefinitionParameters $definitionParameters
+        } | ForEach-Object {
+            $_.ExternalDomain | Should -Be 'contoso.sharepoint.com'
+            $_.ExternalProtocol | Should -Be 'https'
+            $_.ExternalResolutionState | Should -Be 'Resolved'
+        }
+    }
+
+    It "resolves inline parameter interpolation for URL candidates" {
+        InModuleScope PowerPlatformChecker {
+            $actions = [pscustomobject]@{
+                CallApi = [pscustomobject]@{
+                    type = 'OpenApiConnection'
+                    inputs = [pscustomobject]@{
+                        host = [pscustomobject]@{
+                            operationId = 'Invoke'
+                            apiId = '/providers/Microsoft.PowerApps/apis/shared_http'
+                        }
+                        parameters = [pscustomobject]@{
+                            baseUrl = "https://@{parameters('hostName')}/api/@{parameters('version')}"
+                        }
+                    }
+                }
+            }
+
+            $definitionParameters = [pscustomobject]@{
+                hostName = [pscustomobject]@{ defaultValue = 'api.contoso.example' }
+                version = [pscustomobject]@{ defaultValue = 'v1' }
+            }
+
+            Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions -Properties ExternalProfile -DefinitionParameters $definitionParameters
+        } | ForEach-Object {
+            $_.ExternalUrl | Should -Be 'https://api.contoso.example/api/v1'
+            $_.ExternalEndpoint | Should -Be 'https://api.contoso.example/api/v1'
+            $_.ExternalDomain | Should -Be 'api.contoso.example'
+            $_.ExternalMainDomain | Should -Be 'contoso.example'
+            $_.ExternalResolutionState | Should -Be 'Resolved'
+        }
+    }
+
+    It "returns trigger authentication and operation profile metadata when requested" {
+        InModuleScope PowerPlatformChecker {
+            $actions = [pscustomobject]@{
+                manual = [pscustomobject]@{
+                    type = 'Request'
+                    kind = 'Http'
+                    inputs = [pscustomobject]@{
+                        triggerAuthenticationType = 'Tenant'
+                        operationId = 'ForASelectedRecordV3'
+                        host = [pscustomobject]@{
+                            connection = [pscustomobject]@{
+                                name = "@parameters('$connections')['shared_dynamicssmbsaas']['connectionId']"
+                            }
+                        }
+                    }
+                }
+            }
+
+            Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions -IncludeTrigger -IsTrigger -Properties TriggerProfile,OperationProfile
+        } | ForEach-Object {
+            $_.IsTrigger | Should -BeTrue
+            $_.TriggerAuthenticationType | Should -Be 'Tenant'
+            $_.TriggerAuthenticationDescription | Should -Be 'Any user in my tenant'
+            $_.TriggerOperationId | Should -Be 'ForASelectedRecordV3'
+            $_.PSObject.Properties.Name | Should -Contain 'ConnectorDisplayName'
+            $_.PSObject.Properties.Name | Should -Contain 'OperationDisplayName'
+        }
+    }
+
+    It "returns response profile metadata for response actions" {
+        InModuleScope PowerPlatformChecker {
+            $actions = [pscustomobject]@{
+                Response_200 = [pscustomobject]@{
+                    type = 'Response'
+                    kind = 'Http'
+                    inputs = [pscustomobject]@{
+                        statusCode = 200
+                    }
+                }
+                Response_500 = [pscustomobject]@{
+                    type = 'Response'
+                    kind = 'Http'
+                    inputs = [pscustomobject]@{
+                        statusCode = 500
+                        body = '{"error":"failure"}'
+                    }
+                }
+            }
+
+            Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions -Properties ResponseProfile
+        } | ForEach-Object {
+            if ($_.Name -eq 'Response_200') {
+                $_.ResponseStatusCode | Should -Be '200'
+                $_.ResponseHasBody | Should -BeFalse
+                $_.ResponseDescription | Should -Be 'Returns status code only'
+            }
+
+            if ($_.Name -eq 'Response_500') {
+                $_.ResponseStatusCode | Should -Be '500'
+                $_.ResponseHasBody | Should -BeTrue
+                $_.ResponseDescription | Should -Be 'Returns status code and body'
+            }
+        }
     }
 
     It "parses quoted desktop metadata directives without emitting pseudo actions" {

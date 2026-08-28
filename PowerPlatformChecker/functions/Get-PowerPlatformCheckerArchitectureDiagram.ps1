@@ -138,18 +138,8 @@
     $includeWebResources = $includePolicy.IncludeWebResources
     $includeExternalDomains = $includePolicy.IncludeExternalDomains
 
-    # Start from module defaults and apply per-call style overrides if provided.
-    $style = @{}
-    foreach ($key in $script:PowerPlatformCheckerStyles.ArchitectureDiagram.Keys) {
-        $style[$key] = $script:PowerPlatformCheckerStyles.ArchitectureDiagram[$key]
-    }
-    if ($PSBoundParameters.ContainsKey("StyleOverrides")) {
-        foreach ($key in $StyleOverrides.Keys) {
-            if ($style.ContainsKey($key) -and -not [string]::IsNullOrWhiteSpace([string]$StyleOverrides[$key])) {
-                $style[$key] = [string]$StyleOverrides[$key]
-            }
-        }
-    }
+    # Keep style resolution centralized so all diagram producers honor the same defaults and overrides.
+    $style = Get-PowerPlatformCheckerResolvedStyle -StyleTarget 'ArchitectureDiagram' -StyleOverrides $StyleOverrides
 
     $solutionObject = Get-PowerPlatformCheckerSolutionObject -SolutionPath $SolutionPath
     $isScopedDiagram = $includePolicy.IsScopedDiagram
@@ -177,7 +167,7 @@
     }
     $modelApps = @()
     if ($includeModelDrivenApps -and -not $PSBoundParameters.ContainsKey("FlowId") -and -not $PSBoundParameters.ContainsKey("CanvasAppName")) {
-        $modelApps = @(Get-PowerPlatformCheckerModelDrivenApp -SolutionPath $SolutionPath)
+        $modelApps = @(Get-PowerPlatformCheckerAppModelDriven -SolutionPath $SolutionPath)
         if (-not [string]::IsNullOrWhiteSpace([string]$ModelDrivenAppName)) {
             $modelApps = @($modelApps | Where-Object { $_ -and $_.UniqueName -eq $ModelDrivenAppName })
         }
@@ -252,6 +242,7 @@
         -IncludeConnections:$includeConnections `
         -IncludeEntities:$includeEntities `
         -IncludeDefaultEntities:$includeDefaultEntities `
+        -IncludeExternalDomains:$includeExternalDomains `
         -HasFlowFilter:$($PSBoundParameters.ContainsKey("FlowId")) `
         -HasModelDrivenFilter:$($PSBoundParameters.ContainsKey("ModelDrivenAppName")) `
         -CanvasAppName $CanvasAppName

@@ -101,26 +101,21 @@ metadata lines or free-form text into rendered diagrams.
 - `Get-PowerPlatformCheckerSolutionRelation`
 - `Get-PowerPlatformCheckerEntity`
 - `Get-PowerPlatformCheckerEntityFormXmlWebResource`
-- `Get-PowerPlatformCheckerCanvasApp`
-- `Get-PowerPlatformCheckerModelDrivenApp`
-- `Get-PowerPlatformCheckerModelDrivenAppComponentType`
+- `Get-PowerPlatformCheckerApp`
 - `Get-PowerPlatformCheckerWebResource`
 
-`Get-PowerPlatformCheckerModelDrivenApp` behavior:
+`Get-PowerPlatformCheckerApp` behavior:
 
-- `WebResources` contains direct app component links.
-- `EntityWebResources` contains entity FormXML script ownership used for `App -> Entity -> Script` chains.
-
-`Get-PowerPlatformCheckerModelDrivenAppComponentType` common values:
-
-- `1` = Entities
-- `29` = Business Process Flows
-- `62` = Sitemap
+- Returns both canvas and model-driven app metadata.
+- Use `-AppType CanvasApp` or `-AppType ModelDrivenApp` when you want one app family only.
+- Use `-Properties` to request heavier sections such as `ConnectionReferences`, `DataSources`, `Entities`, `FlowIds`, `WebResources`, `EntityWebResources`, and `Components`.
 
 ### Diagram Generation
 
 - `Get-PowerPlatformCheckerArchitectureDiagram`
+- `Get-PowerPlatformCheckerApp`
 - `Get-PowerPlatformCheckerFlowChart`
+- `Get-PowerPlatformCheckerFlow`
 - `Get-PowerPlatformCheckerExternalInteraction`
 
 `Get-PowerPlatformCheckerArchitectureDiagram` supports:
@@ -139,9 +134,25 @@ metadata lines or free-form text into rendered diagrams.
 - Optional recursive discovery of solution folders
 - Optional include/exclude wildcard filters for solution folder names
 - Returns either Mermaid or combined Graph output
+- Preserves multiple outbound destinations per solution when distinct domains/services are discovered
+- Adds inbound `internet` relationships for webhook/manual HTTP-triggered flows
+- Carries representative action evidence in graph-edge metadata for downstream consumers
 
 `Get-PowerPlatformCheckerFlowChart` supports Mermaid and recursive graph output with
 `-OutputFormat Mermaid|Graph`.
+
+### App And Flow Retrieval
+
+- `Get-PowerPlatformCheckerApp`
+- `Get-PowerPlatformCheckerFlow`
+
+`Get-PowerPlatformCheckerApp` returns summary metadata for canvas and model-driven apps through one command.
+Use `-Properties` to request larger sections such as `ConnectionReferences`, `DataSources`, `Entities`, or `FlowIds` when generating documentation.
+
+`Get-PowerPlatformCheckerFlow` returns summary metadata for cloud and desktop flows through one command.
+Use `-Properties` to request `Parameters`, `Actions`, `Trigger`, or `ConnectorTiers` for documentation-focused expansion.
+
+Cloud flow action external profiles now resolve URL/domain metadata from direct URLs and connector-style parameter fields such as `dataset`, `source`, `siteAddress`, and `baseUrl`, including simple parameter interpolation.
 
 ### Connector and Operation Catalogs
 

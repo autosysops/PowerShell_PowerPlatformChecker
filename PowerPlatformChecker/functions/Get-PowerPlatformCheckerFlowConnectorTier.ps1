@@ -43,85 +43,6 @@
     if ($flowType -eq "Desktop") {
         $desktopConnectorCandidates = [System.Collections.Generic.List[object]]::new()
 
-        $addDesktopConnector = {
-            param(
-                [string] $Name,
-                [string] $DisplayName,
-                [string] $Tier
-            )
-
-            $normalizedName = [string]$Name
-            if ($normalizedName -like "*/apis/*") {
-                $normalizedName = $normalizedName.Split("/")[-1]
-            }
-
-            if ([string]::IsNullOrWhiteSpace($normalizedName) -or $normalizedName -notlike $Connector) {
-                return
-            }
-
-            [void]$desktopConnectorCandidates.Add([PSCustomObject]@{
-                Name = [string]$normalizedName
-                DisplayName = [string]$DisplayName
-                Tier = [string]$Tier
-            })
-        }
-
-        $addConnectionReferences = {
-            param(
-                [object] $ConnectionReferences
-            )
-
-            if ($null -eq $ConnectionReferences) {
-                return
-            }
-
-            $referenceItems = @()
-            if ($ConnectionReferences -is [array]) {
-                $referenceItems = @($ConnectionReferences)
-            }
-            elseif (($ConnectionReferences.PSObject.Properties.Name -contains "api") -or ($ConnectionReferences.PSObject.Properties.Name -contains "name")) {
-                $referenceItems = @($ConnectionReferences)
-            }
-
-            if (@($referenceItems).Count -gt 0) {
-                foreach ($connectionReference in @($referenceItems)) {
-                    if ($null -eq $connectionReference) {
-                        continue
-                    }
-
-                    $referenceName = ""
-                    if ($null -ne $connectionReference.api -and -not [string]::IsNullOrWhiteSpace([string]$connectionReference.api.name)) {
-                        $referenceName = [string]$connectionReference.api.name
-                    }
-                    elseif (-not [string]::IsNullOrWhiteSpace([string]$connectionReference.connectorId)) {
-                        $referenceName = [string]$connectionReference.connectorId
-                    }
-                    elseif (-not [string]::IsNullOrWhiteSpace([string]$connectionReference.name)) {
-                        $referenceName = [string]$connectionReference.name
-                    }
-
-                    $referenceDisplayName = [string]$connectionReference.displayName
-                    if ([string]::IsNullOrWhiteSpace($referenceDisplayName)) {
-                        $referenceDisplayName = [string]$connectionReference.connectionDisplayName
-                    }
-
-                    & $addDesktopConnector -Name $referenceName -DisplayName $referenceDisplayName -Tier ([string]$connectionReference.tier)
-                }
-
-                return
-            }
-
-            foreach ($connectionProperty in @($ConnectionReferences | Get-Member -MemberType NoteProperty)) {
-                $entry = $ConnectionReferences.($connectionProperty.Name)
-                $entryDisplayName = [string]$entry.displayName
-                if ([string]::IsNullOrWhiteSpace($entryDisplayName)) {
-                    $entryDisplayName = [string]$connectionProperty.Name
-                }
-
-                & $addDesktopConnector -Name ([string]$connectionProperty.Name) -DisplayName $entryDisplayName -Tier ([string]$entry.tier)
-            }
-        }
-
         foreach ($binary in @(Get-PowerPlatformCheckerDesktopFlowBinary -Path $Path -Type "ConnectorDefinition")) {
             $binaryData = $binary.Data
             if ($binary.PSObject.Properties.Name -contains "DataPath" -and -not [string]::IsNullOrWhiteSpace([string]$binary.DataPath) -and (Test-Path -Path $binary.DataPath)) {
@@ -147,7 +68,7 @@
                 $connectorDisplayName = [string]$binaryData.Definition.Properties.Swagger.info.title
             }
 
-            & $addDesktopConnector -Name $connectorName -DisplayName $connectorDisplayName -Tier ([string]$binaryData.Definition.Properties.Tier)
+            Add-PowerPlatformCheckerFlowConnectorCandidate -CandidateList $desktopConnectorCandidates -Name $connectorName -DisplayName $connectorDisplayName -Tier ([string]$binaryData.Definition.Properties.Tier) -ConnectorFilter $Connector
         }
 
         foreach ($manifestBinary in @(Get-PowerPlatformCheckerDesktopFlowBinary -Path $Path -Type "ManifestFile")) {
@@ -157,24 +78,24 @@
 
             $manifestData = $manifestBinary.Data
             if ($manifestData.PSObject.Properties.Name -contains "ConnectionReferences") {
-                & $addConnectionReferences -ConnectionReferences $manifestData.ConnectionReferences
+                Add-PowerPlatformCheckerFlowConnectorCandidatesFromReferences -CandidateList $desktopConnectorCandidates -ConnectionReferences $manifestData.ConnectionReferences -ConnectorFilter $Connector
             }
             elseif ($manifestData.PSObject.Properties.Name -contains "connectionReferences") {
-                & $addConnectionReferences -ConnectionReferences $manifestData.connectionReferences
+                Add-PowerPlatformCheckerFlowConnectorCandidatesFromReferences -CandidateList $desktopConnectorCandidates -ConnectionReferences $manifestData.connectionReferences -ConnectorFilter $Connector
             }
             elseif (($manifestData.PSObject.Properties.Name -contains "manifest") -and $null -ne $manifestData.manifest) {
                 if ($manifestData.manifest.PSObject.Properties.Name -contains "ConnectionReferences") {
-                    & $addConnectionReferences -ConnectionReferences $manifestData.manifest.ConnectionReferences
+                    Add-PowerPlatformCheckerFlowConnectorCandidatesFromReferences -CandidateList $desktopConnectorCandidates -ConnectionReferences $manifestData.manifest.ConnectionReferences -ConnectorFilter $Connector
                 }
                 elseif ($manifestData.manifest.PSObject.Properties.Name -contains "connectionReferences") {
-                    & $addConnectionReferences -ConnectionReferences $manifestData.manifest.connectionReferences
+                    Add-PowerPlatformCheckerFlowConnectorCandidatesFromReferences -CandidateList $desktopConnectorCandidates -ConnectionReferences $manifestData.manifest.connectionReferences -ConnectorFilter $Connector
                 }
             }
         }
 
         $desktopMetadata = Get-PowerPlatformCheckerDesktopFlowMeta -Path $Path
         if ($null -ne $desktopMetadata -and $null -ne $desktopMetadata.ConnectionReferences) {
-            & $addConnectionReferences -ConnectionReferences $desktopMetadata.ConnectionReferences
+            Add-PowerPlatformCheckerFlowConnectorCandidatesFromReferences -CandidateList $desktopConnectorCandidates -ConnectionReferences $desktopMetadata.ConnectionReferences -ConnectorFilter $Connector
         }
 
         $resolvedDesktopConnectors = @()

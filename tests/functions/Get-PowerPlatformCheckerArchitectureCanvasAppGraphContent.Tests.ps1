@@ -11,7 +11,13 @@ Describe "Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent" {
                 [pscustomobject]@{
                     Name = "app_internal"
                     DisplayName = "App Display"
+                    InteractionDirection = 'Mixed'
+                    InteractionEvidence = 'SourceFormula'
                     ConnectionReferences = @([pscustomobject]@{ id = "/providers/Microsoft.PowerApps/apis/shared_sql" })
+                    DomainInteractions = @(
+                        [pscustomobject]@{ Domain = 'https://contoso.sharepoint.com'; DataSourceName = 'E-Learning-Content'; Direction = 'Read'; Evidence = 'SourceFormula' },
+                        [pscustomobject]@{ Domain = 'https://contoso.sharepoint.com'; DataSourceName = 'E-Learning-Progress'; Direction = 'Write'; Evidence = 'SourceFormula' }
+                    )
                     DataSources = [pscustomobject]@{
                         DataSources = @(
                             [pscustomobject]@{ Name = "Accounts"; entitySetName = "accounts"; logicalName = "account" },
@@ -22,16 +28,21 @@ Describe "Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent" {
             )
 
             $solutionObject = [pscustomobject]@{ CanvasApps = $canvasApps }
-            $result = Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent -SolutionObject $solutionObject -IncludeCanvasApps:$true -IncludeConnections:$true -IncludeEntities:$true -IncludeDefaultEntities:$true -EntitySetByReference @{ account = "accounts" } -KnownEntitySetNames @("accounts")
+            $result = Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent -SolutionObject $solutionObject -IncludeCanvasApps:$true -IncludeConnections:$true -IncludeEntities:$true -IncludeDefaultEntities:$true -IncludeExternalDomains:$true -EntitySetByReference @{ account = "accounts" } -KnownEntitySetNames @("accounts")
 
             @($result.Nodes | Where-Object { $_.Id -eq "app_internal" -and $_.DisplayName -eq "App Display" }).Count | Should -Be 1
             ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.Destination | Should -Be "sql"
             ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.DestinationType | Should -Be "Service"
             ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.DestinationConfidence | Should -Be "Low"
             ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.DestinationEvidence | Should -Be "ConnectionReference"
+            ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.InteractionDirection | Should -Be "Mixed"
+            ($result.Nodes | Where-Object { $_.Id -eq "app_internal" } | Select-Object -First 1).Properties.InteractionEvidence | Should -Be "SourceFormula"
             @($result.Edges | Where-Object { $_.SourceId -eq "shared_sql" -and $_.TargetId -eq "app_internal" }).Count | Should -Be 1
             @($result.Edges | Where-Object { $_.SourceId -eq "app_internal" -and $_.TargetId -eq "accounts" }).Count | Should -Be 1
             @($result.Edges | Where-Object { $_.SourceId -eq "app_internal" -and $_.TargetId -eq "external_vendor" }).Count | Should -Be 1
+            @($result.Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com' -and $_.Type -eq 'ExternalDomain' }).Count | Should -Be 1
+            @($result.Edges | Where-Object { $_.SourceId -eq 'app_internal' -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and $_.Metadata.InteractionDirection -eq 'Read' -and $_.Label -match 'GET$' }).Count | Should -Be 1
+            @($result.Edges | Where-Object { $_.SourceId -eq 'app_internal' -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and $_.Metadata.InteractionDirection -eq 'Write' -and $_.Label -match 'SET$' }).Count | Should -Be 1
             @($result.ConnectedConnections) | Should -Contain 'shared_sql'
             @($result.ConnectedEntities) | Should -Contain 'accounts'
             @($result.DefaultEntitiesInCanvasApps) | Should -Contain 'external_vendor'

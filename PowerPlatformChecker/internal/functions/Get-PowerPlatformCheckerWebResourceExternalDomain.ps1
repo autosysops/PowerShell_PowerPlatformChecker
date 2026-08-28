@@ -47,6 +47,10 @@
             continue
         }
 
+        if (-not (Test-PowerPlatformCheckerExternalDomainToken -DomainValue $domain)) {
+            continue
+        }
+
         $domains += $domain
     }
 

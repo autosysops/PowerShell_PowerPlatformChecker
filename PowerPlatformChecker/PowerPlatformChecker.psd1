@@ -62,10 +62,13 @@ RequiredModules   = @('TelemetryHelper')
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
+    "Get-PowerPlatformCheckerApp",
     "Get-PowerPlatformCheckerCanvasApp",
+    "Get-PowerPlatformCheckerModelDrivenApp",
     "Get-PowerPlatformCheckerConnectorData",
     "Get-PowerPlatformCheckerEntity",
     "Get-PowerPlatformCheckerEntityFormXmlWebResource",
+    "Get-PowerPlatformCheckerFlow",
     "Get-PowerPlatformCheckerFlowActionDefaultName",
     "Get-PowerPlatformCheckerFlowType",
     "Get-PowerPlatformCheckerAppType",
@@ -77,8 +80,7 @@ FunctionsToExport = @(
     "Get-PowerPlatformCheckerFlowConnectorTier",
     "Get-PowerPlatformCheckerFlowDescription",
     "Get-PowerPlatformCheckerArchitectureDiagram",
-    "Get-PowerPlatformCheckerModelDrivenApp",
-    "Get-PowerPlatformCheckerModelDrivenAppComponentType",
+    "Get-PowerPlatformCheckerDiagramLegend",
     "Get-PowerPlatformCheckerOperationData",
     "Get-PowerPlatformCheckerSolutionObject",
     "Get-PowerPlatformCheckerSolutionRelation",
