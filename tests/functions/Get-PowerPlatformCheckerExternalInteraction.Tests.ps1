@@ -69,7 +69,24 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
                     DiagramKind = [string]$Graph.Metadata.DiagramKind
                     IncludeElements = @($Graph.Metadata.IncludeElements | Sort-Object)
                     OutputFormat = [string]$Graph.Metadata.OutputFormat
-                    SourceSolutions = @($Graph.Metadata.SourceSolutions | ForEach-Object { [string]$_ } | Sort-Object)
+                    SourceSolutions = @($Graph.Metadata.SourceSolutions |
+                        ForEach-Object {
+                            $sourcePath = [string]$_
+                            if ([string]::IsNullOrWhiteSpace($sourcePath)) {
+                                return ''
+                            }
+
+                            # Keep snapshots host-independent by storing only the
+                            # trailing solution folder and managed/unmanaged marker.
+                            $normalizedPath = $sourcePath -replace '\\', '/'
+                            $segments = @($normalizedPath.TrimEnd('/') -split '/')
+                            if ($segments.Count -ge 2) {
+                                return ('{0}/{1}' -f $segments[$segments.Count - 2], $segments[$segments.Count - 1])
+                            }
+
+                            return $normalizedPath
+                        } |
+                        Sort-Object)
                     SourceSolutionCount = [int]$Graph.Metadata.SourceSolutionCount
                     IsScopedDiagram = [bool]$Graph.Metadata.IsScopedDiagram
                     SourceFilterType = [string]$Graph.Metadata.SourceFilterType

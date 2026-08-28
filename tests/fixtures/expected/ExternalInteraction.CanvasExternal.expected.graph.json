@@ -14,7 +14,7 @@
     ],
     "OutputFormat": "Graph",
     "SourceSolutions": [
-      "C:\\PowerShellModules\\PowerShell_PowerPlatformChecker\\tests\\fixtures\\canvas-external-solution\\Managed"
+      "canvas-external-solution/Managed"
     ],
     "SourceSolutionCount": 1,
     "IsScopedDiagram": false,

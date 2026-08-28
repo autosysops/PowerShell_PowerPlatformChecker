@@ -14,7 +14,7 @@
     ],
     "OutputFormat": "Graph",
     "SourceSolutions": [
-      "C:\\PowerShellModules\\PowerShell_PowerPlatformChecker\\tests\\fixtures\\anonymized-solution\\Managed"
+      "anonymized-solution/Managed"
     ],
     "SourceSolutionCount": 1,
     "IsScopedDiagram": false,
