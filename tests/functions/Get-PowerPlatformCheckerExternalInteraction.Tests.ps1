@@ -46,15 +46,35 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
             $stableEdges = @($Graph.Edges |
                 Sort-Object { "{0}|{1}|{2}|{3}" -f [string]$_.SourceId, [string]$_.TargetId, [string]$_.Label, [string]$_.EdgeType } |
                 ForEach-Object {
+                    $stableMetadata = [ordered]@{
+                        Arrow = [string]$_.Metadata.Arrow
+                        Evidence = [string]$_.Metadata.Evidence
+                    }
+                    if ($_.Metadata -and $null -ne $_.Metadata.LabelParts) {
+                        $stableLabelParts = [ordered]@{}
+                        foreach ($key in @('Kind', 'SourceAlias', 'SourceType', 'SourceDisplayName', 'DetailParts', 'Interaction', 'DomainUnresolved', 'ActionName', 'OperationName', 'ConnectorName', 'ConnectorCode', 'Protocol', 'TriggerAuthenticationDescription')) {
+                            if ($_.Metadata.LabelParts.PSObject.Properties.Name -contains $key) {
+                                $value = $_.Metadata.LabelParts.$key
+                                if ($value -is [System.Array]) {
+                                    $stableLabelParts[$key] = @($value | ForEach-Object { [string]$_ })
+                                }
+                                elseif ($value -is [bool]) {
+                                    $stableLabelParts[$key] = [bool]$value
+                                }
+                                else {
+                                    $stableLabelParts[$key] = [string]$value
+                                }
+                            }
+                        }
+                        $stableMetadata['LabelParts'] = $stableLabelParts
+                    }
+
                     [ordered]@{
                         SourceId = [string]$_.SourceId
                         TargetId = [string]$_.TargetId
                         Label = [string]$_.Label
                         EdgeType = [string]$_.EdgeType
-                        Metadata = [ordered]@{
-                            Arrow = [string]$_.Metadata.Arrow
-                            Evidence = [string]$_.Metadata.Evidence
-                        }
+                        Metadata = $stableMetadata
                     }
                 })
 
@@ -209,7 +229,32 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
 
         $solutionNode | Should -Not -BeNullOrEmpty
         ($graph.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id }).Count | Should -BeGreaterThan 0
-        (($graph.Edges | Select-Object -ExpandProperty Label) | Where-Object { [string]$_ -match 'Flow-[0-9]{2}|App-[0-9]{2}' }).Count | Should -BeGreaterThan 0
+        (($graph.Edges | Select-Object -ExpandProperty Label) | Where-Object { [string]$_ -match 'Flow / |CanvasApp / ' }).Count | Should -BeGreaterThan 0
+        (($graph.Edges | Select-Object -ExpandProperty Label) | Where-Object { [string]$_ -match 'Flow-[0-9]{2}|App-[0-9]{2}' }).Count | Should -Be 0
+        (($graph.Edges | Select-Object -ExpandProperty Label) | Where-Object { [string]$_ -match '\bC[0-9]{2}\b' }).Count | Should -Be 0
+    }
+
+    It "stores structured label parts in graph edge metadata" {
+        $graph = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @($script:canvasExternalSolutionPath) -OutputFormat Graph
+
+        $unresolvedEdge = $graph.Edges | Where-Object { $_.TargetId -eq 'shared_sharepointonline' -and [string]$_.Label -eq 'CanvasApp / Learning Canvas App GET SharePoint DomainUnresolved' } | Select-Object -First 1
+        $resolvedEdge = $graph.Edges | Where-Object { $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and [string]$_.Label -eq 'CanvasApp / Learning Canvas App GET' } | Select-Object -First 1
+
+        $unresolvedEdge | Should -Not -BeNullOrEmpty
+        $resolvedEdge | Should -Not -BeNullOrEmpty
+
+        $unresolvedEdge.Metadata.LabelParts.Kind | Should -Be 'Source'
+        $unresolvedEdge.Metadata.LabelParts.SourceAlias | Should -Be 'App-01'
+        $unresolvedEdge.Metadata.LabelParts.Interaction | Should -Be 'GET'
+        $unresolvedEdge.Metadata.LabelParts.DomainUnresolved | Should -BeTrue
+        $unresolvedEdge.Metadata.LabelParts.ConnectorName | Should -Be 'SharePoint'
+        $unresolvedEdge.Metadata.LabelParts.ConnectorCode | Should -Be 'C01'
+
+        $resolvedEdge.Metadata.LabelParts.Kind | Should -Be 'Source'
+        $resolvedEdge.Metadata.LabelParts.SourceAlias | Should -Be 'App-01'
+        $resolvedEdge.Metadata.LabelParts.Interaction | Should -Be 'GET'
+        $resolvedEdge.Metadata.LabelParts.DomainUnresolved | Should -BeFalse
+        $resolvedEdge.Label | Should -Be 'CanvasApp / Learning Canvas App GET'
     }
 
     It "creates synthetic destination nodes from flow destination metadata" {
@@ -245,8 +290,8 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
 
         ($graph.Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com' -and $_.Type -eq 'ExternalDomain' }).Count | Should -Be 1
         ($graph.Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com' } | Select-Object -First 1).DisplayName | Should -Be 'contoso.sharepoint.com'
-        ($graph.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and [string]$_.Label -match '^App-[0-9]{2} GET' }).Count | Should -Be 1
-        ($graph.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and [string]$_.Label -match '^App-[0-9]{2} SET' }).Count | Should -Be 1
+        ($graph.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and [string]$_.Label -eq 'CanvasApp / Learning Canvas App GET' }).Count | Should -Be 1
+        ($graph.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and [string]$_.Label -eq 'CanvasApp / Learning Canvas App SET' }).Count | Should -Be 1
     }
 
     It "sends sanitized telemetry" {
@@ -368,8 +413,8 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
 
             $outboundApi | Should -Not -BeNullOrEmpty
             $outboundSp | Should -Not -BeNullOrEmpty
-            $outboundApi.Label | Should -Match '^Flow-[0-9]{2} SET'
-            $outboundSp.Label | Should -Match '^Flow-[0-9]{2} SET'
+            $outboundApi.Label | Should -Be 'Flow / Inbound Flow SET CallApi'
+            $outboundSp.Label | Should -Be 'Flow / Inbound Flow SET CreateFile'
             $outboundApi.Metadata.Evidence | Should -Match 'CallApi'
             $outboundSp.Metadata.Evidence | Should -Match 'CreateFile'
         }
@@ -451,7 +496,7 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
                 })
 
             $outboundApiEdges.Count | Should -Be 2
-            (@($outboundApiEdges | ForEach-Object { [string]$_.Label }) -join '|') | Should -Match 'Flow-[0-9]{2}'
+            (@($outboundApiEdges | ForEach-Object { [string]$_.Label }) -join '|') | Should -Match 'Flow / Inbound Flow'
             (@($outboundApiEdges | ForEach-Object { [string]$_.Label }) -join '|') | Should -Match 'GET'
             (@($outboundApiEdges | ForEach-Object { [string]$_.Label }) -join '|') | Should -Match 'SET'
         }
@@ -590,7 +635,7 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
             $responseEdge = $_.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_internet' -and [string]$_.Label -match 'OUTBOUND' } | Select-Object -First 1
 
             $inboundEdge | Should -Not -BeNullOrEmpty
-            $inboundEdge.Label | Should -Match '^Flow-[0-9]{2} INBOUND'
+            $inboundEdge.Label | Should -Be 'Flow / Webhook Flow INBOUND manual_When an HTTP request is received_Any user in my tenant'
             $responseEdge | Should -Not -BeNullOrEmpty
             $responseEdge.Metadata.Evidence | Should -Match 'Response_200_back_to_integration'
         }

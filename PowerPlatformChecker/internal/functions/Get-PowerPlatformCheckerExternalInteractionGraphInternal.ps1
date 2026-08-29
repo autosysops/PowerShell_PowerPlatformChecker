@@ -119,7 +119,18 @@
                     $connectorKey = [string]$sourceNode.Id
                 }
                 $connectorProfile = Get-PowerPlatformCheckerExternalInteractionConnectorProfile -ConnectorKey $connectorKey -ConnectorDisplayName $connectorKey -ConnectorByKey $connectorByKey -ConnectorLegend $connectorLegend
-                $connectorCode = if ($null -ne $connectorProfile) { [string]$connectorProfile.Code } else { '' }
+                if ($null -ne $connectorProfile -and [string]$connectorProfile.DisplayName -eq $connectorKey) {
+                    $connectionMember = @($sourceNode.Members | Where-Object { $_ -and [string]$_ -notmatch '^\s*ConnectionReference\s*$' } | Select-Object -First 1)
+                    if (@($connectionMember).Count -gt 0) {
+                        $memberText = ([string]$connectionMember[0]).Trim()
+                        $memberText = $memberText -replace '\s+-\s+.*$', ''
+                        $memberText = $memberText -replace '\s*\(.*$', ''
+                        $memberText = $memberText -replace '\s+Test$', ''
+                        if (-not [string]::IsNullOrWhiteSpace($memberText)) {
+                            $connectorProfile.DisplayName = $memberText
+                        }
+                    }
+                }
 
                 $appDomains = @()
                 if ($targetNode.PSObject.Properties.Name -contains 'Properties' -and $null -ne $targetNode.Properties) {
@@ -146,8 +157,8 @@
                 $hasUnresolvedConnectionFallback = $true
                 $targetId = [string]$sourceNode.Id
                 foreach ($interactionLabel in @(Get-PowerPlatformCheckerExternalInteractionLabels -Direction ([string]$targetNode.Properties.InteractionDirection))) {
-                    $sourceLabel = Get-PowerPlatformCheckerExternalInteractionSourceLabel -Node $targetNode -InteractionLabel $interactionLabel -SourceAlias $sourceAlias -ConnectorCode $connectorCode -DomainUnresolved
-                    Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId $targetId -InteractionLabel $interactionLabel -TargetNode $sourceNode -SourceNode $targetNode -Evidence ([string]$edge.Label) -SourceLabelOverride $sourceLabel
+                    $sourceLabel = Get-PowerPlatformCheckerExternalInteractionSourceLabel -Node $targetNode -InteractionLabel $interactionLabel -SourceAlias $sourceAlias -ConnectorName ([string]$connectorProfile.DisplayName) -ConnectorCode ([string]$connectorProfile.Code) -DomainUnresolved
+                    Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId $targetId -InteractionLabel $interactionLabel -TargetNode $sourceNode -SourceNode $targetNode -Evidence ([string]$edge.Label) -SourceLabelOverride ([string]$sourceLabel.Label) -SourceLabelPartsOverride $sourceLabel.LabelParts -CompactLabelOverride ([string]$sourceLabel.MermaidLabel)
                 }
                 continue
             }
@@ -167,7 +178,7 @@
 
                 foreach ($interactionLabel in @(Get-PowerPlatformCheckerExternalInteractionLabels -Direction $edgeInteractionDirection)) {
                     $sourceLabel = Get-PowerPlatformCheckerExternalInteractionSourceLabel -Node $sourceNode -InteractionLabel $interactionLabel -SourceAlias $sourceAlias
-                    Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId $targetId -InteractionLabel $interactionLabel -TargetNode $targetNode -SourceNode $sourceNode -Evidence ([string]$edge.Label) -SourceLabelOverride $sourceLabel
+                    Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId $targetId -InteractionLabel $interactionLabel -TargetNode $targetNode -SourceNode $sourceNode -Evidence ([string]$edge.Label) -SourceLabelOverride ([string]$sourceLabel.Label) -SourceLabelPartsOverride $sourceLabel.LabelParts -CompactLabelOverride ([string]$sourceLabel.MermaidLabel)
                 }
             }
         }
@@ -201,7 +212,6 @@
                             $connectorDisplayName = $connectorKey
                         }
                         $connectorProfile = Get-PowerPlatformCheckerExternalInteractionConnectorProfile -ConnectorKey $connectorKey -ConnectorDisplayName $connectorDisplayName -ConnectorByKey $connectorByKey -ConnectorLegend $connectorLegend
-                        $connectorCode = if ($null -ne $connectorProfile) { [string]$connectorProfile.Code } else { '' }
 
                         if ($flowAction.PSObject.Properties.Name -contains 'IsTrigger' -and [bool]$flowAction.IsTrigger) {
                             continue
@@ -218,9 +228,9 @@
                                 HasExplicitDisplayName = $true
                             }
 
-                            $responseLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $flowNode -FlowAction $flowAction -InteractionLabel 'OUTBOUND' -FlowAlias $flowAlias -ConnectorCode $connectorCode
+                            $responseLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $flowNode -FlowAction $flowAction -InteractionLabel 'OUTBOUND' -FlowAlias $flowAlias -ConnectorCode ([string]$connectorProfile.Code)
                             $responseEvidence = [string]$flowAction.Name
-                            Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId 'externaldomain_internet' -InteractionLabel 'OUTBOUND' -TargetNode $internetNode -SourceNode $flowNode -Evidence $responseEvidence -SourceLabelOverride $responseLabel
+                            Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId 'externaldomain_internet' -InteractionLabel 'OUTBOUND' -TargetNode $internetNode -SourceNode $flowNode -Evidence $responseEvidence -SourceLabelOverride ([string]$responseLabel.Label) -SourceLabelPartsOverride $responseLabel.LabelParts -CompactLabelOverride ([string]$responseLabel.MermaidLabel)
                             [void]$targetIdsAddedForFlow.Add('externaldomain_internet')
                             continue
                         }
@@ -265,8 +275,8 @@
                         }
 
                         $evidence = [string]$flowAction.Name
-                        $sourceLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $flowNode -FlowAction $flowAction -InteractionLabel ([string]$actionInteractionLabel) -FlowAlias $flowAlias -ConnectorCode $connectorCode
-                        Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId ([string]$targetNode.Id) -InteractionLabel ([string]$actionInteractionLabel) -TargetNode $targetNode -SourceNode $flowNode -Evidence $evidence -SourceLabelOverride $sourceLabel
+                        $sourceLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $flowNode -FlowAction $flowAction -InteractionLabel ([string]$actionInteractionLabel) -FlowAlias $flowAlias -ConnectorCode ([string]$connectorProfile.Code)
+                        Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId ([string]$targetNode.Id) -InteractionLabel ([string]$actionInteractionLabel) -TargetNode $targetNode -SourceNode $flowNode -Evidence $evidence -SourceLabelOverride ([string]$sourceLabel.Label) -SourceLabelPartsOverride $sourceLabel.LabelParts -CompactLabelOverride ([string]$sourceLabel.MermaidLabel)
                         [void]$targetIdsAddedForFlow.Add([string]$targetNode.Id)
                     }
                 }
@@ -305,7 +315,7 @@
 
                 foreach ($fallbackInteractionLabel in @($fallbackInteractionLabels)) {
                     $fallbackLabel = Get-PowerPlatformCheckerExternalInteractionSourceLabel -Node $flowNode -InteractionLabel ([string]$fallbackInteractionLabel) -SourceAlias $flowAlias
-                    Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId $targetId -InteractionLabel ([string]$fallbackInteractionLabel) -TargetNode $targetNode -SourceNode $flowNode -Evidence '' -SourceLabelOverride $fallbackLabel
+                    Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId $targetId -InteractionLabel ([string]$fallbackInteractionLabel) -TargetNode $targetNode -SourceNode $flowNode -Evidence '' -SourceLabelOverride ([string]$fallbackLabel.Label) -SourceLabelPartsOverride $fallbackLabel.LabelParts -CompactLabelOverride ([string]$fallbackLabel.MermaidLabel)
                 }
             }
         }
@@ -344,7 +354,7 @@
 
                 if ($triggerActions.Count -eq 0) {
                     $triggerLabel = Get-PowerPlatformCheckerExternalInteractionSourceLabel -Node $inboundFlow -InteractionLabel 'INBOUND' -SourceAlias $inboundAlias
-                    $edgeKey = "{0}|{1}|{2}|-->" -f $internetNodeId, $solutionNodeId, $triggerLabel
+                    $edgeKey = "{0}|{1}|{2}|-->" -f $internetNodeId, $solutionNodeId, [string]$triggerLabel.Label
                     $existingInbound = $combinedEdges | Where-Object {
                         ("{0}|{1}|{2}|{3}" -f [string]$_.SourceId, [string]$_.TargetId, [string]$_.Label, [string]$_.Metadata.Arrow) -eq $edgeKey
                     }
@@ -352,11 +362,13 @@
                         [void]$combinedEdges.Add([pscustomobject]@{
                                 SourceId = $internetNodeId
                                 TargetId = $solutionNodeId
-                                Label = $triggerLabel
+                                Label = [string]$triggerLabel.Label
                                 EdgeType = 'Link'
                                 Metadata = [pscustomobject]@{
                                     Arrow = '-->'
                                     Evidence = [string]$inboundFlow.DisplayName
+                                    MermaidLabel = [string]$triggerLabel.MermaidLabel
+                                    LabelParts = $triggerLabel.LabelParts
                                 }
                             })
                     }
@@ -373,6 +385,7 @@
                     if ([string]::IsNullOrWhiteSpace($triggerConnectorDisplayName)) {
                         $triggerConnectorDisplayName = $triggerConnectorKey
                     }
+                    $triggerConnectorProfile = Get-PowerPlatformCheckerExternalInteractionConnectorProfile -ConnectorKey $triggerConnectorKey -ConnectorDisplayName $triggerConnectorDisplayName -ConnectorByKey $connectorByKey -ConnectorLegend $connectorLegend
 
                     $triggerExternalTarget = [string]$triggerAction.ExternalEndpoint
                     if ([string]::IsNullOrWhiteSpace($triggerExternalTarget) -or $triggerExternalTarget -eq 'Unknown') {
@@ -385,11 +398,9 @@
                         continue
                     }
 
-                    $triggerConnectorProfile = Get-PowerPlatformCheckerExternalInteractionConnectorProfile -ConnectorKey $triggerConnectorKey -ConnectorDisplayName $triggerConnectorDisplayName -ConnectorByKey $connectorByKey -ConnectorLegend $connectorLegend
-                    $triggerConnectorCode = if ($null -ne $triggerConnectorProfile) { [string]$triggerConnectorProfile.Code } else { '' }
-                    $triggerLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $inboundFlow -FlowAction $triggerAction -InteractionLabel 'INBOUND' -FlowAlias $inboundAlias -ConnectorCode $triggerConnectorCode
+                    $triggerLabel = Get-PowerPlatformCheckerExternalInteractionFlowActionLabel -FlowNode $inboundFlow -FlowAction $triggerAction -InteractionLabel 'INBOUND' -FlowAlias $inboundAlias -ConnectorCode ([string]$triggerConnectorProfile.Code)
                     $triggerEvidence = [string]$triggerAction.Name
-                    $edgeKey = "{0}|{1}|{2}|-->" -f $internetNodeId, $solutionNodeId, $triggerLabel
+                    $edgeKey = "{0}|{1}|{2}|-->" -f $internetNodeId, $solutionNodeId, [string]$triggerLabel.Label
                     $existingInbound = $combinedEdges | Where-Object {
                         ("{0}|{1}|{2}|{3}" -f [string]$_.SourceId, [string]$_.TargetId, [string]$_.Label, [string]$_.Metadata.Arrow) -eq $edgeKey
                     }
@@ -398,11 +409,13 @@
                         [void]$combinedEdges.Add([pscustomobject]@{
                                 SourceId = $internetNodeId
                                 TargetId = $solutionNodeId
-                                Label = [string]$triggerLabel
+                                Label = [string]$triggerLabel.Label
                                 EdgeType = 'Link'
                                 Metadata = [pscustomobject]@{
                                     Arrow = '-->'
                                     Evidence = $triggerEvidence
+                                    MermaidLabel = [string]$triggerLabel.MermaidLabel
+                                    LabelParts = $triggerLabel.LabelParts
                                 }
                             })
                     }
@@ -421,14 +434,15 @@
             }
 
             foreach ($sourceLabel in @($interactionByTarget[$targetId].Keys | Sort-Object)) {
-                $edgeLabel = [string]$sourceLabel
+                $interactionEntry = $interactionByTarget[$targetId][$sourceLabel]
+                $edgeLabel = [string]$interactionEntry.Label
                 $edgeKey = "{0}|{1}|{2}|-->" -f $solutionNodeId, [string]$targetId, $edgeLabel
                 $existingEdge = $combinedEdges | Where-Object {
                     ("{0}|{1}|{2}|{3}" -f [string]$_.SourceId, [string]$_.TargetId, [string]$_.Label, [string]$_.Metadata.Arrow) -eq $edgeKey
                 }
 
                 if (-not $existingEdge) {
-                    $edgeEvidence = (($interactionByTarget[$targetId][$sourceLabel] | Select-Object -First 3) -join ',')
+                    $edgeEvidence = ((@($interactionEntry.Evidence) | Select-Object -First 3) -join ',')
                     [void]$combinedEdges.Add([pscustomobject]@{
                             SourceId = $solutionNodeId
                             TargetId = [string]$targetId
@@ -437,6 +451,8 @@
                             Metadata = [pscustomobject]@{
                                 Arrow = '-->'
                                 Evidence = $edgeEvidence
+                                MermaidLabel = [string]$interactionEntry.MermaidLabel
+                                LabelParts = $interactionEntry.LabelParts
                             }
                         })
                 }

@@ -137,6 +137,9 @@ metadata lines or free-form text into rendered diagrams.
 - Preserves multiple outbound destinations per solution when distinct domains/services are discovered
 - Adds inbound `internet` relationships for webhook/manual HTTP-triggered flows
 - Carries representative action evidence in graph-edge metadata for downstream consumers
+- Stores structured edge label metadata (`LabelParts`) in Graph output so downstream renderers can rebuild labels per format
+- Keeps full descriptive edge labels in Graph output, including connector names where available
+- Uses compact lookup labels in Mermaid output and lists the source aliases plus plain-text connector codes in the legend
 - Normalizes external domain node labels by removing `http://` or `https://` prefixes for wiki-safe rendering
 
 `Get-PowerPlatformCheckerFlowChart` supports Mermaid and recursive graph output with

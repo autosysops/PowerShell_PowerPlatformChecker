@@ -16,8 +16,11 @@
     .PARAMETER SourceAlias
         Optional short alias (for example App-01) to use instead of type and display name.
 
+    .PARAMETER ConnectorName
+        Optional connector display name used in full Graph labels.
+
     .PARAMETER ConnectorCode
-        Optional compact connector code appended to unresolved-connection labels.
+        Optional connector lookup code used in compact Mermaid labels.
 
     .PARAMETER DomainUnresolved
         Marks labels that still target unresolved connection references.
@@ -29,7 +32,7 @@
     #>
 
     [CmdletBinding()]
-    [OutputType([string])]
+    [OutputType([pscustomobject])]
     param(
         [Parameter(Mandatory = $true)]
         [object] $Node,
@@ -41,30 +44,22 @@
         [string] $SourceAlias,
 
         [Parameter(Mandatory = $false)]
+        [string] $ConnectorName,
+
+        [Parameter(Mandatory = $false)]
         [string] $ConnectorCode,
 
         [Parameter(Mandatory = $false)]
         [switch] $DomainUnresolved
     )
 
-    $labelParts = [System.Collections.Generic.List[string]]::new()
-
-    if (-not [string]::IsNullOrWhiteSpace([string]$SourceAlias)) {
-        [void]$labelParts.Add(([string]$SourceAlias).Replace(':', ' '))
-    }
-    else {
-        $sourceType = [string]$Node.Type
-        $sourceName = [string]$Node.DisplayName
-        if ([string]::IsNullOrWhiteSpace($sourceName)) {
-            $sourceName = [string]$Node.Id
-        }
-
-        $safeSourceType = $sourceType.Replace(':', ' ')
-        $safeSourceName = $sourceName.Replace(':', ' ')
-        [void]$labelParts.Add(('{0} {1}' -f $safeSourceType, $safeSourceName).Trim())
-    }
-
     $detailParts = [System.Collections.Generic.List[string]]::new()
+    $sourceType = [string]$Node.Type
+    $sourceName = [string]$Node.DisplayName
+    if ([string]::IsNullOrWhiteSpace($sourceName)) {
+        $sourceName = [string]$Node.Id
+    }
+
     if ([string]$Node.Type -eq 'CanvasApp' -and $Node.Properties -and $Node.Properties.ContainsKey('SourceSignals')) {
         $firstSignal = @($Node.Properties.SourceSignals | Select-Object -First 1)
         if (@($firstSignal).Count -gt 0 -and $null -ne $firstSignal[0]) {
@@ -86,19 +81,26 @@
         }
     }
 
-    if ($detailParts.Count -gt 0) {
-        [void]$labelParts.Add(($detailParts -join ' / '))
+    $labelPartMap = [ordered]@{
+        Kind = 'Source'
+        SourceAlias = [string]$SourceAlias
+        SourceType = $sourceType.Replace(':', ' ')
+        SourceDisplayName = $sourceName.Replace(':', ' ')
+        DetailParts = @($detailParts)
+        Interaction = ([string]$InteractionLabel).Replace(':', ' ')
+        DomainUnresolved = [bool]$DomainUnresolved.IsPresent
     }
-
-    [void]$labelParts.Add(([string]$InteractionLabel).Replace(':', ' '))
-
+    if (-not [string]::IsNullOrWhiteSpace([string]$ConnectorName)) {
+        $labelPartMap['ConnectorName'] = ([string]$ConnectorName).Replace(':', ' ')
+    }
     if (-not [string]::IsNullOrWhiteSpace([string]$ConnectorCode)) {
-        [void]$labelParts.Add(([string]$ConnectorCode).Replace(':', ' '))
+        $labelPartMap['ConnectorCode'] = ([string]$ConnectorCode).Replace(':', ' ')
     }
+    $labelPartObject = [pscustomobject]$labelPartMap
 
-    if ($DomainUnresolved.IsPresent) {
-        [void]$labelParts.Add('DomainUnresolved')
+    return [pscustomobject]@{
+        Label = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $labelPartObject
+        MermaidLabel = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $labelPartObject -Compact
+        LabelParts = $labelPartObject
     }
-
-    return (($labelParts -join ' ') -replace '\s{2,}', ' ').Trim()
 }

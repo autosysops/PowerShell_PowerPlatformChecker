@@ -5,7 +5,7 @@
 
     .DESCRIPTION
         Returns style legend rows for a diagram type and, for external interaction
-        graphs, includes compact source aliases and connector code/color mappings.
+        graphs, includes compact source aliases and connector code mappings.
 
     .PARAMETER DiagramType
         Diagram legend type to generate.
@@ -187,7 +187,7 @@
             [void]$lines.Add('')
             [void]$lines.Add('### Connector Codes')
             foreach ($connector in @($legendObject.Connectors | Sort-Object Code)) {
-                [void]$lines.Add("- <span style=`"color:$($connector.Color)`">$($connector.Code)</span> = $($connector.DisplayName)")
+                [void]$lines.Add("- $($connector.Code) = $($connector.DisplayName)")
             }
         }
 

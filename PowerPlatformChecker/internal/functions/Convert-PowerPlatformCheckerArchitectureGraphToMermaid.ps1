@@ -51,6 +51,9 @@
             }
 
             $edgeLabel = [string]$edge.Label
+            if ($edge.Metadata -and $edge.Metadata.PSObject.Properties.Name -contains 'MermaidLabel' -and -not [string]::IsNullOrWhiteSpace([string]$edge.Metadata.MermaidLabel)) {
+                $edgeLabel = [string]$edge.Metadata.MermaidLabel
+            }
             if (-not [string]::IsNullOrWhiteSpace($edgeLabel)) {
                 $safeEdgeLabel = $edgeLabel
                 $safeEdgeLabel = $safeEdgeLabel.Replace('|', '/')

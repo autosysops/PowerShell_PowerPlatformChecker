@@ -31,6 +31,12 @@
     .PARAMETER SourceLabelOverride
         Optional explicit source label. When omitted the label is derived from the source node.
 
+    .PARAMETER SourceLabelPartsOverride
+        Optional structured label metadata paired with SourceLabelOverride.
+
+    .PARAMETER CompactLabelOverride
+        Optional compact Mermaid label paired with the full SourceLabelOverride.
+
     .EXAMPLE
         Add a read interaction between a solution component and an external node.
 
@@ -61,7 +67,15 @@
         [string] $Evidence,
 
         [Parameter(Mandatory = $false)]
-        [string] $SourceLabelOverride
+        [string] $SourceLabelOverride,
+
+        [Parameter(Mandatory = $false)]
+        [object] $SourceLabelPartsOverride
+
+        ,
+
+        [Parameter(Mandatory = $false)]
+        [string] $CompactLabelOverride
     )
 
     if ([string]::IsNullOrWhiteSpace($TargetId)) {
@@ -73,18 +87,29 @@
     }
     $TargetNodeById[$TargetId] = $TargetNode
 
-    $sourceLabel = if (-not [string]::IsNullOrWhiteSpace([string]$SourceLabelOverride)) {
-        [string]$SourceLabelOverride
+    $sourceLabelResult = if (-not [string]::IsNullOrWhiteSpace([string]$SourceLabelOverride)) {
+        [pscustomobject]@{
+            Label = [string]$SourceLabelOverride
+            MermaidLabel = if ([string]::IsNullOrWhiteSpace([string]$CompactLabelOverride)) { [string]$SourceLabelOverride } else { [string]$CompactLabelOverride }
+            LabelParts = $SourceLabelPartsOverride
+        }
     }
     else {
         Get-PowerPlatformCheckerExternalInteractionSourceLabel -Node $SourceNode -InteractionLabel $InteractionLabel
     }
 
+    $sourceLabel = [string]$sourceLabelResult.Label
+
     if (-not $InteractionByTarget[$TargetId].ContainsKey($sourceLabel)) {
-        $InteractionByTarget[$TargetId][$sourceLabel] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        $InteractionByTarget[$TargetId][$sourceLabel] = [pscustomobject]@{
+            Label = $sourceLabel
+            MermaidLabel = [string]$sourceLabelResult.MermaidLabel
+            LabelParts = $sourceLabelResult.LabelParts
+            Evidence = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        }
     }
 
     if (-not [string]::IsNullOrWhiteSpace([string]$Evidence)) {
-        [void]$InteractionByTarget[$TargetId][$sourceLabel].Add([string]$Evidence)
+        [void]$InteractionByTarget[$TargetId][$sourceLabel].Evidence.Add([string]$Evidence)
     }
 }

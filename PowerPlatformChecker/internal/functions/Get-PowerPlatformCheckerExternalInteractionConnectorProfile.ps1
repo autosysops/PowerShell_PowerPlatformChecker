@@ -1,17 +1,18 @@
-﻿function Get-PowerPlatformCheckerExternalInteractionConnectorProfile {
+function Get-PowerPlatformCheckerExternalInteractionConnectorProfile {
     <#
     .SYNOPSIS
-        Registers or retrieves a connector legend profile.
+        Registers or retrieves connector lookup metadata for external interaction diagrams.
 
     .DESCRIPTION
-        Assigns compact connector codes (for example C01) and deterministic colors
-        to connector keys for readable external-interaction edge labels and legends.
+        Assigns deterministic connector codes and resolves connector display names
+        so Mermaid output can use compact lookup tokens while Graph output keeps
+        descriptive connector names.
 
     .PARAMETER ConnectorKey
-        Connector key used as deterministic identity.
+        Connector identity used as the deterministic lookup key.
 
     .PARAMETER ConnectorDisplayName
-        Human-friendly connector name.
+        Optional display name to use when the catalog has no better match.
 
     .PARAMETER ConnectorByKey
         Mutable hashtable cache keyed by normalized connector key.
@@ -20,9 +21,7 @@
         Optional mutable list to receive connector legend rows.
 
     .EXAMPLE
-        Register connector metadata used by the external-interaction legend.
-
-        PS> Get-PowerPlatformCheckerExternalInteractionConnectorProfile -ConnectorKey 'shared_sharepointonline' -ConnectorByKey $map
+        Get-PowerPlatformCheckerExternalInteractionConnectorProfile -ConnectorKey 'shared_sharepointonline' -ConnectorByKey $map
     #>
 
     [CmdletBinding()]
@@ -52,18 +51,19 @@
     }
 
     $displayName = [string]$ConnectorDisplayName
-    if ([string]::IsNullOrWhiteSpace($displayName)) {
+    $catalogEntry = @($script:connectorData | Where-Object { $_.name -eq $normalizedKey } | Select-Object -First 1)
+    if (@($catalogEntry).Count -gt 0 -and -not [string]::IsNullOrWhiteSpace([string]$catalogEntry[0].displayname)) {
+        $displayName = [string]$catalogEntry[0].displayname
+    }
+    elseif ([string]::IsNullOrWhiteSpace($displayName)) {
         $displayName = [string]$ConnectorKey
     }
 
     $connectorCode = 'C{0:d2}' -f (@($ConnectorByKey.Keys).Count + 1)
-    $connectorColor = Get-PowerPlatformCheckerExternalInteractionConnectorColor -ConnectorKey $normalizedKey
-
     $connectorProfile = [pscustomobject]@{
         ConnectorKey = $normalizedKey
         DisplayName = $displayName
         Code = $connectorCode
-        Color = $connectorColor
     }
 
     $ConnectorByKey[$normalizedKey] = $connectorProfile

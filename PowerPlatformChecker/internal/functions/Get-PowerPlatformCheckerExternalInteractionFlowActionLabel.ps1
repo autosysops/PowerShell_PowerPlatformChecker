@@ -20,7 +20,7 @@
         Optional short source alias (for example Flow-01) used in edge labels.
 
     .PARAMETER ConnectorCode
-        Optional compact connector code (for example C01) appended for unresolved references.
+        Optional connector lookup code used in compact Mermaid labels.
 
     .PARAMETER DomainUnresolved
         Marks labels that still point to connection references instead of resolved domains.
@@ -32,7 +32,7 @@
     #>
 
     [CmdletBinding()]
-    [OutputType([string])]
+    [OutputType([pscustomobject])]
     param(
         [Parameter(Mandatory = $true)]
         [object] $FlowNode,
@@ -71,18 +71,6 @@
     $protocol = ([string]$FlowAction.ExternalProtocol).Replace(':', ' ')
     $triggerAuthText = ([string]$FlowAction.TriggerAuthenticationDescription).Replace(':', ' ')
 
-    $labelParts = [System.Collections.Generic.List[string]]::new()
-    [void]$labelParts.Add($safeFlowName)
-    [void]$labelParts.Add(([string]$InteractionLabel).Replace(':', ' '))
-
-    if (-not [string]::IsNullOrWhiteSpace([string]$ConnectorCode)) {
-        [void]$labelParts.Add(([string]$ConnectorCode).Replace(':', ' '))
-    }
-
-    if ($DomainUnresolved.IsPresent) {
-        [void]$labelParts.Add('DomainUnresolved')
-    }
-
     $descriptorParts = [System.Collections.Generic.List[string]]::new()
     if (-not [string]::IsNullOrWhiteSpace($actionName)) {
         [void]$descriptorParts.Add($actionName)
@@ -99,9 +87,30 @@
     if (-not [string]::IsNullOrWhiteSpace($triggerAuthText)) {
         [void]$descriptorParts.Add($triggerAuthText)
     }
-    if ($descriptorParts.Count -gt 0) {
-        [void]$labelParts.Add(($descriptorParts -join '_'))
+    $labelPartMap = [ordered]@{
+        Kind = 'FlowAction'
+        SourceAlias = [string]$FlowAlias
+        SourceType = 'Flow'
+        SourceDisplayName = ([string]$FlowNode.DisplayName).Replace(':', ' ')
+        DetailParts = @()
+        Interaction = ([string]$InteractionLabel).Replace(':', ' ')
+        DomainUnresolved = [bool]$DomainUnresolved.IsPresent
+        ActionName = $actionName
+        OperationName = $operationName
+        Protocol = $protocol
+        TriggerAuthenticationDescription = $triggerAuthText
     }
+    if (-not [string]::IsNullOrWhiteSpace($connectorName)) {
+        $labelPartMap['ConnectorName'] = $connectorName
+    }
+    if (-not [string]::IsNullOrWhiteSpace([string]$ConnectorCode)) {
+        $labelPartMap['ConnectorCode'] = ([string]$ConnectorCode).Replace(':', ' ')
+    }
+    $labelPartObject = [pscustomobject]$labelPartMap
 
-    return (($labelParts -join ' ') -replace '\s{2,}', ' ').Trim()
+    return [pscustomobject]@{
+        Label = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $labelPartObject
+        MermaidLabel = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $labelPartObject -Compact
+        LabelParts = $labelPartObject
+    }
 }

@@ -54,41 +54,81 @@
     {
       "SourceId": "solution_canvas_external_solution",
       "TargetId": "externaldomain_https_contoso_sharepoint_com",
-      "Label": "App-01 GET",
+      "Label": "CanvasApp / Learning Canvas App GET",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
-        "Evidence": "Training-Content GET"
+        "Evidence": "Training-Content GET",
+        "LabelParts": {
+          "Kind": "Source",
+          "SourceAlias": "App-01",
+          "SourceType": "CanvasApp",
+          "SourceDisplayName": "Learning Canvas App",
+          "DetailParts": [],
+          "Interaction": "GET",
+          "DomainUnresolved": false
+        }
       }
     },
     {
       "SourceId": "solution_canvas_external_solution",
       "TargetId": "externaldomain_https_contoso_sharepoint_com",
-      "Label": "App-01 SET",
+      "Label": "CanvasApp / Learning Canvas App SET",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
-        "Evidence": "Training-Progress SET"
+        "Evidence": "Training-Progress SET",
+        "LabelParts": {
+          "Kind": "Source",
+          "SourceAlias": "App-01",
+          "SourceType": "CanvasApp",
+          "SourceDisplayName": "Learning Canvas App",
+          "DetailParts": [],
+          "Interaction": "SET",
+          "DomainUnresolved": false
+        }
       }
     },
     {
       "SourceId": "solution_canvas_external_solution",
       "TargetId": "shared_sharepointonline",
-      "Label": "App-01 GET C01 DomainUnresolved",
+      "Label": "CanvasApp / Learning Canvas App GET SharePoint DomainUnresolved",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
-        "Evidence": "shared_sharepointonline"
+        "Evidence": "shared_sharepointonline",
+        "LabelParts": {
+          "Kind": "Source",
+          "SourceAlias": "App-01",
+          "SourceType": "CanvasApp",
+          "SourceDisplayName": "Learning Canvas App",
+          "DetailParts": [],
+          "Interaction": "GET",
+          "DomainUnresolved": true,
+          "ConnectorName": "SharePoint",
+          "ConnectorCode": "C01"
+        }
       }
     },
     {
       "SourceId": "solution_canvas_external_solution",
       "TargetId": "shared_sharepointonline",
-      "Label": "App-01 SET C01 DomainUnresolved",
+      "Label": "CanvasApp / Learning Canvas App SET SharePoint DomainUnresolved",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
-        "Evidence": "shared_sharepointonline"
+        "Evidence": "shared_sharepointonline",
+        "LabelParts": {
+          "Kind": "Source",
+          "SourceAlias": "App-01",
+          "SourceType": "CanvasApp",
+          "SourceDisplayName": "Learning Canvas App",
+          "DetailParts": [],
+          "Interaction": "SET",
+          "DomainUnresolved": true,
+          "ConnectorName": "SharePoint",
+          "ConnectorCode": "C01"
+        }
       }
     }
   ],

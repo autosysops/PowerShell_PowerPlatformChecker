@@ -25,7 +25,7 @@ Describe "Get-PowerPlatformCheckerDiagramLegend" {
         $legend | Should -Match "### Flow and App Aliases"
         $legend | Should -Match "Flow-"
         $legend | Should -Match "### Connector Codes"
-        $legend | Should -Match "C[0-9]{2}"
+        $legend | Should -Match "C[0-9]{2} ="
     }
 
     It "shows only relevant external diagram classes and omits the Azure DevOps note" {
@@ -38,6 +38,8 @@ Describe "Get-PowerPlatformCheckerDiagramLegend" {
         $legend | Should -Not -Match '<span style="color:[^"]+">CanvasApp</span>'
         $legend | Should -Not -Match '<span style="color:[^"]+">ModelDrivenApp</span>'
         $legend | Should -Not -Match '<span style="color:[^"]+">Entity</span>'
+        $legend | Should -Not -Match '<span style="color:[^"]+">C[0-9]{2}</span>'
+        $legend | Should -Match '(?m)^- C[0-9]{2} = '
         $legend | Should -Not -Match 'Azure DevOps Mermaid does not reliably support per-edge-label text colors'
     }
 
