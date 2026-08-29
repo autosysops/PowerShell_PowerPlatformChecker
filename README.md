@@ -137,6 +137,7 @@ metadata lines or free-form text into rendered diagrams.
 - Preserves multiple outbound destinations per solution when distinct domains/services are discovered
 - Adds inbound `internet` relationships for webhook/manual HTTP-triggered flows
 - Carries representative action evidence in graph-edge metadata for downstream consumers
+- Normalizes external domain node labels by removing `http://` or `https://` prefixes for wiki-safe rendering
 
 `Get-PowerPlatformCheckerFlowChart` supports Mermaid and recursive graph output with
 `-OutputFormat Mermaid|Graph`.

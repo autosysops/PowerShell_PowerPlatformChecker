@@ -25,7 +25,7 @@
     {
       "Id": "externaldomain_https_contoso_sharepoint_com",
       "Type": "ExternalDomain",
-      "DisplayName": "https://contoso.sharepoint.com",
+      "DisplayName": "contoso.sharepoint.com",
       "ClassKind": "ExternalDomain",
       "Members": [],
       "HasExplicitDisplayName": true

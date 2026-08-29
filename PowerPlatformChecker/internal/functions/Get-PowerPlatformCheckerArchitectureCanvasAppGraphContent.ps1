@@ -145,10 +145,11 @@
 
                 $domainNodeId = "externaldomain_{0}" -f (Convert-PowerPlatformCheckerMermaidId -InputString ([string]$externalDomain.ToLowerInvariant()))
                 if (-not ($nodes | Where-Object { $_.Id -eq $domainNodeId })) {
+                    $displayDomain = Get-PowerPlatformCheckerExternalDomainDisplayName -DomainValue $externalDomain
                     $nodes += [pscustomobject]@{
                         Id = $domainNodeId
                         Type = 'ExternalDomain'
-                        DisplayName = $externalDomain
+                        DisplayName = $displayDomain
                         ClassKind = 'ExternalDomain'
                         Properties = @{}
                         Members = @()

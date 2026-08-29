@@ -2,7 +2,7 @@
 graph LR;
 solution_anonymized_solution["anonymized-solution"]:::Solution
 externaldomain_internet["internet"]:::ExternalDomain
-externaldomain_https_api_contoso_example["https://api.contoso.example"]:::ExternalDomain
+externaldomain_https_api_contoso_example["api.contoso.example"]:::ExternalDomain
 shared_commondataserviceforapps["shared_commondataserviceforapps"]:::Connection
 shared_office365["shared_office365"]:::Connection
 externaldomain_internet -->|Flow-01 INBOUND Manual| solution_anonymized_solution

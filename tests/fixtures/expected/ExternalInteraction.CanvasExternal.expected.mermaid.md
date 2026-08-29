@@ -1,7 +1,7 @@
 ﻿:::mermaid
 graph LR;
 solution_canvas_external_solution["canvas-external-solution"]:::Solution
-externaldomain_https_contoso_sharepoint_com["https://contoso.sharepoint.com"]:::ExternalDomain
+externaldomain_https_contoso_sharepoint_com["contoso.sharepoint.com"]:::ExternalDomain
 shared_sharepointonline["shared_sharepointonline"]:::Connection
 solution_canvas_external_solution -->|App-01 GET| externaldomain_https_contoso_sharepoint_com
 solution_canvas_external_solution -->|App-01 SET| externaldomain_https_contoso_sharepoint_com

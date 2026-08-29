@@ -25,7 +25,7 @@
     {
       "Id": "externaldomain_https_api_contoso_example",
       "Type": "ExternalDomain",
-      "DisplayName": "https://api.contoso.example",
+      "DisplayName": "api.contoso.example",
       "ClassKind": "ExternalDomain",
       "Members": [],
       "HasExplicitDisplayName": true

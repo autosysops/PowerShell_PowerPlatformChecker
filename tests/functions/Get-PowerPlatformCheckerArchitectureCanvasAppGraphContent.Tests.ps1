@@ -41,12 +41,37 @@ Describe "Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent" {
             @($result.Edges | Where-Object { $_.SourceId -eq "app_internal" -and $_.TargetId -eq "accounts" }).Count | Should -Be 1
             @($result.Edges | Where-Object { $_.SourceId -eq "app_internal" -and $_.TargetId -eq "external_vendor" }).Count | Should -Be 1
             @($result.Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com' -and $_.Type -eq 'ExternalDomain' }).Count | Should -Be 1
+            ($result.Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com' } | Select-Object -First 1).DisplayName | Should -Be 'contoso.sharepoint.com'
             @($result.Edges | Where-Object { $_.SourceId -eq 'app_internal' -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and $_.Metadata.InteractionDirection -eq 'Read' -and $_.Label -match 'GET$' }).Count | Should -Be 1
             @($result.Edges | Where-Object { $_.SourceId -eq 'app_internal' -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and $_.Metadata.InteractionDirection -eq 'Write' -and $_.Label -match 'SET$' }).Count | Should -Be 1
             @($result.ConnectedConnections) | Should -Contain 'shared_sql'
             @($result.ConnectedEntities) | Should -Contain 'accounts'
             @($result.DefaultEntitiesInCanvasApps) | Should -Contain 'external_vendor'
             @($result.ConnectedDefaultEntities) | Should -Contain 'external_vendor'
+        }
+    }
+
+    It "normalizes external domain labels by removing any protocol prefix that uses ://" {
+        InModuleScope PowerPlatformChecker {
+            $canvasApps = @(
+                [pscustomobject]@{
+                    Name = "app_protocol"
+                    DisplayName = "Protocol App"
+                    InteractionDirection = 'Read'
+                    InteractionEvidence = 'SourceFormula'
+                    ConnectionReferences = @()
+                    DomainInteractions = @(
+                        [pscustomobject]@{ Domain = 'ftp://files.contoso.example/archive'; DataSourceName = 'Archive'; Direction = 'Read'; Evidence = 'SourceFormula' }
+                    )
+                    DataSources = [pscustomobject]@{ DataSources = @() }
+                }
+            )
+
+            $solutionObject = [pscustomobject]@{ CanvasApps = $canvasApps }
+            $result = Get-PowerPlatformCheckerArchitectureCanvasAppGraphContent -SolutionObject $solutionObject -IncludeCanvasApps:$true -IncludeExternalDomains:$true -EntitySetByReference @{} -KnownEntitySetNames @()
+
+            @($result.Nodes | Where-Object { $_.Id -eq 'externaldomain_ftp_files_contoso_example_archive' -and $_.Type -eq 'ExternalDomain' }).Count | Should -Be 1
+            ($result.Nodes | Where-Object { $_.Id -eq 'externaldomain_ftp_files_contoso_example_archive' } | Select-Object -First 1).DisplayName | Should -Be 'files.contoso.example/archive'
         }
     }
 }

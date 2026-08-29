@@ -244,6 +244,7 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
         $solutionNode = $graph.Nodes | Where-Object Type -eq 'Solution' | Select-Object -First 1
 
         ($graph.Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com' -and $_.Type -eq 'ExternalDomain' }).Count | Should -Be 1
+        ($graph.Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com' } | Select-Object -First 1).DisplayName | Should -Be 'contoso.sharepoint.com'
         ($graph.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and [string]$_.Label -match '^App-[0-9]{2} GET' }).Count | Should -Be 1
         ($graph.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and [string]$_.Label -match '^App-[0-9]{2} SET' }).Count | Should -Be 1
     }
@@ -490,7 +491,7 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
             Mock -CommandName Get-PowerPlatformCheckerFlowActionList -MockWith {
                 @(
                     [pscustomobject]@{ Name = 'ReadPlan'; ExternalEndpoint = 'https://contoso.sharepoint.com/sites/energy'; ExternalDomain = 'contoso.sharepoint.com'; GetSetAction = 'Get'; InteractionDirection = 'Read'; Group = 'shared_sharepointonline' },
-                    [pscustomobject]@{ Name = 'WritePlan'; ExternalEndpoint = 'https://contoso.sharepoint.com/sites/ops'; ExternalDomain = 'contoso.sharepoint.com'; GetSetAction = 'Set'; InteractionDirection = 'Write'; Group = 'shared_sharepointonline' },
+                    [pscustomobject]@{ Name = 'WritePlan'; ExternalEndpoint = 'ftp://contoso.sharepoint.com/sites/ops'; ExternalDomain = 'contoso.sharepoint.com'; GetSetAction = 'Set'; InteractionDirection = 'Write'; Group = 'shared_sharepointonline' },
                     [pscustomobject]@{ Name = 'WriteUnknownSite'; ExternalEndpoint = ''; ExternalDomain = ''; GetSetAction = 'Set'; InteractionDirection = 'Write'; Group = 'shared_sharepointonline' }
                 )
             }
@@ -501,13 +502,15 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
             $solutionNode | Should -Not -BeNullOrEmpty
 
             ($_ | Select-Object -ExpandProperty Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com_sites_energy' }).Count | Should -Be 1
-            ($_ | Select-Object -ExpandProperty Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com_sites_ops' }).Count | Should -Be 1
+            ($_ | Select-Object -ExpandProperty Nodes | Where-Object { $_.Id -eq 'externaldomain_ftp_contoso_sharepoint_com_sites_ops' }).Count | Should -Be 1
+            ($_ | Select-Object -ExpandProperty Nodes | Where-Object { $_.Id -eq 'externaldomain_https_contoso_sharepoint_com_sites_energy' } | Select-Object -First 1).DisplayName | Should -Be 'contoso.sharepoint.com/sites/energy'
+            ($_ | Select-Object -ExpandProperty Nodes | Where-Object { $_.Id -eq 'externaldomain_ftp_contoso_sharepoint_com_sites_ops' } | Select-Object -First 1).DisplayName | Should -Be 'contoso.sharepoint.com/sites/ops'
             ($_ | Select-Object -ExpandProperty Nodes | Where-Object { $_.Id -eq 'externaldomain_unknown_shared_sharepointonline_' }).Count | Should -Be 0
 
             ($_ | Select-Object -ExpandProperty Nodes | Where-Object { $_.Id -eq 'connection_shared_sharepointonline' }).Count | Should -Be 0
 
             $energyEdge = $_.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com_sites_energy' -and [string]$_.Label -match 'GET' } | Select-Object -First 1
-            $opsEdge = $_.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com_sites_ops' -and [string]$_.Label -match 'SET' } | Select-Object -First 1
+            $opsEdge = $_.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_ftp_contoso_sharepoint_com_sites_ops' -and [string]$_.Label -match 'SET' } | Select-Object -First 1
             $unknownEdge = $_.Edges | Where-Object { $_.SourceId -eq $solutionNode.Id -and $_.TargetId -eq 'externaldomain_unknown_shared_sharepointonline_' -and [string]$_.Label -match 'SET' } | Select-Object -First 1
 
             $energyEdge | Should -Not -BeNullOrEmpty

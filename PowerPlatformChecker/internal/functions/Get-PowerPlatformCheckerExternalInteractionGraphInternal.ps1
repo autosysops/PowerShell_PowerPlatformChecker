@@ -233,8 +233,9 @@
                             continue
                         }
 
-                        $displayDomain = ([string]$domain).Trim()
-                        $normalizedDomain = $displayDomain.ToLowerInvariant()
+                        $rawDomain = ([string]$domain).Trim()
+                        $displayDomain = Get-PowerPlatformCheckerExternalDomainDisplayName -DomainValue $rawDomain
+                        $normalizedDomain = $rawDomain.ToLowerInvariant()
                         $targetNode = [pscustomobject]@{
                             Id = "externaldomain_{0}" -f (Convert-PowerPlatformCheckerMermaidId -InputString $normalizedDomain)
                             Type = 'ExternalDomain'
@@ -280,8 +281,9 @@
                         continue
                     }
 
-                    $displayDomain = ([string]$destination).Trim()
-                    $normalizedDomain = $displayDomain.ToLowerInvariant()
+                    $rawDomain = ([string]$destination).Trim()
+                    $displayDomain = Get-PowerPlatformCheckerExternalDomainDisplayName -DomainValue $rawDomain
+                    $normalizedDomain = $rawDomain.ToLowerInvariant()
                     $targetNode = [pscustomobject]@{
                         Id = "externaldomain_{0}" -f (Convert-PowerPlatformCheckerMermaidId -InputString $normalizedDomain)
                         Type = 'ExternalDomain'

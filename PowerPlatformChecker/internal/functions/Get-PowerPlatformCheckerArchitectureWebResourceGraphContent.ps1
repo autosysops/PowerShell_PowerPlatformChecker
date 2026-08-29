@@ -143,7 +143,9 @@
             }
 
             $externalDomainId = "external_" + (Convert-PowerPlatformCheckerMermaidId -InputString ([string]$externalDomain))
-            $nodes += [pscustomobject]@{ Id = $externalDomainId; Type = "ExternalDomain"; DisplayName = [string]$externalDomain; ClassKind = "ExternalDomain"; Properties = @{}; Members = @(); HasExplicitDisplayName = $true }
+            $displayDomain = Get-PowerPlatformCheckerExternalDomainDisplayName -DomainValue ([string]$externalDomain
+            )
+            $nodes += [pscustomobject]@{ Id = $externalDomainId; Type = "ExternalDomain"; DisplayName = [string]$displayDomain; ClassKind = "ExternalDomain"; Properties = @{}; Members = @(); HasExplicitDisplayName = $true }
             $edges += [pscustomobject]@{ SourceId = [string]$webResource.MermaidId; TargetId = $externalDomainId; Label = "ExternalCall"; EdgeType = "Link"; Metadata = @{ Arrow = "-->" } }
         }
     }
