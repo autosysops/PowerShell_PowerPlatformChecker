@@ -106,7 +106,7 @@
             CanvasApp = "fill:$($resolvedStyle.CanvasApp),stroke:$($resolvedStyle.Stroke)"
             ModelDrivenApp = "fill:$($resolvedStyle.ModelDrivenApp),stroke:$($resolvedStyle.Stroke)"
             WebResource = "fill:$($resolvedStyle.WebResource),stroke:$($resolvedStyle.Stroke)"
-            Solution = "fill:$($resolvedStyle.Solution),stroke:#111111,stroke-width:2px;"
+            Solution = "fill:$($resolvedStyle.Solution),stroke:$($resolvedStyle.SolutionStroke),stroke-width:2px;"
             ExternalDomain = "fill:$($resolvedStyle.ExternalDomain),stroke:$($resolvedStyle.Stroke)"
         }
         $styleNames = @($styleMap.Keys | Sort-Object)

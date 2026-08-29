@@ -114,7 +114,7 @@
         $styles.WebResource = "fill:$($Style.WebResource),stroke:$($Style.Stroke)"
     }
     if (@($uniqueNodes | Where-Object { $_.ClassKind -eq 'Solution' }).Count -gt 0) {
-        $styles.Solution = "fill:$($Style.Solution),stroke:#111111,stroke-width:2px;"
+        $styles.Solution = "fill:$($Style.Solution),stroke:$($Style.SolutionStroke),stroke-width:2px;"
     }
     if (@($uniqueNodes | Where-Object { $_.ClassKind -eq 'ExternalDomain' }).Count -gt 0) {
         $styles.ExternalDomain = "fill:$($Style.ExternalDomain),stroke:$($Style.Stroke)"

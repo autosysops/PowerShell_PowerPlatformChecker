@@ -18,6 +18,6 @@ classDef Flow fill:#DBE4EE,stroke:#5E5B52
 classDef CanvasApp fill:#8BC34A,stroke:#5E5B52
 classDef ModelDrivenApp fill:#7BAFD4,stroke:#5E5B52
 classDef WebResource fill:#D7C8F3,stroke:#5E5B52
-classDef Solution fill:#f5f5f5,stroke:#111111,stroke-width:2px;
+classDef Solution fill:#f5f5fa,stroke:#1A1A1A,stroke-width:2px;
 classDef ExternalDomain fill:#E6D3A3,stroke:#5E5B52
 :::

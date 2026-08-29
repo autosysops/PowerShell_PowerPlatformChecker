@@ -17,7 +17,7 @@ Describe "Get-PowerPlatformCheckerStyle" {
         $style = Get-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram
 
         $style.Flow | Should -Not -BeNullOrEmpty
-        $style.Solution | Should -Be "#f5f5f5"
+        $style.Solution | Should -Be "#f5f5fa"
         $style.ExternalDomain | Should -Be "#E6D3A3"
         $style.Stroke | Should -Be "#5E5B52"
     }

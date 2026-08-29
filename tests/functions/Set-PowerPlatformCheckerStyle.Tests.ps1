@@ -40,11 +40,11 @@ Describe "Set-PowerPlatformCheckerStyle" {
             $result.ExternalDomain | Should -Be "#aabbcc"
 
             $markdown = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @((Get-PowerPlatformCheckerFixtureSolutionPath)) -OutputFormat Mermaid
-            $markdown | Should -Match 'classDef Solution fill:#ededed,stroke:#111111,stroke-width:2px;'
+            $markdown | Should -Match 'classDef Solution fill:#ededed,stroke:#1A1A1A,stroke-width:2px;'
             $markdown | Should -Match 'classDef ExternalDomain fill:#aabbcc,stroke:#5E5B52'
         }
         finally {
-            Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Solution "#f5f5f5" -ExternalDomain "#E6D3A3" | Out-Null
+            Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Solution "#f5f5fa" -ExternalDomain "#E6D3A3" | Out-Null
         }
     }
 

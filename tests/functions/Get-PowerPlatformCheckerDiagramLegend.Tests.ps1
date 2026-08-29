@@ -33,7 +33,7 @@ Describe "Get-PowerPlatformCheckerDiagramLegend" {
         $legend = Get-PowerPlatformCheckerDiagramLegend -DiagramType ExternalInteraction -Graph $graph
 
         $legend | Should -Match '<span style="color:#FCD757">Connection</span>'
-        $legend | Should -Match '<span style="color:#f5f5f5">Solution</span>'
+        $legend | Should -Match '<span style="color:#f5f5fa">Solution</span>'
         $legend | Should -Match '<span style="color:#E6D3A3">ExternalDomain</span>'
         $legend | Should -Not -Match '<span style="color:[^"]+">CanvasApp</span>'
         $legend | Should -Not -Match '<span style="color:[^"]+">ModelDrivenApp</span>'

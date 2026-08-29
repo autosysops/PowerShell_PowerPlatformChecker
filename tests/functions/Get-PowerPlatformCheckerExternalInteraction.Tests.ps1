@@ -301,7 +301,7 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
                     Edges = @()
                     Styles = [pscustomobject]@{
                         default = 'fill:red,stroke:"0e75a9249ce34eca8f8c"'
-                        Solution = 'fill:#f5f5f5,stroke:"0e75a9249ce34eca8f8c"'
+                        Solution = 'fill:#f5f5fa,stroke:"0e75a9249ce34eca8f8c"'
                     }
                     StyleOrder = @('default', 'Solution')
                 }
@@ -311,7 +311,7 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
 
             Get-PowerPlatformCheckerExternalInteractionGraphInternal -FilteredSolutionPaths @('C:\Temp\MySolution\Managed') -Direction 'LR'
         } | ForEach-Object {
-            [string]$_.Styles.Solution | Should -Be 'fill:#f5f5f5,stroke:#111111,stroke-width:2px;'
+            [string]$_.Styles.Solution | Should -Be 'fill:#f5f5fa,stroke:#1A1A1A,stroke-width:2px;'
             [string]$_.Styles.Solution | Should -Not -Match 'stroke:"'
         }
     }

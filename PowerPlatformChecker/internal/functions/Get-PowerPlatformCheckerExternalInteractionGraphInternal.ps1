@@ -477,7 +477,7 @@
         $requiredStyles['Flow'] = "fill:$($resolvedStyle.Flow),stroke:$($resolvedStyle.Stroke)"
     }
     if (@($combinedNodes | Where-Object { $_.ClassKind -eq 'Solution' }).Count -gt 0) {
-        $requiredStyles['Solution'] = "fill:$($resolvedStyle.Solution),stroke:#111111,stroke-width:2px;"
+        $requiredStyles['Solution'] = "fill:$($resolvedStyle.Solution),stroke:$($resolvedStyle.SolutionStroke),stroke-width:2px;"
     }
     if (@($combinedNodes | Where-Object { $_.ClassKind -eq 'ExternalDomain' }).Count -gt 0) {
         $requiredStyles['ExternalDomain'] = "fill:$($resolvedStyle.ExternalDomain),stroke:$($resolvedStyle.Stroke)"

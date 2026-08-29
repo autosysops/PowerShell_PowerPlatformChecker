@@ -20,9 +20,10 @@ if (-not $script:PowerPlatformCheckerDiagramStyleDefaults) {
 			CanvasApp = "#8BC34A"
 			ModelDrivenApp = "#7BAFD4"
 			WebResource = "#D7C8F3"
-			Solution = "#f5f5f5"
+			Solution = "#f5f5fa"
 			ExternalDomain = "#E6D3A3"
 			Stroke = "#5E5B52"
+			SolutionStroke = "#1A1A1A"
 		}
 	}
 }
