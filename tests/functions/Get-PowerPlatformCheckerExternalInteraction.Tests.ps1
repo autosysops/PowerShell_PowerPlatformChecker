@@ -279,6 +279,20 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
         $markdown | Should -Match 'classDef Connection fill:#123456,stroke:#5E5B52'
     }
 
+    It "sanitizes invalid quoted stroke values in Mermaid class definitions" {
+        try {
+            [void](Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Stroke '"a934a73fdcd8491e8bfc"')
+
+            $markdown = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @($script:solutionPath) -OutputFormat Mermaid
+
+            $markdown | Should -Not -Match '(?m)^classDef\s+\w+\s+.*stroke:"'
+            $markdown | Should -Match 'classDef Connection fill:#FCD757,stroke:#5E5B52'
+        }
+        finally {
+            [void](Set-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram -Stroke '#5E5B52')
+        }
+    }
+
     It "normalizes managed solution identity and keeps inbound plus multi-target outbound evidence" {
         InModuleScope PowerPlatformChecker {
             Mock -CommandName Get-PowerPlatformCheckerArchitectureDiagram -MockWith {

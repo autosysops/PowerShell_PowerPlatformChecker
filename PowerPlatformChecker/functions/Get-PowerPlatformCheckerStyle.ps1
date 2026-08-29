@@ -27,7 +27,9 @@
         [string] $StyleTarget = 'ArchitectureDiagram'
     )
 
-    if (-not $script:PowerPlatformCheckerStyles.ContainsKey($StyleTarget)) {
+    $styleStore = $script:PowerPlatformCheckerDiagramStyles
+
+    if (-not $styleStore.ContainsKey($StyleTarget)) {
         throw "Unsupported style target '$StyleTarget'."
     }
 
@@ -36,5 +38,5 @@
     }
     Send-THEvent -ModuleName 'PowerPlatformChecker' -EventName 'Get-PowerPlatformCheckerStyle' -PropertiesHash $telemetryProperties
 
-    return $script:PowerPlatformCheckerStyles[$StyleTarget].Clone()
+    return $styleStore[$StyleTarget].Clone()
 }

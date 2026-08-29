@@ -24,13 +24,13 @@ Describe "Get-PowerPlatformCheckerStyle" {
 
     It "throws for unsupported style targets in module state" {
         InModuleScope PowerPlatformChecker {
-            $originalStyles = $script:PowerPlatformCheckerStyles
+            $originalStyles = $script:PowerPlatformCheckerDiagramStyles
             try {
-                $script:PowerPlatformCheckerStyles = @{}
+                $script:PowerPlatformCheckerDiagramStyles = @{}
                 { Get-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram } | Should -Throw "Unsupported style target*"
             }
             finally {
-                $script:PowerPlatformCheckerStyles = $originalStyles
+                $script:PowerPlatformCheckerDiagramStyles = $originalStyles
             }
         }
     }

@@ -362,6 +362,8 @@ Supported keys and built-in values are:
 | `CanvasApp` | `#8BC34A` | Canvas apps |
 | `ModelDrivenApp` | `#7BAFD4` | Model-driven apps |
 | `WebResource` | `#D7C8F3` | JavaScript and icon web resources |
+| `Solution` | `#f5f5f5` | External interaction solution nodes |
+| `ExternalDomain` | `#E6D3A3` | External systems and internet domains |
 | `Stroke` | `#5E5B52` | Border color shared by all classes |
 
 Set defaults for all subsequent diagrams in the current imported-module session:

@@ -111,7 +111,9 @@
     }
 
     begin {
-        if (-not $script:PowerPlatformCheckerStyles.ContainsKey($StyleTarget)) {
+        $styleStore = $script:PowerPlatformCheckerDiagramStyles
+
+        if (-not $styleStore.ContainsKey($StyleTarget)) {
             throw "Unsupported style target '$StyleTarget'."
         }
 
@@ -164,10 +166,10 @@
         foreach ($key in @($updates.Keys)) {
             $value = [string]$updates[$key]
             if ($PSCmdlet.ShouldProcess("$StyleTarget style", "Set '$key' style value to '$value'")) {
-                $script:PowerPlatformCheckerStyles[$StyleTarget][$key] = $value
+                $styleStore[$StyleTarget][$key] = $value
             }
         }
 
-        return $script:PowerPlatformCheckerStyles[$StyleTarget].Clone()
+        return $styleStore[$StyleTarget].Clone()
     }
 }

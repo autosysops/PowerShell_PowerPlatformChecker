@@ -6,10 +6,10 @@
 # ================== DIAGRAM STYLE DEFAULTS =========================
 # ===================================================================
 
-# Keep style defaults in a target-keyed store so new renderers can add
-# dedicated style maps without changing command contracts.
-if (-not $script:PowerPlatformCheckerStyles) {
-	$script:PowerPlatformCheckerStyles = @{
+# Keep diagram style defaults in a target-keyed store so new diagram
+# renderers can add dedicated style maps without changing command contracts.
+if (-not $script:PowerPlatformCheckerDiagramStyleDefaults) {
+	$script:PowerPlatformCheckerDiagramStyleDefaults = @{
 		ArchitectureDiagram = @{
 			Default = "red"
 			EnvVar = "#DF9A57"
@@ -23,6 +23,16 @@ if (-not $script:PowerPlatformCheckerStyles) {
 			Solution = "#f5f5f5"
 			ExternalDomain = "#E6D3A3"
 			Stroke = "#5E5B52"
+		}
+	}
+}
+
+if (-not $script:PowerPlatformCheckerDiagramStyles) {
+	$script:PowerPlatformCheckerDiagramStyles = @{}
+	foreach ($targetName in @($script:PowerPlatformCheckerDiagramStyleDefaults.Keys)) {
+		$script:PowerPlatformCheckerDiagramStyles[$targetName] = @{}
+		foreach ($styleKey in @($script:PowerPlatformCheckerDiagramStyleDefaults[$targetName].Keys)) {
+			$script:PowerPlatformCheckerDiagramStyles[$targetName][$styleKey] = [string]$script:PowerPlatformCheckerDiagramStyleDefaults[$targetName][$styleKey]
 		}
 	}
 }
