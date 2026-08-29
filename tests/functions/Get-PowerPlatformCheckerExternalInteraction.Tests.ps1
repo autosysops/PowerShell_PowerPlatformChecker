@@ -293,6 +293,29 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
         }
     }
 
+    It "overrides malformed inherited Solution class styles in external interaction graphs" {
+        InModuleScope PowerPlatformChecker {
+            Mock -CommandName Get-PowerPlatformCheckerArchitectureDiagram -MockWith {
+                [pscustomobject]@{
+                    Nodes = @()
+                    Edges = @()
+                    Styles = [pscustomobject]@{
+                        default = 'fill:red,stroke:"0e75a9249ce34eca8f8c"'
+                        Solution = 'fill:#f5f5f5,stroke:"0e75a9249ce34eca8f8c"'
+                    }
+                    StyleOrder = @('default', 'Solution')
+                }
+            }
+
+            Mock -CommandName Get-PowerPlatformCheckerFlowFile -MockWith { @() }
+
+            Get-PowerPlatformCheckerExternalInteractionGraphInternal -FilteredSolutionPaths @('C:\Temp\MySolution\Managed') -Direction 'LR'
+        } | ForEach-Object {
+            [string]$_.Styles.Solution | Should -Be 'fill:#f5f5f5,stroke:#111111,stroke-width:2px;'
+            [string]$_.Styles.Solution | Should -Not -Match 'stroke:"'
+        }
+    }
+
     It "normalizes managed solution identity and keeps inbound plus multi-target outbound evidence" {
         InModuleScope PowerPlatformChecker {
             Mock -CommandName Get-PowerPlatformCheckerArchitectureDiagram -MockWith {

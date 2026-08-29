@@ -484,9 +484,9 @@
     }
 
     foreach ($styleName in @($requiredStyles.Keys)) {
-        if (-not $styles.ContainsKey($styleName)) {
-            $styles[$styleName] = [string]$requiredStyles[$styleName]
-        }
+        # Always enforce required style definitions for external interaction
+        # output so inherited style maps cannot leak malformed Mermaid tokens.
+        $styles[$styleName] = [string]$requiredStyles[$styleName]
         if ($styleOrder -notcontains $styleName) {
             $styleOrder += $styleName
         }
