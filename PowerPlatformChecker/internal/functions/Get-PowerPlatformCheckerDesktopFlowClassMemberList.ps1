@@ -95,7 +95,7 @@
         [void]$members.Add("    [OUTPUT]$outputName")
     }
     foreach ($subflowName in @($subflowNames)) {
-        [void]$members.Add("    [SUBFLOW]$subflowName")
+        [void]$members.Add("    Subflow($subflowName)")
     }
 
     return @($members)

@@ -128,12 +128,20 @@
         $destinationType = "Unknown"
         $destinationConfidence = "Low"
         $destinationEvidence = "NoDestinationSignal"
+        $desktopSubflowNames = @()
         if ([string]::IsNullOrWhiteSpace($flowType)) {
             $flowType = "Unknown"
         }
 
         if ($flowType -eq "Desktop") {
             $flowMembers += @(Get-PowerPlatformCheckerDesktopFlowClassMemberList -Path $flowPath)
+            foreach ($member in @($flowMembers)) {
+                $memberText = [string]$member
+                if ($memberText -match '^\s*Subflow\((?<name>[^)]+)\)\s*$') {
+                    $desktopSubflowNames += [string]$matches['name']
+                }
+            }
+            $desktopSubflowNames = @($desktopSubflowNames | Select-Object -Unique)
         }
 
         # Flow parameters provide environment-variable usage links into the flow node.
@@ -240,6 +248,34 @@
             }
             Members = @($flowMembers)
             HasExplicitDisplayName = $true
+        }
+
+        foreach ($subflowName in @($desktopSubflowNames)) {
+            if ([string]::IsNullOrWhiteSpace([string]$subflowName)) {
+                continue
+            }
+
+            $subflowNodeId = Convert-PowerPlatformCheckerMermaidId -InputString ("subflow_{0}_{1}" -f [string]$flow.Id, [string]$subflowName)
+            $nodes += [pscustomobject]@{
+                Id = $subflowNodeId
+                Type = "FlowSubflow"
+                DisplayName = [string]$subflowName
+                ClassKind = "Flow"
+                Properties = @{
+                    FlowType = "Subflow"
+                    ParentFlowId = [string]$flow.Id
+                }
+                Members = @()
+                HasExplicitDisplayName = $true
+            }
+
+            $edges += [pscustomobject]@{
+                SourceId = $flowNode
+                TargetId = $subflowNodeId
+                Label = "Subflow"
+                EdgeType = "Reference"
+                Metadata = @{ Arrow = "..>" }
+            }
         }
     }
 

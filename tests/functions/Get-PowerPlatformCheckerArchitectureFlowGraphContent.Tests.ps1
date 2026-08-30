@@ -139,9 +139,18 @@ Describe "Get-PowerPlatformCheckerArchitectureFlowGraphContent" {
 
             $result = Get-PowerPlatformCheckerArchitectureFlowGraphContent -SolutionPath $SolutionPath -SolutionObject $solutionObject -IncludeFlows:$true -IncludeEnvironmentVariables:$false -IncludeConnections:$false -IncludeEntities:$false -HasFlowFilter:$false -FlowId '' -EntitySetByReference @{}
 
-            @($result.Nodes).Count | Should -Be 1
-            $result.Nodes[0].Members | Should -Contain '    [SUBFLOW]ProcessOrder'
-            $result.Nodes[0].Members | Should -Contain '    [SUBFLOW]SendAudit'
+            @($result.Nodes).Count | Should -Be 3
+            $result.Nodes[0].Members | Should -Contain '    Subflow(ProcessOrder)'
+            $result.Nodes[0].Members | Should -Contain '    Subflow(SendAudit)'
+
+            $subflowNodes = @($result.Nodes | Where-Object { $_.Type -eq 'FlowSubflow' })
+            @($subflowNodes).Count | Should -Be 2
+            ($subflowNodes | Select-Object -ExpandProperty DisplayName) | Should -Contain 'ProcessOrder'
+            ($subflowNodes | Select-Object -ExpandProperty DisplayName) | Should -Contain 'SendAudit'
+            ($subflowNodes | ForEach-Object { $_.Properties.FlowType }) | Should -Contain 'Subflow'
+
+            $subflowEdges = @($result.Edges | Where-Object { $_.SourceId -eq 'flow99999999-9999-9999-9999-999999999999' -and $_.Label -eq 'Subflow' })
+            @($subflowEdges).Count | Should -Be 2
         } -Parameters @{ SolutionPath = $script:desktopFlowChartSolutionPath }
     }
 }

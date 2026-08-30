@@ -1,4 +1,4 @@
-﻿:::mermaid
+:::mermaid
 classDiagram
 direction LR
 class flow23232323-3434-4545-5656-676767676767["[DESKTOP] Desktop external profile flow"]:::Flow

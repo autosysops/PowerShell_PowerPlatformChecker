@@ -46,8 +46,8 @@ Describe "Get-PowerPlatformCheckerDesktopFlowClassMemberList" {
             Get-PowerPlatformCheckerDesktopFlowClassMemberList -Path $resolvedPath
         } $path
 
-        $members | Should -Contain '    [SUBFLOW]ProcessOrder'
-        $members | Should -Contain '    [SUBFLOW]SendAudit'
+        $members | Should -Contain '    Subflow(ProcessOrder)'
+        $members | Should -Contain '    Subflow(SendAudit)'
     }
 }
 

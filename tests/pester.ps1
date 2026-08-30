@@ -80,6 +80,7 @@ $global:__pester_data.ScriptAnalyzer | Out-Host
 
 #region Test Commands
 $functionTestFiles = @()
+$functionTestResult = $null
 if ($TestFunctions)
 {
 	Write-Host "Proceeding with individual tests"
@@ -87,27 +88,35 @@ if ($TestFunctions)
 		$_.Name -like $Include -and $_.Name -notlike $Exclude
 	})
 
-	foreach ($file in $functionTestFiles)
+	if ($functionTestFiles.Count -gt 0)
 	{
-		Write-Host "  Executing $($file.Name)"
-		$config.TestResult.OutputPath = Join-Path "$PSScriptRoot\..\TestResults" "TEST-$($file.BaseName).xml"
-		$config.Run.Path = $file.FullName
+		Write-Host "  Executing function test suite ($($functionTestFiles.Count) files)"
+		$config.TestResult.OutputPath = Join-Path "$PSScriptRoot\..\TestResults" "TEST-Functions.xml"
+		$config.Run.Path = @($functionTestFiles.FullName)
 		$config.Run.PassThru = $true
 		$config.Output.Verbosity = $Output
-    	$results = Invoke-Pester -Configuration $config
-		foreach ($result in $results)
+		$config.CodeCoverage.Enabled = $EnableCoverage
+		if ($EnableCoverage)
 		{
-			$totalRun += $result.TotalCount
-			$totalFailed += $result.FailedCount
-			$result.Tests | Where-Object Result -ne 'Passed' | ForEach-Object {
-				$testresults += [pscustomobject]@{
-					Block    = $_.Block
-					Name	 = "It $($_.Name)"
-					Result   = $_.Result
-					Message  = $_.ErrorRecord.DisplayErrorMessage
-				}
+			$config.CodeCoverage.Path = @("$PSScriptRoot\..\PowerPlatformChecker\functions\*.ps1")
+			$config.CodeCoverage.OutputPath = Join-Path "$PSScriptRoot\..\TestResults" "coverage.xml"
+			$config.CodeCoverage.OutputFormat = "JaCoCo"
+		}
+		$functionTestResult = Invoke-Pester -Configuration $config
+		$totalRun += $functionTestResult.TotalCount
+		$totalFailed += $functionTestResult.FailedCount
+		$functionTestResult.Tests | Where-Object Result -ne 'Passed' | ForEach-Object {
+			$testresults += [pscustomobject]@{
+				Block    = $_.Block
+				Name	 = "It $($_.Name)"
+				Result   = $_.Result
+				Message  = $_.ErrorRecord.DisplayErrorMessage
 			}
 		}
+	}
+	else
+	{
+		Write-Host "No function tests selected."
 	}
 }
 #endregion Test Commands
@@ -116,27 +125,17 @@ if ($TestFunctions)
 if ($TestFunctions -and $EnableCoverage)
 {
 	Write-Host "Calculating code coverage for public functions"
-	if ($functionTestFiles.Count -eq 0)
+	if ($functionTestFiles.Count -eq 0 -or $null -eq $functionTestResult)
 	{
 		Write-Host "No function tests selected for coverage run."
 		return
 	}
 
-	$coverageConfig = [PesterConfiguration]::Default
-	$coverageConfig.Run.Path = @($functionTestFiles.FullName)
-	$coverageConfig.Run.PassThru = $true
-	$coverageConfig.Output.Verbosity = $Output
-	$coverageConfig.CodeCoverage.Enabled = $true
-	$coverageConfig.CodeCoverage.Path = @("$PSScriptRoot\..\PowerPlatformChecker\functions\*.ps1")
 	$coverageOutputPath = Join-Path "$PSScriptRoot\..\TestResults" "coverage.xml"
-	$coverageConfig.CodeCoverage.OutputPath = $coverageOutputPath
-	$coverageConfig.CodeCoverage.OutputFormat = "JaCoCo"
-
-	$coverageResult = Invoke-Pester -Configuration $coverageConfig
-	if ($coverageResult.FailedCount -gt 0)
+	if ($functionTestResult.FailedCount -gt 0)
 	{
-		$failedCoverageTests = $coverageResult.Tests | Where-Object Result -ne 'Passed' | Select-Object -ExpandProperty Name
-		throw "Coverage run contained failing tests: $($failedCoverageTests -join ', ')"
+		$failedCoverageTests = $functionTestResult.Tests | Where-Object Result -ne 'Passed' | Select-Object -ExpandProperty Name
+		throw "Coverage-enabled function test run contained failing tests: $($failedCoverageTests -join ', ')"
 	}
 
 	[xml]$coverageXml = (Get-Content -Path $coverageOutputPath) -join "`n"
