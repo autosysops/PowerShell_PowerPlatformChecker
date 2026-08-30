@@ -89,7 +89,6 @@
     }
     $labelPartMap = [ordered]@{
         Kind = 'FlowAction'
-        SourceAlias = [string]$FlowAlias
         SourceType = 'Flow'
         SourceDisplayName = ([string]$FlowNode.DisplayName).Replace(':', ' ')
         DetailParts = @()
@@ -100,17 +99,23 @@
         Protocol = $protocol
         TriggerAuthenticationDescription = $triggerAuthText
     }
-    if (-not [string]::IsNullOrWhiteSpace($connectorName)) {
-        $labelPartMap['ConnectorName'] = $connectorName
-    }
-    if (-not [string]::IsNullOrWhiteSpace([string]$ConnectorCode)) {
-        $labelPartMap['ConnectorCode'] = ([string]$ConnectorCode).Replace(':', ' ')
+    if (-not [string]::IsNullOrWhiteSpace([string]$FlowAlias)) {
+        $labelPartMap['CompactSourceAlias'] = ([string]$FlowAlias).Replace(':', ' ')
     }
     $labelPartObject = [pscustomobject]$labelPartMap
 
+    $compactLabelPartMap = [ordered]@{}
+    foreach ($property in @($labelPartObject.PSObject.Properties)) {
+        $compactLabelPartMap[[string]$property.Name] = $property.Value
+    }
+    if (-not [string]::IsNullOrWhiteSpace([string]$ConnectorCode)) {
+        $compactLabelPartMap['ConnectorCode'] = ([string]$ConnectorCode).Replace(':', ' ')
+    }
+    $compactLabelPartObject = [pscustomobject]$compactLabelPartMap
+
     return [pscustomobject]@{
         Label = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $labelPartObject
-        MermaidLabel = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $labelPartObject -Compact
+        MermaidLabel = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $compactLabelPartObject -Compact
         LabelParts = $labelPartObject
     }
 }

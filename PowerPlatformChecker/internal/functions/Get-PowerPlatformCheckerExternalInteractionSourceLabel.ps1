@@ -16,9 +16,6 @@
     .PARAMETER SourceAlias
         Optional short alias (for example App-01) to use instead of type and display name.
 
-    .PARAMETER ConnectorName
-        Optional connector display name used in full Graph labels.
-
     .PARAMETER ConnectorCode
         Optional connector lookup code used in compact Mermaid labels.
 
@@ -42,9 +39,6 @@
 
         [Parameter(Mandatory = $false)]
         [string] $SourceAlias,
-
-        [Parameter(Mandatory = $false)]
-        [string] $ConnectorName,
 
         [Parameter(Mandatory = $false)]
         [string] $ConnectorCode,
@@ -83,24 +77,29 @@
 
     $labelPartMap = [ordered]@{
         Kind = 'Source'
-        SourceAlias = [string]$SourceAlias
         SourceType = $sourceType.Replace(':', ' ')
         SourceDisplayName = $sourceName.Replace(':', ' ')
         DetailParts = @($detailParts)
         Interaction = ([string]$InteractionLabel).Replace(':', ' ')
         DomainUnresolved = [bool]$DomainUnresolved.IsPresent
     }
-    if (-not [string]::IsNullOrWhiteSpace([string]$ConnectorName)) {
-        $labelPartMap['ConnectorName'] = ([string]$ConnectorName).Replace(':', ' ')
-    }
-    if (-not [string]::IsNullOrWhiteSpace([string]$ConnectorCode)) {
-        $labelPartMap['ConnectorCode'] = ([string]$ConnectorCode).Replace(':', ' ')
+    if (-not [string]::IsNullOrWhiteSpace([string]$SourceAlias)) {
+        $labelPartMap['CompactSourceAlias'] = [string]$SourceAlias
     }
     $labelPartObject = [pscustomobject]$labelPartMap
 
+    $compactLabelPartMap = [ordered]@{}
+    foreach ($property in @($labelPartObject.PSObject.Properties)) {
+        $compactLabelPartMap[[string]$property.Name] = $property.Value
+    }
+    if (-not [string]::IsNullOrWhiteSpace([string]$ConnectorCode)) {
+        $compactLabelPartMap['ConnectorCode'] = ([string]$ConnectorCode).Replace(':', ' ')
+    }
+    $compactLabelPartObject = [pscustomobject]$compactLabelPartMap
+
     return [pscustomobject]@{
         Label = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $labelPartObject
-        MermaidLabel = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $labelPartObject -Compact
+        MermaidLabel = Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $compactLabelPartObject -Compact
         LabelParts = $labelPartObject
     }
 }

@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerExternalInteractionConnectorProfile {
+﻿function Get-PowerPlatformCheckerExternalInteractionConnectorProfile {
     <#
     .SYNOPSIS
         Registers or retrieves connector lookup metadata for external interaction diagrams.
@@ -21,6 +21,8 @@ function Get-PowerPlatformCheckerExternalInteractionConnectorProfile {
         Optional mutable list to receive connector legend rows.
 
     .EXAMPLE
+        Resolve connector lookup metadata for an external interaction edge.
+
         Get-PowerPlatformCheckerExternalInteractionConnectorProfile -ConnectorKey 'shared_sharepointonline' -ConnectorByKey $map
     #>
 

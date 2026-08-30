@@ -157,7 +157,7 @@
                 $hasUnresolvedConnectionFallback = $true
                 $targetId = [string]$sourceNode.Id
                 foreach ($interactionLabel in @(Get-PowerPlatformCheckerExternalInteractionLabels -Direction ([string]$targetNode.Properties.InteractionDirection))) {
-                    $sourceLabel = Get-PowerPlatformCheckerExternalInteractionSourceLabel -Node $targetNode -InteractionLabel $interactionLabel -SourceAlias $sourceAlias -ConnectorName ([string]$connectorProfile.DisplayName) -ConnectorCode ([string]$connectorProfile.Code) -DomainUnresolved
+                    $sourceLabel = Get-PowerPlatformCheckerExternalInteractionSourceLabel -Node $targetNode -InteractionLabel $interactionLabel -SourceAlias $sourceAlias -ConnectorCode ([string]$connectorProfile.Code) -DomainUnresolved
                     Add-PowerPlatformCheckerExternalInteractionEvidence -InteractionByTarget $interactionByTarget -TargetNodeById $targetNodeById -TargetId $targetId -InteractionLabel $interactionLabel -TargetNode $sourceNode -SourceNode $targetNode -Evidence ([string]$edge.Label) -SourceLabelOverride ([string]$sourceLabel.Label) -SourceLabelPartsOverride $sourceLabel.LabelParts -CompactLabelOverride ([string]$sourceLabel.MermaidLabel)
                 }
                 continue

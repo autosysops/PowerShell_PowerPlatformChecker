@@ -52,7 +52,7 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
                     }
                     if ($_.Metadata -and $null -ne $_.Metadata.LabelParts) {
                         $stableLabelParts = [ordered]@{}
-                        foreach ($key in @('Kind', 'SourceAlias', 'SourceType', 'SourceDisplayName', 'DetailParts', 'Interaction', 'DomainUnresolved', 'ActionName', 'OperationName', 'ConnectorName', 'ConnectorCode', 'Protocol', 'TriggerAuthenticationDescription')) {
+                        foreach ($key in @('Kind', 'SourceType', 'SourceDisplayName', 'DetailParts', 'Interaction', 'DomainUnresolved', 'ActionName', 'OperationName', 'ConnectorName', 'ConnectorCode', 'Protocol', 'TriggerAuthenticationDescription')) {
                             if ($_.Metadata.LabelParts.PSObject.Properties.Name -contains $key) {
                                 $value = $_.Metadata.LabelParts.$key
                                 if ($value -is [System.Array]) {
@@ -237,23 +237,27 @@ Describe "Get-PowerPlatformCheckerExternalInteraction" {
     It "stores structured label parts in graph edge metadata" {
         $graph = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @($script:canvasExternalSolutionPath) -OutputFormat Graph
 
-        $unresolvedEdge = $graph.Edges | Where-Object { $_.TargetId -eq 'shared_sharepointonline' -and [string]$_.Label -eq 'CanvasApp / Learning Canvas App GET SharePoint DomainUnresolved' } | Select-Object -First 1
+        $unresolvedEdge = $graph.Edges | Where-Object { $_.TargetId -eq 'shared_sharepointonline' -and [string]$_.Label -eq 'CanvasApp / Learning Canvas App GET DomainUnresolved' } | Select-Object -First 1
         $resolvedEdge = $graph.Edges | Where-Object { $_.TargetId -eq 'externaldomain_https_contoso_sharepoint_com' -and [string]$_.Label -eq 'CanvasApp / Learning Canvas App GET' } | Select-Object -First 1
 
         $unresolvedEdge | Should -Not -BeNullOrEmpty
         $resolvedEdge | Should -Not -BeNullOrEmpty
 
         $unresolvedEdge.Metadata.LabelParts.Kind | Should -Be 'Source'
-        $unresolvedEdge.Metadata.LabelParts.SourceAlias | Should -Be 'App-01'
+        $unresolvedEdge.Metadata.LabelParts.SourceDisplayName | Should -Be 'Learning Canvas App'
+        $unresolvedEdge.Metadata.LabelParts.PSObject.Properties.Name | Should -Not -Contain 'SourceAlias'
         $unresolvedEdge.Metadata.LabelParts.Interaction | Should -Be 'GET'
         $unresolvedEdge.Metadata.LabelParts.DomainUnresolved | Should -BeTrue
-        $unresolvedEdge.Metadata.LabelParts.ConnectorName | Should -Be 'SharePoint'
-        $unresolvedEdge.Metadata.LabelParts.ConnectorCode | Should -Be 'C01'
+        $unresolvedEdge.Metadata.LabelParts.PSObject.Properties.Name | Should -Not -Contain 'ConnectorName'
+        $unresolvedEdge.Metadata.LabelParts.PSObject.Properties.Name | Should -Not -Contain 'ConnectorCode'
 
         $resolvedEdge.Metadata.LabelParts.Kind | Should -Be 'Source'
-        $resolvedEdge.Metadata.LabelParts.SourceAlias | Should -Be 'App-01'
+        $resolvedEdge.Metadata.LabelParts.SourceDisplayName | Should -Be 'Learning Canvas App'
+        $resolvedEdge.Metadata.LabelParts.PSObject.Properties.Name | Should -Not -Contain 'SourceAlias'
         $resolvedEdge.Metadata.LabelParts.Interaction | Should -Be 'GET'
         $resolvedEdge.Metadata.LabelParts.DomainUnresolved | Should -BeFalse
+        $resolvedEdge.Metadata.LabelParts.PSObject.Properties.Name | Should -Not -Contain 'ConnectorName'
+        $resolvedEdge.Metadata.LabelParts.PSObject.Properties.Name | Should -Not -Contain 'ConnectorCode'
         $resolvedEdge.Label | Should -Be 'CanvasApp / Learning Canvas App GET'
     }
 

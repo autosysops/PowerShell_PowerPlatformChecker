@@ -146,9 +146,5 @@
 
     $combinedGraph = Get-PowerPlatformCheckerExternalInteractionGraphInternal @internalGraphParameters
 
-    if ($OutputFormat -eq 'Graph') {
-        return $combinedGraph
-    }
-
-    return Convert-PowerPlatformCheckerArchitectureGraphToMermaid -Graph $combinedGraph
+    return Convert-PowerPlatformCheckerDiagramGraphToOutput -Graph $combinedGraph -OutputFormat $OutputFormat
 }

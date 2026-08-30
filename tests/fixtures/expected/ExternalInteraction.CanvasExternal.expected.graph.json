@@ -61,7 +61,6 @@
         "Evidence": "Training-Content GET",
         "LabelParts": {
           "Kind": "Source",
-          "SourceAlias": "App-01",
           "SourceType": "CanvasApp",
           "SourceDisplayName": "Learning Canvas App",
           "DetailParts": [],
@@ -80,7 +79,6 @@
         "Evidence": "Training-Progress SET",
         "LabelParts": {
           "Kind": "Source",
-          "SourceAlias": "App-01",
           "SourceType": "CanvasApp",
           "SourceDisplayName": "Learning Canvas App",
           "DetailParts": [],
@@ -92,42 +90,36 @@
     {
       "SourceId": "solution_canvas_external_solution",
       "TargetId": "shared_sharepointonline",
-      "Label": "CanvasApp / Learning Canvas App GET SharePoint DomainUnresolved",
+      "Label": "CanvasApp / Learning Canvas App GET DomainUnresolved",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
         "Evidence": "shared_sharepointonline",
         "LabelParts": {
           "Kind": "Source",
-          "SourceAlias": "App-01",
           "SourceType": "CanvasApp",
           "SourceDisplayName": "Learning Canvas App",
           "DetailParts": [],
           "Interaction": "GET",
-          "DomainUnresolved": true,
-          "ConnectorName": "SharePoint",
-          "ConnectorCode": "C01"
+          "DomainUnresolved": true
         }
       }
     },
     {
       "SourceId": "solution_canvas_external_solution",
       "TargetId": "shared_sharepointonline",
-      "Label": "CanvasApp / Learning Canvas App SET SharePoint DomainUnresolved",
+      "Label": "CanvasApp / Learning Canvas App SET DomainUnresolved",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
         "Evidence": "shared_sharepointonline",
         "LabelParts": {
           "Kind": "Source",
-          "SourceAlias": "App-01",
           "SourceType": "CanvasApp",
           "SourceDisplayName": "Learning Canvas App",
           "DetailParts": [],
           "Interaction": "SET",
-          "DomainUnresolved": true,
-          "ConnectorName": "SharePoint",
-          "ConnectorCode": "C01"
+          "DomainUnresolved": true
         }
       }
     }

@@ -52,23 +52,7 @@
     )
     $nodeDeclarationById = @{}
     foreach ($node in $flowchartNodes) {
-        $nodeId = [string]$node.Id
-        $nodeLabel = [string]$node.Label
-
-        switch ([string]$node.Shape) {
-            "Trigger" {
-                $nodeDeclarationById[$nodeId] = "$nodeId([`"$nodeLabel`"] )" -replace " \)",")"
-                continue
-            }
-            "Decision" {
-                $nodeDeclarationById[$nodeId] = "$nodeId{`"$nodeLabel`"}"
-                continue
-            }
-            default {
-                $nodeDeclarationById[$nodeId] = "$nodeId[`"$nodeLabel`"]"
-                continue
-            }
-        }
+        $nodeDeclarationById[[string]$node.Id] = Convert-PowerPlatformCheckerFlowChartNodeToMermaid -Node $node
     }
 
     # Root and nested graphs use the same rendering frames. Only nested graphs
@@ -91,16 +75,7 @@
 
         if ($frame.Kind -eq "Edges") {
             foreach ($edge in @($currentGraph.Edges)) {
-                $fromId = [string]$edge.From
-                $toId = [string]$edge.To
-                $label = [string]$edge.Label
-
-                if ([string]::IsNullOrWhiteSpace($label)) {
-                    $lines += "$fromId --> $toId"
-                }
-                else {
-                    $lines += "$fromId -- $label --> $toId"
-                }
+                $lines += (Convert-PowerPlatformCheckerFlowChartEdgeToMermaid -Edge $edge)
             }
             continue
         }

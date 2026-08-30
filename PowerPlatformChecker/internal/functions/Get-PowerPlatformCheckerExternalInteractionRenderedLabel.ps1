@@ -1,4 +1,4 @@
-function Get-PowerPlatformCheckerExternalInteractionRenderedLabel {
+﻿function Get-PowerPlatformCheckerExternalInteractionRenderedLabel {
     <#
     .SYNOPSIS
         Renders external interaction edge labels from structured label parts.
@@ -14,6 +14,8 @@ function Get-PowerPlatformCheckerExternalInteractionRenderedLabel {
         Renders the compact alias-based Mermaid label instead of the full graph label.
 
     .EXAMPLE
+        Render the compact Mermaid label from structured external interaction label parts.
+
         Get-PowerPlatformCheckerExternalInteractionRenderedLabel -LabelParts $parts -Compact
     #>
 
@@ -33,7 +35,13 @@ function Get-PowerPlatformCheckerExternalInteractionRenderedLabel {
     }
 
     $interaction = [string]$LabelParts.Interaction
-    $sourceAlias = [string]$LabelParts.SourceAlias
+    $sourceAlias = ''
+    if ($LabelParts.PSObject.Properties.Name -contains 'CompactSourceAlias') {
+        $sourceAlias = [string]$LabelParts.CompactSourceAlias
+    }
+    if ([string]::IsNullOrWhiteSpace($sourceAlias) -and $LabelParts.PSObject.Properties.Name -contains 'SourceAlias') {
+        $sourceAlias = [string]$LabelParts.SourceAlias
+    }
     $sourceType = [string]$LabelParts.SourceType
     $sourceDisplayName = [string]$LabelParts.SourceDisplayName
     $connectorName = [string]$LabelParts.ConnectorName
@@ -87,20 +95,34 @@ function Get-PowerPlatformCheckerExternalInteractionRenderedLabel {
         $protocol = [string]$LabelParts.Protocol
         $triggerAuthText = [string]$LabelParts.TriggerAuthenticationDescription
 
-        if (-not [string]::IsNullOrWhiteSpace($actionName)) {
-            [void]$descriptorParts.Add($actionName)
+        if ($Compact.IsPresent) {
+            if (-not [string]::IsNullOrWhiteSpace($actionName)) {
+                [void]$descriptorParts.Add($actionName)
+            }
+            elseif (-not [string]::IsNullOrWhiteSpace($operationName)) {
+                [void]$descriptorParts.Add($operationName)
+            }
+
+            if (-not [string]::IsNullOrWhiteSpace($protocol) -and $protocol -ne 'Unknown') {
+                [void]$descriptorParts.Add($protocol)
+            }
         }
-        if (-not [string]::IsNullOrWhiteSpace($operationName) -and $operationName -ne $actionName) {
-            [void]$descriptorParts.Add($operationName)
-        }
-        if (-not [string]::IsNullOrWhiteSpace($connectorName)) {
-            [void]$descriptorParts.Add($connectorName)
-        }
-        if (-not [string]::IsNullOrWhiteSpace($protocol) -and $protocol -ne 'Unknown') {
-            [void]$descriptorParts.Add($protocol)
-        }
-        if (-not [string]::IsNullOrWhiteSpace($triggerAuthText)) {
-            [void]$descriptorParts.Add($triggerAuthText)
+        else {
+            if (-not [string]::IsNullOrWhiteSpace($actionName)) {
+                [void]$descriptorParts.Add($actionName)
+            }
+            if (-not [string]::IsNullOrWhiteSpace($operationName) -and $operationName -ne $actionName) {
+                [void]$descriptorParts.Add($operationName)
+            }
+            if (-not [string]::IsNullOrWhiteSpace($connectorName)) {
+                [void]$descriptorParts.Add($connectorName)
+            }
+            if (-not [string]::IsNullOrWhiteSpace($protocol) -and $protocol -ne 'Unknown') {
+                [void]$descriptorParts.Add($protocol)
+            }
+            if (-not [string]::IsNullOrWhiteSpace($triggerAuthText)) {
+                [void]$descriptorParts.Add($triggerAuthText)
+            }
         }
 
         if ($descriptorParts.Count -gt 0) {

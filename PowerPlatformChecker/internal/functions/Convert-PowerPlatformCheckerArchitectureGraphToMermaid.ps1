@@ -36,39 +36,11 @@
         $flowLines = @(':::mermaid', "graph $flowDirection;")
 
         foreach ($node in @($Graph.Nodes)) {
-            $nodeLabel = [string]$node.DisplayName
-            if ([string]::IsNullOrWhiteSpace($nodeLabel)) {
-                $nodeLabel = [string]$node.Id
-            }
-            $nodeLabel = $nodeLabel.Replace('"', "'")
-            $flowLines += ('{0}["{1}"]:::{2}' -f [string]$node.Id, [string]$nodeLabel, [string]$node.ClassKind)
+            $flowLines += @(Convert-PowerPlatformCheckerArchitectureNodeToMermaid -Node $node -DiagramKind Flowchart)
         }
 
         foreach ($edge in @($Graph.Edges)) {
-            $arrow = if ($edge.Metadata.Arrow) { [string]$edge.Metadata.Arrow } elseif ($edge.EdgeType -eq 'Reference') { '..>' } else { '-->' }
-            if ($arrow -eq '..>') {
-                $arrow = '-.->'
-            }
-
-            $edgeLabel = [string]$edge.Label
-            if ($edge.Metadata -and $edge.Metadata.PSObject.Properties.Name -contains 'MermaidLabel' -and -not [string]::IsNullOrWhiteSpace([string]$edge.Metadata.MermaidLabel)) {
-                $edgeLabel = [string]$edge.Metadata.MermaidLabel
-            }
-            if (-not [string]::IsNullOrWhiteSpace($edgeLabel)) {
-                $safeEdgeLabel = $edgeLabel
-                $safeEdgeLabel = $safeEdgeLabel.Replace('|', '/')
-                $safeEdgeLabel = $safeEdgeLabel.Replace('"', "'")
-                # Mermaid flowchart edge labels are sensitive to punctuation used by node syntax.
-                # Keep labels plain text to avoid parse errors in wiki renderers.
-                $safeEdgeLabel = $safeEdgeLabel -replace '[\(\)\[\]\{\}]', ' '
-                $safeEdgeLabel = $safeEdgeLabel -replace '[:;,]', ' '
-                $safeEdgeLabel = $safeEdgeLabel -replace '\s{2,}', ' '
-                $safeEdgeLabel = $safeEdgeLabel.Trim()
-                $flowLines += "$($edge.SourceId) $arrow|$safeEdgeLabel| $($edge.TargetId)"
-            }
-            else {
-                $flowLines += "$($edge.SourceId) $arrow $($edge.TargetId)"
-            }
+            $flowLines += (Convert-PowerPlatformCheckerArchitectureEdgeToMermaid -Edge $edge -DiagramKind Flowchart)
         }
 
         $styleNames = if (@($Graph.StyleOrder).Count -gt 0) { @($Graph.StyleOrder) } else { @($Graph.Styles.PSObject.Properties.Name) }
@@ -88,7 +60,7 @@
                 continue
             }
 
-            $flowLines += "classDef $styleName $styleValue"
+            $flowLines += (Convert-PowerPlatformCheckerArchitectureStyleToMermaid -StyleName ([string]$styleName) -StyleValue $styleValue)
         }
 
         $flowLines += ':::'
@@ -98,36 +70,11 @@
     $lines = @(":::mermaid", "classDiagram", "direction $($Graph.Metadata.Direction)")
 
     foreach ($node in @($Graph.Nodes)) {
-        $declaration = "class $($node.Id)"
-        $displayName = [string]$node.DisplayName
-        if ($node.ClassKind -eq "Flow" -and $null -ne $node.Properties -and $node.Properties.ContainsKey("FlowType")) {
-            $flowType = [string]$node.Properties["FlowType"]
-            if (-not [string]::IsNullOrWhiteSpace($flowType)) {
-                $displayName = "[{0}] {1}" -f $flowType.ToUpper(), $displayName
-            }
-        }
-        if ($node.HasExplicitDisplayName) {
-            $declaration += "[`"$displayName`"]"
-        }
-        $declaration += ":::$($node.ClassKind)"
-
-        if (@($node.Members).Count -eq 0) {
-            $lines += $declaration
-            continue
-        }
-
-        $lines += "$declaration {"
-        $lines += @($node.Members)
-        $lines += "}"
+        $lines += @(Convert-PowerPlatformCheckerArchitectureNodeToMermaid -Node $node -DiagramKind ClassDiagram)
     }
 
     foreach ($edge in @($Graph.Edges)) {
-        $arrow = if ($edge.Metadata.Arrow) { [string]$edge.Metadata.Arrow } elseif ($edge.EdgeType -eq "Reference") { "..>" } else { "-->" }
-        $edgeLine = "$($edge.SourceId) $arrow $($edge.TargetId)"
-        if (-not [string]::IsNullOrWhiteSpace([string]$edge.Label)) {
-            $edgeLine += ":$($edge.Label)"
-        }
-        $lines += $edgeLine
+        $lines += (Convert-PowerPlatformCheckerArchitectureEdgeToMermaid -Edge $edge -DiagramKind ClassDiagram)
     }
 
     $styleNames = if (@($Graph.StyleOrder).Count -gt 0) { @($Graph.StyleOrder) } else { @($Graph.Styles.PSObject.Properties.Name) }
@@ -147,7 +94,7 @@
             continue
         }
 
-        $lines += "classDef $styleName $styleValue"
+        $lines += (Convert-PowerPlatformCheckerArchitectureStyleToMermaid -StyleName ([string]$styleName) -StyleValue $styleValue)
     }
 
     $lines += ":::"

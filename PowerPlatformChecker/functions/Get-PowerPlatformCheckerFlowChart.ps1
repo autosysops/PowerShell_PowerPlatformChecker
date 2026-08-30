@@ -61,10 +61,6 @@
     $graphContext = Get-PowerPlatformCheckerFlowChartContext -Actions $Actions
     $graph = Get-PowerPlatformCheckerFlowChartInternal -GraphContext $graphContext -RootActionName $graphContext.RootActionName -Direction $Direction
 
-    if ($OutputFormat -eq "Graph") {
-        return $graph
-    }
-
-    return Convert-PowerPlatformCheckerFlowChartGraphToMermaid -Graph $graph
+    return Convert-PowerPlatformCheckerDiagramGraphToOutput -Graph $graph -OutputFormat $OutputFormat
 }
 

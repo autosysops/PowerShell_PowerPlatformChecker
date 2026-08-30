@@ -80,7 +80,6 @@
         "Evidence": "Manual",
         "LabelParts": {
           "Kind": "FlowAction",
-          "SourceAlias": "Flow-01",
           "SourceType": "Flow",
           "SourceDisplayName": "Child Flow",
           "DetailParts": [],
@@ -96,14 +95,13 @@
     {
       "SourceId": "externaldomain_internet",
       "TargetId": "solution_Energy",
-      "Label": "Flow / Cloud HTTP profile flow INBOUND manual",
+      "Label": "Flow / Cloud HTTP profile flow INBOUND Manual",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
         "Evidence": "manual",
         "LabelParts": {
           "Kind": "FlowAction",
-          "SourceAlias": "Flow-02",
           "SourceType": "Flow",
           "SourceDisplayName": "Cloud HTTP profile flow",
           "DetailParts": [],
@@ -126,7 +124,6 @@
         "Evidence": "CallApi",
         "LabelParts": {
           "Kind": "FlowAction",
-          "SourceAlias": "Flow-02",
           "SourceType": "Flow",
           "SourceDisplayName": "Cloud HTTP profile flow",
           "DetailParts": [],
@@ -142,42 +139,36 @@
     {
       "SourceId": "solution_Energy",
       "TargetId": "shared_commondataserviceforapps",
-      "Label": "CanvasApp / Sales Canvas App Unknown Microsoft Dataverse DomainUnresolved",
+      "Label": "CanvasApp / Sales Canvas App Unknown DomainUnresolved",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
         "Evidence": "shared_commondataserviceforapps",
         "LabelParts": {
           "Kind": "Source",
-          "SourceAlias": "App-01",
           "SourceType": "CanvasApp",
           "SourceDisplayName": "Sales Canvas App",
           "DetailParts": [],
           "Interaction": "Unknown",
-          "DomainUnresolved": true,
-          "ConnectorName": "Microsoft Dataverse",
-          "ConnectorCode": "C01"
+          "DomainUnresolved": true
         }
       }
     },
     {
       "SourceId": "solution_Energy",
       "TargetId": "shared_office365",
-      "Label": "CanvasApp / Sales Canvas App Unknown Office 365 Outlook DomainUnresolved",
+      "Label": "CanvasApp / Sales Canvas App Unknown DomainUnresolved",
       "EdgeType": "Link",
       "Metadata": {
         "Arrow": "-->",
         "Evidence": "shared_office365",
         "LabelParts": {
           "Kind": "Source",
-          "SourceAlias": "App-01",
           "SourceType": "CanvasApp",
           "SourceDisplayName": "Sales Canvas App",
           "DetailParts": [],
           "Interaction": "Unknown",
-          "DomainUnresolved": true,
-          "ConnectorName": "Office 365 Outlook",
-          "ConnectorCode": "C02"
+          "DomainUnresolved": true
         }
       }
     }
