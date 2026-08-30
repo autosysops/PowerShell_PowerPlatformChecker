@@ -17,6 +17,14 @@
     .PARAMETER OutputFormat
         Output format to return: Mermaid markdown text (default) or graph object.
 
+    .PARAMETER IncludeStyles
+        Includes flowchart style metadata in Graph output and Mermaid style
+        declarations in text output.
+
+    .PARAMETER StyleOverrides
+        Optional style overrides for FlowChart style keys when IncludeStyles is
+        set.
+
     .OUTPUTS
         System.String when OutputFormat is Mermaid. Returns Azure DevOps-flavored Mermaid
         markdown containing a flowchart.
@@ -46,7 +54,13 @@
 
         [Parameter(Mandatory = $false)]
         [ValidateSet("Mermaid", "Graph")]
-        [string] $OutputFormat = "Mermaid"
+        [string] $OutputFormat = "Mermaid",
+
+        [Parameter(Mandatory = $false)]
+        [switch] $IncludeStyles,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable] $StyleOverrides
     )
 
     $actionCount = @($Actions).Count
@@ -55,11 +69,16 @@
         ActionCountBucket = $actionCountBucket
         Direction = $Direction
         OutputFormat = $OutputFormat
+        IncludeStyles = $IncludeStyles.IsPresent
+        HasStyleOverrides = $PSBoundParameters.ContainsKey('StyleOverrides')
     }
     Send-THEvent -ModuleName "PowerPlatformChecker" -EventName "Get-PowerPlatformCheckerFlowChart" -PropertiesHash $telemetryProperties
 
     $graphContext = Get-PowerPlatformCheckerFlowChartContext -Actions $Actions
     $graph = Get-PowerPlatformCheckerFlowChartInternal -GraphContext $graphContext -RootActionName $graphContext.RootActionName -Direction $Direction
+    if ($IncludeStyles.IsPresent) {
+        $graph = Get-PowerPlatformCheckerFlowChartStyledGraph -Graph $graph -StyleOverrides $StyleOverrides
+    }
 
     return Convert-PowerPlatformCheckerDiagramGraphToOutput -Graph $graph -OutputFormat $OutputFormat
 }

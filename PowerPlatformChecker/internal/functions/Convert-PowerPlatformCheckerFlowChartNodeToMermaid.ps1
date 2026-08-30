@@ -25,16 +25,20 @@
 
     $nodeId = [string]$Node.Id
     $nodeLabel = [string]$Node.Label
+    $classSuffix = ''
+    if ($Node.PSObject.Properties.Name -contains 'ClassKind' -and -not [string]::IsNullOrWhiteSpace([string]$Node.ClassKind)) {
+        $classSuffix = ":::{0}" -f [string]$Node.ClassKind
+    }
 
     switch ([string]$Node.Shape) {
         'Trigger' {
-            return ("$nodeId([`"$nodeLabel`"] )" -replace ' \)', ')')
+            return (("$nodeId([`"$nodeLabel`"] )" -replace ' \)', ')') + $classSuffix)
         }
         'Decision' {
-            return "$nodeId{`"$nodeLabel`"}"
+            return "$nodeId{`"$nodeLabel`"}$classSuffix"
         }
         default {
-            return "$nodeId[`"$nodeLabel`"]"
+            return "$nodeId[`"$nodeLabel`"]$classSuffix"
         }
     }
 }

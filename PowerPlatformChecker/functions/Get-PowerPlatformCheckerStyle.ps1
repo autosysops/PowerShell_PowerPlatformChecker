@@ -23,7 +23,7 @@
     [OutputType([hashtable])]
     param(
         [Parameter(Mandatory = $false)]
-        [ValidateSet('ArchitectureDiagram')]
+        [ValidateSet('ArchitectureDiagram', 'FlowChart')]
         [string] $StyleTarget = 'ArchitectureDiagram'
     )
 

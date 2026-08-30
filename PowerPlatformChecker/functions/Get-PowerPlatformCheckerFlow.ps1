@@ -5,7 +5,8 @@
 
     .DESCRIPTION
         Retrieves summary flow metadata for cloud and desktop flows. Optional
-        detail sections such as parameters, actions, and connector tiers can be
+        detail sections such as parameters, actions, connector tiers, trigger,
+        and desktop subflow names can be
         requested through the Properties parameter.
 
     .PARAMETER SolutionPath
@@ -47,8 +48,8 @@
         [string] $Id,
 
         [Parameter(Mandatory = $false)]
-        [ValidateSet('Parameters', 'Actions', 'ConnectorTiers', 'Trigger')]
-        [string[]] $Properties = @('Parameters', 'Actions', 'ConnectorTiers', 'Trigger')
+        [ValidateSet('Parameters', 'Actions', 'ConnectorTiers', 'Trigger', 'Subflows')]
+        [string[]] $Properties = @('Parameters', 'Actions', 'ConnectorTiers', 'Trigger', 'Subflows')
     )
 
     $telemetryProperties = @{
@@ -93,6 +94,7 @@
         $includeActions = $Properties -contains 'Actions'
         $includeConnectorTiers = $Properties -contains 'ConnectorTiers'
         $includeTrigger = $Properties -contains 'Trigger'
+        $includeSubflows = $Properties -contains 'Subflows'
 
         $flowActions = @()
         if (($includeActions -or $includeTrigger) -and -not [string]::IsNullOrWhiteSpace($flowPath)) {
@@ -110,6 +112,14 @@
         }
         if ($includeConnectorTiers -and -not [string]::IsNullOrWhiteSpace($flowPath)) {
             $flowObject['ConnectorTiers'] = @(Get-PowerPlatformCheckerFlowConnectorTier -Path $flowPath)
+        }
+        if ($includeSubflows) {
+            if ($flowType -eq 'Desktop' -and -not [string]::IsNullOrWhiteSpace($flowPath)) {
+                $flowObject['Subflows'] = @(Get-PowerPlatformCheckerDesktopSubflowNameList -Path $flowPath)
+            }
+            else {
+                $flowObject['Subflows'] = @()
+            }
         }
 
         [void]$results.Add([pscustomobject]$flowObject)

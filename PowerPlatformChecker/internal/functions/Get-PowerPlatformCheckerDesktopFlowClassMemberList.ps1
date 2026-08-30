@@ -27,8 +27,10 @@
 
     $inputNames = [System.Collections.Generic.List[string]]::new()
     $outputNames = [System.Collections.Generic.List[string]]::new()
+    $subflowNames = [System.Collections.Generic.List[string]]::new()
     $seenInputs = [System.Collections.Generic.HashSet[string]]::new()
     $seenOutputs = [System.Collections.Generic.HashSet[string]]::new()
+    $seenSubflows = [System.Collections.Generic.HashSet[string]]::new()
 
     try {
         $desktopFlowPath = $Path
@@ -64,6 +66,10 @@
             }
         }
 
+        foreach ($subflowName in @(Get-PowerPlatformCheckerDesktopSubflowNameList -Path $desktopFlowPath)) {
+            Add-PowerPlatformCheckerDesktopMemberName -MemberNames $subflowNames -SeenMemberNames $seenSubflows -Name ([string]$subflowName)
+        }
+
         $normalizedDefinition = ConvertTo-PowerPlatformCheckerDesktopNormalizedDefinition -Definition ([string]$desktopMetadata.Definition)
         foreach ($definitionLine in @($normalizedDefinition -split "`n")) {
             if ($definitionLine -match '^\s*"?@INPUT\s+(?<name>[A-Za-z0-9_]+)\s*:') {
@@ -87,6 +93,9 @@
     }
     foreach ($outputName in @($outputNames)) {
         [void]$members.Add("    [OUTPUT]$outputName")
+    }
+    foreach ($subflowName in @($subflowNames)) {
+        [void]$members.Add("    [SUBFLOW]$subflowName")
     }
 
     return @($members)

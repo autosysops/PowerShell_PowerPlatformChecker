@@ -117,6 +117,8 @@ metadata lines or free-form text into rendered diagrams.
 - `Get-PowerPlatformCheckerFlowChart`
 - `Get-PowerPlatformCheckerFlow`
 - `Get-PowerPlatformCheckerExternalInteraction`
+- `Get-PowerPlatformCheckerSubflowActionList`
+- `Get-PowerPlatformCheckerSubflowChart`
 
 `Get-PowerPlatformCheckerArchitectureDiagram` supports:
 
@@ -145,6 +147,11 @@ metadata lines or free-form text into rendered diagrams.
 `Get-PowerPlatformCheckerFlowChart` supports Mermaid and recursive graph output with
 `-OutputFormat Mermaid|Graph`.
 
+For desktop flows, subflow-level analysis is available through:
+
+- `Get-PowerPlatformCheckerSubflowActionList` to return actions inside one `FUNCTION` block
+- `Get-PowerPlatformCheckerSubflowChart` to render one subflow as Mermaid or Graph
+
 ### App And Flow Retrieval
 
 - `Get-PowerPlatformCheckerApp`
@@ -154,7 +161,9 @@ metadata lines or free-form text into rendered diagrams.
 Use `-Properties` to request larger sections such as `ConnectionReferences`, `DataSources`, `Entities`, or `FlowIds` when generating documentation.
 
 `Get-PowerPlatformCheckerFlow` returns summary metadata for cloud and desktop flows through one command.
-Use `-Properties` to request `Parameters`, `Actions`, `Trigger`, or `ConnectorTiers` for documentation-focused expansion.
+Use `-Properties` to request `Parameters`, `Actions`, `Trigger`, `ConnectorTiers`, or `Subflows` for documentation-focused expansion.
+
+For desktop flows, `Subflows` returns the declared `FUNCTION` names in definition order.
 
 Cloud flow action external profiles now resolve URL/domain metadata from direct URLs and connector-style parameter fields such as `dataset`, `source`, `siteAddress`, and `baseUrl`, including simple parameter interpolation.
 

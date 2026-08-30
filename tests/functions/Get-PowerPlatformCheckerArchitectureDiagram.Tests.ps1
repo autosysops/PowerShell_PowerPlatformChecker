@@ -37,6 +37,7 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
         Initialize-PowerPlatformCheckerTestData
         $script:solutionPath = Get-PowerPlatformCheckerFixtureSolutionPath
         $script:desktopSolutionPath = Get-PowerPlatformCheckerDesktopFixtureSolutionPath
+        $script:desktopFlowChartSolutionPath = (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\desktop-flowchart-solution\Managed")).Path
         $script:graphSnapshotConverter = {
             param(
                 [Parameter(Mandatory = $true)]
@@ -158,6 +159,7 @@ Describe "Get-PowerPlatformCheckerArchitectureDiagram" {
             ($desktopGraph.Nodes | Where-Object { $_.ClassKind -eq "EnvVar" } | Select-Object -ExpandProperty Id) | Should -Contain "ppc_desktop_baseurl"
             ($desktopGraph.Edges | Where-Object { $_.SourceId -eq "ppc_desktop_baseurl" -and $_.TargetId -eq "flow77777777-7777-7777-7777-777777777777" }).Count | Should -BeGreaterThan 0
         }
+
 
         It "does not include unrelated web resources in flow-scoped diagrams" {
             $flowGraph = Get-PowerPlatformCheckerArchitectureDiagram -SolutionPath $script:solutionPath -FlowId "11111111-1111-1111-1111-111111111111" -OutputFormat Graph

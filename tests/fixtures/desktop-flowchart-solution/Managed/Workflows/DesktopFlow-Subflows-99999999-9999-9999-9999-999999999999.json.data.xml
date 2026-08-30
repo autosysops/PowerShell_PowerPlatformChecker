@@ -1,0 +1,18 @@
+<Workflow WorkflowId="{99999999-9999-9999-9999-999999999999}" Name="Desktop Subflows Flow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/DesktopFlow-Subflows-99999999-9999-9999-9999-999999999999.json</JsonFileName>
+  <Category>6</Category>
+  <UIFlowType>2</UIFlowType>
+  <Description>Desktop flow fixture for subflow extraction and subflow charts.</Description>
+  <Definition>DISPLAY Message='Main start'
+CALL ProcessOrder OrderId: 42
+WRITE Text='Main end'
+FUNCTION ProcessOrder GLOBAL
+@INPUT OrderId
+SET OrderNumber TO 1
+External.InvokeCloudConnector ConnectorId: '/providers/Microsoft.PowerApps/apis/shared_office365' OperationId: 'SendEmailV2'
+CALL SendAudit
+END FUNCTION
+FUNCTION SendAudit
+WRITE Text='Audit complete'
+END FUNCTION</Definition>
+</Workflow>

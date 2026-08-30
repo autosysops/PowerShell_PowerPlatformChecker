@@ -18,6 +18,15 @@ Describe "Get-PowerPlatformCheckerDiagramLegend" {
         $legend | Should -Match "CanvasApp"
     }
 
+    It "returns flowchart legend markdown using flowchart style values" {
+        $legend = Get-PowerPlatformCheckerDiagramLegend -DiagramType FlowChart
+
+        $legend | Should -Match "### Diagram Legend"
+        $legend | Should -Match "FlowAction"
+        $legend | Should -Match "FlowDecision"
+        $legend | Should -Match "FlowTrigger"
+    }
+
     It "returns external interaction legend markdown with aliases and connector codes" {
         $graph = Get-PowerPlatformCheckerExternalInteraction -SolutionPaths @($script:solutionPath) -OutputFormat Graph
         $legend = Get-PowerPlatformCheckerDiagramLegend -DiagramType ExternalInteraction -Graph $graph

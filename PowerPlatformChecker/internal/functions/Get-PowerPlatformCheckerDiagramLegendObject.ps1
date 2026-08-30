@@ -26,7 +26,7 @@
     [OutputType([pscustomobject])]
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('ArchitectureDiagram', 'ExternalInteraction')]
+        [ValidateSet('ArchitectureDiagram', 'FlowChart', 'ExternalInteraction')]
         [string] $DiagramType,
 
         [Parameter(Mandatory = $false)]
@@ -73,19 +73,32 @@
         }
     }
     else {
-        $resolvedStyle = Get-PowerPlatformCheckerResolvedStyle -StyleTarget 'ArchitectureDiagram' -StyleOverrides $StyleOverrides
-        $styleMap = @{
-            default = "fill:$($resolvedStyle.Default),stroke:$($resolvedStyle.Stroke)"
-            EnvVar = "fill:$($resolvedStyle.EnvVar),stroke:$($resolvedStyle.Stroke)"
-            Connection = "fill:$($resolvedStyle.Connection),stroke:$($resolvedStyle.Stroke)"
-            Entity = "fill:$($resolvedStyle.Entity),stroke:$($resolvedStyle.Stroke)"
-            DefaultEntity = "fill:$($resolvedStyle.DefaultEntity),stroke:$($resolvedStyle.Stroke)"
-            Flow = "fill:$($resolvedStyle.Flow),stroke:$($resolvedStyle.Stroke)"
-            CanvasApp = "fill:$($resolvedStyle.CanvasApp),stroke:$($resolvedStyle.Stroke)"
-            ModelDrivenApp = "fill:$($resolvedStyle.ModelDrivenApp),stroke:$($resolvedStyle.Stroke)"
-            WebResource = "fill:$($resolvedStyle.WebResource),stroke:$($resolvedStyle.Stroke)"
-            Solution = "fill:$($resolvedStyle.Solution),stroke:$($resolvedStyle.SolutionStroke),stroke-width:2px;"
-            ExternalDomain = "fill:$($resolvedStyle.ExternalDomain),stroke:$($resolvedStyle.Stroke)"
+        if ($DiagramType -eq 'FlowChart') {
+            $resolvedStyle = Get-PowerPlatformCheckerResolvedStyle -StyleTarget 'FlowChart' -StyleOverrides $StyleOverrides
+            $styleMap = @{
+                FlowAction = "fill:$($resolvedStyle.FlowAction),stroke:$($resolvedStyle.Stroke)"
+                FlowDecision = "fill:$($resolvedStyle.FlowDecision),stroke:$($resolvedStyle.Stroke)"
+                FlowTrigger = "fill:$($resolvedStyle.FlowTrigger),stroke:$($resolvedStyle.Stroke)"
+                FlowSuccessPath = "stroke:$($resolvedStyle.FlowSuccessPath),stroke-width:2px,color:$($resolvedStyle.FlowSuccessPath)"
+                FlowErrorPath = "stroke:$($resolvedStyle.FlowErrorPath),stroke-width:2px,color:$($resolvedStyle.FlowErrorPath)"
+                FlowDefaultPath = "stroke:$($resolvedStyle.FlowDefaultPath),stroke-width:1px,color:$($resolvedStyle.FlowDefaultPath)"
+            }
+        }
+        else {
+            $resolvedStyle = Get-PowerPlatformCheckerResolvedStyle -StyleTarget 'ArchitectureDiagram' -StyleOverrides $StyleOverrides
+            $styleMap = @{
+                default = "fill:$($resolvedStyle.Default),stroke:$($resolvedStyle.Stroke)"
+                EnvVar = "fill:$($resolvedStyle.EnvVar),stroke:$($resolvedStyle.Stroke)"
+                Connection = "fill:$($resolvedStyle.Connection),stroke:$($resolvedStyle.Stroke)"
+                Entity = "fill:$($resolvedStyle.Entity),stroke:$($resolvedStyle.Stroke)"
+                DefaultEntity = "fill:$($resolvedStyle.DefaultEntity),stroke:$($resolvedStyle.Stroke)"
+                Flow = "fill:$($resolvedStyle.Flow),stroke:$($resolvedStyle.Stroke)"
+                CanvasApp = "fill:$($resolvedStyle.CanvasApp),stroke:$($resolvedStyle.Stroke)"
+                ModelDrivenApp = "fill:$($resolvedStyle.ModelDrivenApp),stroke:$($resolvedStyle.Stroke)"
+                WebResource = "fill:$($resolvedStyle.WebResource),stroke:$($resolvedStyle.Stroke)"
+                Solution = "fill:$($resolvedStyle.Solution),stroke:$($resolvedStyle.SolutionStroke),stroke-width:2px;"
+                ExternalDomain = "fill:$($resolvedStyle.ExternalDomain),stroke:$($resolvedStyle.Stroke)"
+            }
         }
         $styleNames = @($styleMap.Keys | Sort-Object)
     }

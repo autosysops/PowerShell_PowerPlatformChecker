@@ -13,6 +13,15 @@ Describe "Get-PowerPlatformCheckerStyle" {
         $style.ContainsKey("Stroke") | Should -BeTrue
     }
 
+    It "returns flowchart style values as a hashtable" {
+        $style = Get-PowerPlatformCheckerStyle -StyleTarget FlowChart
+
+        $style.GetType().Name | Should -Be "Hashtable"
+        $style.ContainsKey("FlowAction") | Should -BeTrue
+        $style.ContainsKey("FlowDecision") | Should -BeTrue
+        $style.ContainsKey("FlowTrigger") | Should -BeTrue
+    }
+
     It "returns expected key values directly" {
         $style = Get-PowerPlatformCheckerStyle -StyleTarget ArchitectureDiagram
 

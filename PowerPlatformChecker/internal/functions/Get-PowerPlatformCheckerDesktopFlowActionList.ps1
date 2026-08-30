@@ -16,6 +16,10 @@
     .PARAMETER Properties
         Additional optional properties to include in the output.
 
+    .PARAMETER SubflowName
+        Optional desktop FUNCTION name. When supplied, only actions from that
+        subflow body are parsed and returned.
+
     .EXAMPLE
         Get desktop actions and include chart relationship metadata.
 
@@ -33,6 +37,11 @@
 
         [Parameter(Mandatory = $false, Position = 3)]
         [String[]] $Properties = @()
+
+        ,
+        [Parameter(Mandatory = $false, Position = 4)]
+        [AllowNull()]
+        [string] $SubflowName
     )
 
     $metadata = Get-PowerPlatformCheckerDesktopFlowMeta -Path $Path
@@ -41,6 +50,12 @@
     }
 
     $segments = @(ConvertTo-PowerPlatformCheckerDesktopDefinitionSegmentList -Definition ([string]$metadata.Definition))
+    if (-not [string]::IsNullOrWhiteSpace($SubflowName)) {
+        $segments = @(Get-PowerPlatformCheckerDesktopSubflowSegmentList -Segments $segments -SubflowName $SubflowName)
+        if (@($segments).Count -eq 0) {
+            return @()
+        }
+    }
 
     $actions = @()
     $actionNameCount = @{}

@@ -1,0 +1,8 @@
+{
+  "name": "Desktop Subflows Flow",
+  "type": "Microsoft.ProcessSimple/flows",
+  "properties": {
+    "displayName": "Desktop Subflows Flow",
+    "state": "Started"
+  }
+}

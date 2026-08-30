@@ -36,7 +36,7 @@
     [OutputType([string], [pscustomobject])]
     param(
         [Parameter(Mandatory = $false)]
-        [ValidateSet('ArchitectureDiagram', 'ExternalInteraction')]
+        [ValidateSet('ArchitectureDiagram', 'FlowChart', 'ExternalInteraction')]
         [string] $DiagramType = 'ArchitectureDiagram',
 
         [Parameter(Mandatory = $false)]

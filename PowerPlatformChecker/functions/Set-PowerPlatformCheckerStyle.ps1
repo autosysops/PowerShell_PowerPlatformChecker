@@ -65,7 +65,7 @@
     [OutputType([hashtable])]
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('ArchitectureDiagram')]
+        [ValidateSet('ArchitectureDiagram', 'FlowChart')]
         [string] $StyleTarget
     )
 
@@ -83,6 +83,15 @@
                 'WebResource',
                 'Solution',
                 'ExternalDomain',
+                'Stroke'
+            )
+            FlowChart = @(
+                'FlowAction',
+                'FlowDecision',
+                'FlowTrigger',
+                'FlowSuccessPath',
+                'FlowErrorPath',
+                'FlowDefaultPath',
                 'Stroke'
             )
         }
@@ -130,6 +139,15 @@
                 'WebResource',
                 'Solution',
                 'ExternalDomain',
+                'Stroke'
+            )
+            FlowChart = @(
+                'FlowAction',
+                'FlowDecision',
+                'FlowTrigger',
+                'FlowSuccessPath',
+                'FlowErrorPath',
+                'FlowDefaultPath',
                 'Stroke'
             )
         }

@@ -3,6 +3,7 @@
 Describe "Get-PowerPlatformCheckerDesktopFlowClassMemberList" {
     BeforeAll {
         $script:desktopClassMemberEdgePath = (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\desktop-class-members-edge\Managed\Workflows")).Path
+        $script:desktopFlowChartSolutionPath = (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\desktop-flowchart-solution\Managed")).Path
     }
 
     It "returns expected class members for file-backed desktop flow cases" -ForEach @(
@@ -35,6 +36,18 @@ Describe "Get-PowerPlatformCheckerDesktopFlowClassMemberList" {
         } $resolvedPath
 
         $members | Should -Be $ExpectedMembers
+    }
+
+    It "returns subflow members for desktop flows that declare FUNCTION blocks" {
+        $path = Join-Path $script:desktopFlowChartSolutionPath "Workflows\DesktopFlow-Subflows-99999999-9999-9999-9999-999999999999.json"
+
+        $members = & (Get-Module PowerPlatformChecker) {
+            param($resolvedPath)
+            Get-PowerPlatformCheckerDesktopFlowClassMemberList -Path $resolvedPath
+        } $path
+
+        $members | Should -Contain '    [SUBFLOW]ProcessOrder'
+        $members | Should -Contain '    [SUBFLOW]SendAudit'
     }
 }
 

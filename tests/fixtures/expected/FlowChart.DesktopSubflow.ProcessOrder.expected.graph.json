@@ -1,0 +1,38 @@
+{
+  "GraphType": "FlowchartGraph",
+  "Id": null,
+  "ActionName": null,
+  "Title": null,
+  "Direction": "TB",
+  "IsEmpty": false,
+  "Nodes": [
+    {
+      "Id": "action0",
+      "Label": "SET",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action1",
+      "Label": "External.InvokeCloudConnector (shared_office365.SendEmailV2)",
+      "Shape": "Action"
+    },
+    {
+      "Id": "action2",
+      "Label": "CALL SendAudit",
+      "Shape": "Action"
+    }
+  ],
+  "Edges": [
+    {
+      "From": "action0",
+      "Label": "Succeeded",
+      "To": "action1"
+    },
+    {
+      "From": "action1",
+      "Label": "Succeeded",
+      "To": "action2"
+    }
+  ],
+  "Subgraphs": []
+}

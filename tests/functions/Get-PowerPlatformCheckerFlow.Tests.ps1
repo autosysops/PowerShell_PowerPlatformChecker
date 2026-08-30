@@ -5,6 +5,7 @@ Describe "Get-PowerPlatformCheckerFlow" {
         Initialize-PowerPlatformCheckerTestData
         $script:solutionPath = Get-PowerPlatformCheckerFixtureSolutionPath
         $script:desktopSolutionPath = Get-PowerPlatformCheckerDesktopFixtureSolutionPath
+        $script:desktopFlowChartSolutionPath = (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\desktop-flowchart-solution\Managed")).Path
     }
 
     BeforeEach {
@@ -21,6 +22,7 @@ Describe "Get-PowerPlatformCheckerFlow" {
         $cloudFlows[0].PSObject.Properties.Name | Should -Contain 'Actions'
         $cloudFlows[0].PSObject.Properties.Name | Should -Contain 'ConnectorTiers'
         $cloudFlows[0].PSObject.Properties.Name | Should -Contain 'Trigger'
+        $cloudFlows[0].PSObject.Properties.Name | Should -Contain 'Subflows'
     }
 
     It "supports name or id based selection and property filtering" {
@@ -32,17 +34,28 @@ Describe "Get-PowerPlatformCheckerFlow" {
         $byName[0].PSObject.Properties.Name | Should -Contain 'Trigger'
         $byName[0].PSObject.Properties.Name | Should -Not -Contain 'Actions'
         $byName[0].PSObject.Properties.Name | Should -Not -Contain 'ConnectorTiers'
+        $byName[0].PSObject.Properties.Name | Should -Not -Contain 'Subflows'
         @($byId).Count | Should -Be 1
         $byId[0].PSObject.Properties.Name | Should -Contain 'ConnectorTiers'
         $byId[0].PSObject.Properties.Name | Should -Not -Contain 'Parameters'
         $byId[0].PSObject.Properties.Name | Should -Not -Contain 'Actions'
         $byId[0].PSObject.Properties.Name | Should -Not -Contain 'Trigger'
+        $byId[0].PSObject.Properties.Name | Should -Not -Contain 'Subflows'
 
         $triggerRow = @($byName[0].Trigger | Select-Object -First 1)
         @($triggerRow).Count | Should -Be 1
         $triggerRow[0].PSObject.Properties.Name | Should -Contain 'TriggerAuthenticationType'
         $triggerRow[0].PSObject.Properties.Name | Should -Contain 'TriggerAuthenticationDescription'
         $triggerRow[0].PSObject.Properties.Name | Should -Contain 'TriggerOperationId'
+    }
+
+    It "returns subflow names for desktop flows when requested" {
+        $desktopSubflowFlow = @(Get-PowerPlatformCheckerFlow -SolutionPath $script:desktopFlowChartSolutionPath -Name 'Desktop Subflows Flow' -Properties Subflows)
+
+        @($desktopSubflowFlow).Count | Should -Be 1
+        $desktopSubflowFlow[0].PSObject.Properties.Name | Should -Contain 'Subflows'
+        $desktopSubflowFlow[0].Subflows | Should -Contain 'ProcessOrder'
+        $desktopSubflowFlow[0].Subflows | Should -Contain 'SendAudit'
     }
 
     It "sends sanitized telemetry" {

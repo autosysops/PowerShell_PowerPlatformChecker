@@ -25,6 +25,15 @@ if (-not $script:PowerPlatformCheckerDiagramStyleDefaults) {
 			Stroke = "#5E5B52"
 			SolutionStroke = "#1A1A1A"
 		}
+		FlowChart = @{
+			FlowAction = "#DBE4EE"
+			FlowDecision = "#FCD757"
+			FlowTrigger = "#8BC34A"
+			FlowSuccessPath = "#2E7D32"
+			FlowErrorPath = "#C62828"
+			FlowDefaultPath = "#5E5B52"
+			Stroke = "#5E5B52"
+		}
 	}
 }
 

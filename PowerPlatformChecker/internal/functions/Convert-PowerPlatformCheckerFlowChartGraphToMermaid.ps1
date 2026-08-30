@@ -63,6 +63,8 @@
         Graph = $Graph
         IsRoot = $true
     })
+    $renderedEdgeIndex = 0
+    $edgeIndexesByStyle = @{}
 
     while ($renderStack.Count -gt 0) {
         $frame = $renderStack.Pop()
@@ -76,6 +78,20 @@
         if ($frame.Kind -eq "Edges") {
             foreach ($edge in @($currentGraph.Edges)) {
                 $lines += (Convert-PowerPlatformCheckerFlowChartEdgeToMermaid -Edge $edge)
+
+                $edgeStyleClass = $null
+                if ($edge.PSObject.Properties.Name -contains 'Metadata' -and $edge.Metadata -is [System.Collections.IDictionary] -and $edge.Metadata.ContainsKey('StyleClass')) {
+                    $edgeStyleClass = [string]$edge.Metadata.StyleClass
+                }
+
+                if (-not [string]::IsNullOrWhiteSpace($edgeStyleClass)) {
+                    if (-not $edgeIndexesByStyle.ContainsKey($edgeStyleClass)) {
+                        $edgeIndexesByStyle[$edgeStyleClass] = [System.Collections.Generic.List[int]]::new()
+                    }
+                    [void]$edgeIndexesByStyle[$edgeStyleClass].Add($renderedEdgeIndex)
+                }
+
+                $renderedEdgeIndex++
             }
             continue
         }
@@ -120,6 +136,70 @@
                 IsRoot = $false
             })
         }
+    }
+
+    $styleNames = @()
+    if ($Graph.PSObject.Properties.Name -contains 'StyleOrder' -and @($Graph.StyleOrder).Count -gt 0) {
+        $styleNames = @($Graph.StyleOrder)
+    }
+    elseif ($Graph.PSObject.Properties.Name -contains 'Styles') {
+        if ($Graph.Styles -is [System.Collections.IDictionary]) {
+            $styleNames = @($Graph.Styles.Keys | Sort-Object)
+        }
+        else {
+            $styleNames = @($Graph.Styles.PSObject.Properties.Name | Sort-Object)
+        }
+    }
+
+    foreach ($styleName in @($styleNames)) {
+        $styleValue = ''
+        if ($Graph.Styles -is [System.Collections.IDictionary]) {
+            $styleValue = [string]$Graph.Styles[[string]$styleName]
+        }
+        else {
+            $styleProperty = $Graph.Styles.PSObject.Properties[[string]$styleName]
+            if ($null -ne $styleProperty) {
+                $styleValue = [string]$styleProperty.Value
+            }
+        }
+
+        if ([string]::IsNullOrWhiteSpace($styleValue)) {
+            continue
+        }
+
+        if ($styleName -like 'Flow*Path') {
+            continue
+        }
+
+        $lines += "classDef $styleName $styleValue"
+    }
+
+    foreach ($edgeStyleName in @($styleNames | Where-Object { $_ -like 'Flow*Path' })) {
+        if (-not $edgeIndexesByStyle.ContainsKey([string]$edgeStyleName)) {
+            continue
+        }
+
+        $styleValue = ''
+        if ($Graph.Styles -is [System.Collections.IDictionary]) {
+            $styleValue = [string]$Graph.Styles[[string]$edgeStyleName]
+        }
+        else {
+            $styleProperty = $Graph.Styles.PSObject.Properties[[string]$edgeStyleName]
+            if ($null -ne $styleProperty) {
+                $styleValue = [string]$styleProperty.Value
+            }
+        }
+
+        if ([string]::IsNullOrWhiteSpace($styleValue)) {
+            continue
+        }
+
+        $edgeIndexes = @($edgeIndexesByStyle[[string]$edgeStyleName] | Sort-Object)
+        if (@($edgeIndexes).Count -eq 0) {
+            continue
+        }
+
+        $lines += ("linkStyle {0} {1}" -f (@($edgeIndexes) -join ','), $styleValue)
     }
 
     $lines += ":::"

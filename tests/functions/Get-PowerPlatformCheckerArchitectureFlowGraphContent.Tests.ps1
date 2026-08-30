@@ -3,6 +3,7 @@
 Describe "Get-PowerPlatformCheckerArchitectureFlowGraphContent" {
     BeforeAll {
         Initialize-PowerPlatformCheckerTestData
+        $script:desktopFlowChartSolutionPath = (Resolve-Path (Join-Path $PSScriptRoot "..\fixtures\desktop-flowchart-solution\Managed")).Path
     }
 
     It "renders flow class content and tracks connected references" {
@@ -116,5 +117,31 @@ Describe "Get-PowerPlatformCheckerArchitectureFlowGraphContent" {
             $result.Nodes[0].Properties.DestinationConfidence | Should -Be "Medium"
             $result.Nodes[0].Properties.DestinationEvidence | Should -Be "ActionEntity"
         }
+    }
+
+    It "includes declared desktop subflows in flow members" {
+        InModuleScope PowerPlatformChecker {
+            param($SolutionPath)
+
+            $solutionObject = [pscustomobject]@{ Workflows = @([pscustomobject]@{ Id = "99999999-9999-9999-9999-999999999999"; Name = "Desktop Subflows Flow" }) }
+
+            Mock -CommandName Get-PowerPlatformCheckerFlowType -ModuleName PowerPlatformChecker -MockWith { "Desktop" }
+            Mock -CommandName Get-PowerPlatformCheckerFlowParameter -ModuleName PowerPlatformChecker -MockWith { @() }
+            Mock -CommandName Get-PowerPlatformCheckerFlowActionList -ModuleName PowerPlatformChecker -MockWith { @() }
+            Mock -CommandName Get-PowerPlatformCheckerFlowConnectorTier -ModuleName PowerPlatformChecker -MockWith { @() }
+            Mock -CommandName Get-PowerPlatformCheckerFlowDirectionProfile -ModuleName PowerPlatformChecker -MockWith {
+                [pscustomobject]@{ InteractionDirection = 'Unknown'; DirectionConfidence = 'Low'; SourceEvidence = 'NoDirectionSignal' }
+            }
+            Mock -CommandName Get-PowerPlatformCheckerFlowDestinationProfile -ModuleName PowerPlatformChecker -MockWith {
+                [pscustomobject]@{ Destination = ''; DestinationType = 'Unknown'; DestinationConfidence = 'Low'; DestinationEvidence = 'NoDestinationSignal' }
+            }
+            Mock -CommandName Get-PowerPlatformCheckerFlowTriggerMode -ModuleName PowerPlatformChecker -MockWith { 'Unknown' }
+
+            $result = Get-PowerPlatformCheckerArchitectureFlowGraphContent -SolutionPath $SolutionPath -SolutionObject $solutionObject -IncludeFlows:$true -IncludeEnvironmentVariables:$false -IncludeConnections:$false -IncludeEntities:$false -HasFlowFilter:$false -FlowId '' -EntitySetByReference @{}
+
+            @($result.Nodes).Count | Should -Be 1
+            $result.Nodes[0].Members | Should -Contain '    [SUBFLOW]ProcessOrder'
+            $result.Nodes[0].Members | Should -Contain '    [SUBFLOW]SendAudit'
+        } -Parameters @{ SolutionPath = $script:desktopFlowChartSolutionPath }
     }
 }

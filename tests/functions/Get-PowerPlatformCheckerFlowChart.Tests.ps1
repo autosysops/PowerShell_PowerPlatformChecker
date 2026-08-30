@@ -53,6 +53,7 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
         $script:desktopConnectorMultilineFlowPath = Join-Path $script:desktopFlowChartSolutionPath "Workflows\DesktopFlow-ConnectorMultiline-dddddddd-dddd-dddd-dddd-dddddddddddd.json"
         $script:desktopScopeSuccessAndEmailBodyFlowPath = Join-Path $script:desktopFlowChartSolutionPath "Workflows\DesktopFlow-ScopeSuccessAndEmailBody-eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee.json"
         $script:desktopPdfwRegressionFlowPath = Join-Path $script:desktopFlowChartSolutionPath "Workflows\DesktopFlow-PdfwRegression-ffffffff-ffff-ffff-ffff-ffffffffffff.json"
+        $script:desktopSubflowFixturePath = Join-Path $script:desktopFlowChartSolutionPath "Workflows\DesktopFlow-Subflows-99999999-9999-9999-9999-999999999999.json"
 
         $script:sampleActions = Get-PowerPlatformCheckerFlowActionList -Path $script:flowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
         $script:childActions = Get-PowerPlatformCheckerFlowActionList -Path $script:childFlowPath -Recurse -IncludeTrigger -Properties References,Entities,RunAfter,ParentAction
@@ -67,6 +68,7 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
         $script:desktopConnectorMultilineActions = Get-PowerPlatformCheckerFlowActionList -Path $script:desktopConnectorMultilineFlowPath -Recurse -Properties References,Entities,RunAfter,ParentAction
         $script:desktopScopeSuccessAndEmailBodyActions = Get-PowerPlatformCheckerFlowActionList -Path $script:desktopScopeSuccessAndEmailBodyFlowPath -Recurse -Properties References,Entities,RunAfter,ParentAction
         $script:desktopPdfwRegressionActions = Get-PowerPlatformCheckerFlowActionList -Path $script:desktopPdfwRegressionFlowPath -Recurse -Properties References,Entities,RunAfter,ParentAction
+        $script:desktopProcessOrderSubflowActions = Get-PowerPlatformCheckerSubflowActionList -Path $script:desktopSubflowFixturePath -SubflowName "ProcessOrder" -Properties RunAfter,ParentAction
         $script:actionsByRef = @{
             sampleActions = $script:sampleActions
             childActions = $script:childActions
@@ -81,6 +83,7 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
             desktopConnectorMultilineActions = $script:desktopConnectorMultilineActions
             desktopScopeSuccessAndEmailBodyActions = $script:desktopScopeSuccessAndEmailBodyActions
             desktopPdfwRegressionActions = $script:desktopPdfwRegressionActions
+            desktopProcessOrderSubflowActions = $script:desktopProcessOrderSubflowActions
         }
         $script:flowGraphSnapshotNormalizer = {
             param(
@@ -274,11 +277,11 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
             }
 
             [void](Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction LR -OutputFormat Mermaid)
-            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerFlowChart" -ExpectedKeys @("ActionCountBucket", "Direction", "OutputFormat") -ConfidentialValues @("SampleFlow", "Call_Child_Workflow")
+            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerFlowChart" -ExpectedKeys @("ActionCountBucket", "Direction", "OutputFormat", "IncludeStyles", "HasStyleOverrides") -ConfidentialValues @("SampleFlow", "Call_Child_Workflow")
 
             $telemetryCalls.Clear()
             [void](Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction TB -OutputFormat Graph)
-            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerFlowChart" -ExpectedKeys @("ActionCountBucket", "Direction", "OutputFormat") -ConfidentialValues @("SampleFlow", "Call_Child_Workflow")
+            Assert-PowerPlatformCheckerTelemetrySafe -TelemetryCalls @($telemetryCalls) -EventName "Get-PowerPlatformCheckerFlowChart" -ExpectedKeys @("ActionCountBucket", "Direction", "OutputFormat", "IncludeStyles", "HasStyleOverrides") -ConfidentialValues @("SampleFlow", "Call_Child_Workflow")
         }
 
         It "returns graph output when requested" {
@@ -301,6 +304,25 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
 
             (Normalize-PowerPlatformCheckerSnapshotText -Text $mermaidFromGraph) |
                 Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $mermaidFromPublic)
+        }
+
+        It "emits style class definitions and link styles when styles are requested" {
+            $markdown = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction TB -IncludeStyles
+
+            $markdown | Should -Match '(?m)^classDef FlowAction '
+            $markdown | Should -Match '(?m)^classDef FlowDecision '
+            $markdown | Should -Match '(?m)^classDef FlowTrigger '
+            $markdown | Should -Match '(?m)^linkStyle '
+        }
+
+        It "adds style metadata to graph output when styles are requested" {
+            $graph = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction TB -OutputFormat Graph -IncludeStyles
+
+            $graph.PSObject.Properties.Name | Should -Contain 'Styles'
+            $graph.PSObject.Properties.Name | Should -Contain 'StyleOrder'
+            $graph.Styles.ContainsKey('FlowAction') | Should -BeTrue
+            $graph.Styles.ContainsKey('FlowDecision') | Should -BeTrue
+            $graph.Styles.ContainsKey('FlowTrigger') | Should -BeTrue
         }
 
         It "marks outputformat parameter with Mermaid and Graph validate-set values" {
@@ -373,6 +395,20 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
             }
 
             $graphCount | Should -BeGreaterThan 1
+        }
+
+        It "matches subflow fixture snapshots through the shared flowchart renderer" {
+            $expectedMermaid = Get-PowerPlatformCheckerExpectedSnapshot -FileName "FlowChart.DesktopSubflow.ProcessOrder.expected.md"
+            $expectedGraph = Get-PowerPlatformCheckerExpectedSnapshot -FileName "FlowChart.DesktopSubflow.ProcessOrder.expected.graph.json"
+
+            $mermaid = Get-PowerPlatformCheckerFlowChart -Actions $script:desktopProcessOrderSubflowActions -Direction TB
+            $graph = Get-PowerPlatformCheckerFlowChart -Actions $script:desktopProcessOrderSubflowActions -Direction TB -OutputFormat Graph
+            $actualGraph = & $script:flowGraphSnapshotConverter -Graph $graph
+
+            (Normalize-PowerPlatformCheckerSnapshotText -Text $mermaid) |
+                Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $expectedMermaid)
+            (Normalize-PowerPlatformCheckerSnapshotText -Text $actualGraph) |
+                Should -Be (Normalize-PowerPlatformCheckerSnapshotText -Text $expectedGraph)
         }
     }
 }
