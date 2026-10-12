@@ -37,9 +37,16 @@
         # Get the operation data
         if ($Group -ne "*") {
             $opdata = Get-PowerPlatformCheckerOperationData -Name $Type -Group $Group
+
+            # The catalog sometimes writes the version with an underscore (GetItems_V2) where the flow JSON uses GetItemsV2
+            if (-not $opdata) {
+                $opdata = Get-PowerPlatformCheckerOperationData -Group $Group | Where-Object { $_.name.Replace("_", "") -eq $Type }
+            }
         }
         else {
-            $opdata = Get-PowerPlatformCheckerOperationData -OperationType $Type -Group $Group
+            # The flow JSON calls a condition "If", the catalog calls it "Condition"
+            $operationType = if ($Type -eq "If") { "Condition" } else { $Type }
+            $opdata = Get-PowerPlatformCheckerOperationData -OperationType $operationType -Group $Group
         }
 
         # Check if multiple entries are returned, if so try to find the one that is marked as default
