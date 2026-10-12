@@ -21,7 +21,7 @@
     .PARAMETER Properties
         A list of additional properties to include in the output.
         Supported values are References, Entities, RunAfter, ParentAction,
-        InteractionProfile, and ExternalProfile.
+        InteractionProfile, ExternalProfile, and SecurityProfile (secure inputs and outputs).
 
     .EXAMPLE
         Get a list of actions in a Power Platform flow
@@ -73,7 +73,7 @@
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 5)]
         [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 5)]
-        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile", "TriggerProfile", "OperationProfile", "ResponseProfile")]
+        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile", "TriggerProfile", "OperationProfile", "ResponseProfile", "SecurityProfile")]
         [String[]] $Properties = @()
     )
 

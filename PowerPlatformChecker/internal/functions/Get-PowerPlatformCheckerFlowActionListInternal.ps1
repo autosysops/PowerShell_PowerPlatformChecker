@@ -118,7 +118,7 @@
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 5)]
         [Parameter(Mandatory = $false, ParameterSetName = 'Path', Position = 5)]
-        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile", "TriggerProfile", "OperationProfile", "ResponseProfile")]
+        [ValidateSet("References", "Entities", "RunAfter", "ParentAction", "InteractionProfile", "ExternalProfile", "TriggerProfile", "OperationProfile", "ResponseProfile", "SecurityProfile")]
         [String[]] $Properties = @(),
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Actions', Position = 6)]
@@ -349,6 +349,13 @@
             $actionObject | Add-Member -MemberType NoteProperty -Name 'ResponseStatusCode' -Value ([string]$responseStatusCode)
             $actionObject | Add-Member -MemberType NoteProperty -Name 'ResponseHasBody' -Value ([bool]$responseHasBody)
             $actionObject | Add-Member -MemberType NoteProperty -Name 'ResponseDescription' -Value ([string]$responseBodyDescription)
+        }
+
+        if ($Properties -contains "SecurityProfile") {
+            # Secure inputs/outputs are stored as runtimeConfiguration.secureData.properties = @('inputs', 'outputs')
+            $secureProperties = @($rawAction.runtimeConfiguration.secureData.properties)
+            $actionObject | Add-Member -MemberType NoteProperty -Name "SecureInputs" -Value ($secureProperties -contains "inputs")
+            $actionObject | Add-Member -MemberType NoteProperty -Name "SecureOutputs" -Value ($secureProperties -contains "outputs")
         }
 
         if ($Properties -contains "Entities") {
