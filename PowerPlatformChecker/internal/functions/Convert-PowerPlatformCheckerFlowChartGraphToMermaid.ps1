@@ -100,7 +100,8 @@
             $graphId = [string]$currentGraph.Id
             $graphTitle = [string]$currentGraph.Title
             $graphDirection = if ($currentGraph.Direction) { [string]$currentGraph.Direction } else { "TB" }
-            if ([string]::IsNullOrWhiteSpace($graphTitle)) {
+            # A space is an intentional blank label; omitting it makes Mermaid display the ID.
+            if ([string]::IsNullOrEmpty($graphTitle)) {
                 $lines += "subgraph $graphId"
             }
             else {
