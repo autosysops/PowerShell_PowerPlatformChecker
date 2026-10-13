@@ -229,6 +229,41 @@ Describe "Get-PowerPlatformCheckerFlowActionList" {
         }
     }
 
+    It "returns security profile metadata for secure inputs and outputs" {
+        InModuleScope PowerPlatformChecker {
+            $actions = [pscustomobject]@{
+                Both = [pscustomobject]@{
+                    type = 'Compose'
+                    runtimeConfiguration = [pscustomobject]@{ secureData = [pscustomobject]@{ properties = @('inputs', 'outputs') } }
+                }
+                InputsOnly = [pscustomobject]@{
+                    type = 'Compose'
+                    runtimeConfiguration = [pscustomobject]@{ secureData = [pscustomobject]@{ properties = @('inputs') } }
+                }
+                Neither = [pscustomobject]@{
+                    type = 'Compose'
+                }
+            }
+
+            Get-PowerPlatformCheckerFlowActionListInternal -Actions $actions -Properties SecurityProfile
+        } | ForEach-Object {
+            if ($_.Name -eq 'Both') {
+                $_.SecureInputs | Should -BeTrue
+                $_.SecureOutputs | Should -BeTrue
+            }
+
+            if ($_.Name -eq 'InputsOnly') {
+                $_.SecureInputs | Should -BeTrue
+                $_.SecureOutputs | Should -BeFalse
+            }
+
+            if ($_.Name -eq 'Neither') {
+                $_.SecureInputs | Should -BeFalse
+                $_.SecureOutputs | Should -BeFalse
+            }
+        }
+    }
+
     It "parses quoted desktop metadata directives without emitting pseudo actions" {
         $actions = Get-PowerPlatformCheckerFlowActionList -Path $script:desktopQuotedMetadataFlowPath -Recurse -Properties RunAfter,ParentAction
 

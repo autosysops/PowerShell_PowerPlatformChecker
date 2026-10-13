@@ -158,6 +158,31 @@ Describe "Get-PowerPlatformCheckerFlowChart" {
     }
 
     Context "General Behavior" {
+        It "gives condition wrappers an explicit blank Mermaid title" -TestCases @(
+            @{ ActionsRef = 'sampleActions' }
+            @{ ActionsRef = 'trueOnlyConditionActions' }
+            @{ ActionsRef = 'scopeInIfActions' }
+        ) {
+            param($ActionsRef)
+
+            $graph = Get-PowerPlatformCheckerFlowChart -Actions $script:actionsByRef[$ActionsRef] -OutputFormat Graph
+            $markdown = Get-PowerPlatformCheckerFlowChart -Actions $script:actionsByRef[$ActionsRef]
+            $queue = [System.Collections.Generic.Queue[object]]::new()
+            $queue.Enqueue($graph)
+            $conditionCount = 0
+            while ($queue.Count -gt 0) {
+                $current = $queue.Dequeue()
+                foreach ($child in @($current.Subgraphs)) {
+                    $queue.Enqueue($child)
+                    if ($child.Title -eq ' ') {
+                        $conditionCount++
+                        $markdown | Should -Match ('(?m)^subgraph ' + [regex]::Escape($child.Id) + '\[" "\]\r?$')
+                    }
+                }
+            }
+            $conditionCount | Should -BeGreaterThan 0
+        }
+
         It "uses TB as default direction" {
             $implicitDirection = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions
             $explicitDirection = Get-PowerPlatformCheckerFlowChart -Actions $script:sampleActions -Direction TB

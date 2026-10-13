@@ -14,6 +14,28 @@ Describe "Get-PowerPlatformCheckerFlowActionDefaultName" {
         $summary | Should -Be "Send an email"
     }
 
+    It "maps the flow JSON condition type If to the catalog operation Condition" {
+        # The real catalog stores a condition as operationType Condition, not If
+        Mock -CommandName Get-PowerPlatformCheckerOperationData -ModuleName PowerPlatformChecker {
+            param($Name = "*", $OperationType = "*", $Group = "*")
+            @([pscustomobject]@{ name = "Condition"; operationType = "Condition"; group = "Control"; summary = "Condition"; builtin = $true }) |
+                Where-Object { $_.name -like $Name -and $_.operationType -like $OperationType -and $_.group -like $Group }
+        }
+
+        Get-PowerPlatformCheckerFlowActionDefaultName -Type "If" -Group "*" | Should -Be "Condition"
+    }
+
+    It "matches catalog names that write the version with an underscore" {
+        # The real catalog names this operation GetItems_V2, the flow JSON says GetItemsV2
+        Mock -CommandName Get-PowerPlatformCheckerOperationData -ModuleName PowerPlatformChecker {
+            param($Name = "*", $OperationType = "*", $Group = "*")
+            @([pscustomobject]@{ name = "GetItems_V2"; operationType = "OpenApiConnection"; group = "shared_sql"; summary = "Get rows (V2)"; builtin = $false }) |
+                Where-Object { $_.name -like $Name -and $_.operationType -like $OperationType -and $_.group -like $Group }
+        }
+
+        Get-PowerPlatformCheckerFlowActionDefaultName -Type "GetItemsV2" -Group "shared_sql" | Should -Be "Get rows (V2)"
+    }
+
     It "prefers builtin operation metadata when multiple matches are returned" {
         Mock -CommandName Get-PowerPlatformCheckerOperationData -ModuleName PowerPlatformChecker {
             @(

@@ -5,7 +5,7 @@ action1["Call_Child_Workflow"]
 action5["Create_orderline"]
 action6["Parallel_A"]
 action7["Parallel_B"]
-subgraph action4_group
+subgraph action4_group[" "]
 direction LR
 action2["Send_an_email"]
 action3["Update_row"]
